@@ -1,11 +1,9 @@
-import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import { router, usePathname } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo, Logomark } from '../components/Logo';
-import { Info, UserPlus, Mail, type LucideIcon } from 'lucide-react-native';
 
 // ── design tokens (node 2:16) ──────────────────────────────────────
 const T = {
@@ -73,11 +71,11 @@ const VISION_CARDS = [
   },
 ];
 
-const NAV_ITEMS: { label: string; route: string; Icon?: LucideIcon }[] = [
+const NAV_ITEMS = [
   { label: 'BuddyID', route: '/buddyid' },
-  { label: 'Sobre nós', route: '/buddyid/sobre-nos', Icon: Info },
-  { label: 'Juntar-me', route: '/buddyid/parceiros', Icon: UserPlus },
-  { label: 'Contacto', route: '/buddyid/contacto', Icon: Mail },
+  { label: 'Sobre nós', route: '/buddyid/sobre-nos' },
+  { label: 'Juntar-me', route: '/buddyid/parceiros' },
+  { label: 'Contacto', route: '/buddyid/contacto' },
 ];
 
 export default function Landing() {
@@ -171,14 +169,11 @@ export default function Landing() {
       <View style={s.nav}>
         {NAV_ITEMS.map((item, i) => {
           const active = pathname === item.route || (i === 0 && pathname === '/buddyid');
-          const opacity = active ? 1 : 0.55;
           return (
             <TouchableOpacity key={item.label} style={s.navItem} onPress={() => router.push(item.route as any)}>
-              <View style={{ opacity, marginBottom: 3 }}>
-                {i === 0
-                  ? <Logomark color="#fff" size={22} />
-                  : item.Icon && <item.Icon size={22} color="#fff" strokeWidth={1.8} />}
-              </View>
+              {i === 0
+                ? <Logomark color={active ? '#fff' : 'rgba(255,255,255,0.5)'} size={22} />
+                : <View style={[s.navIcon, active && s.navIconActive]} />}
               <Text style={[s.navLabel, active && s.navLabelActive]}>{item.label}</Text>
             </TouchableOpacity>
           );
@@ -436,6 +431,14 @@ const s = StyleSheet.create({
     paddingTop: spacing[2],
   },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: spacing[2] },
-  navLabel: { fontFamily: font.regular, fontSize: 9, color: 'rgba(255,255,255,0.55)' },
+  navIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginBottom: 4,
+  },
+  navIconActive: { backgroundColor: 'transparent' },
+  navLabel: { fontFamily: font.medium, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
   navLabelActive: { color: '#fff', fontFamily: font.semiBold },
 });
