@@ -66,7 +66,7 @@ export default function SobreNos() {
           <View style={styles.fundBlockLeft}>
             <Text style={styles.fundBlockTitle}>Buddy Fund</Text>
             <Text style={styles.fundBlockSub}>
-              {'Por cada serviço concluído doamos '}
+              {'Por cada cão pré-registado e com um serviço ativado, doamos '}
               <Text style={styles.fundBlockHighlight}>1€</Text>
               {' a associações de animais em Portugal.'}
             </Text>
