@@ -38,12 +38,12 @@ import {
   INITIAL_FORM_DATA,
 } from './types';
 
-const TOTAL_QUESTIONS = 14;
+const TOTAL_QUESTIONS = 12;
 const BUDDYID_FORM_KEY = 'buddyid_pending_form';
 
 const STEPS = [
   'q1','q2','q3','q4','q5','q6','q7b','q8',
-  'qEmail','qPhone','qLocation','q12','q13','q14','consent',
+  'qLocation','q12','q13','q14','consent',
 ] as const;
 type StepKey = typeof STEPS[number];
 
@@ -86,7 +86,7 @@ export default function Flow() {
 
   async function handleSubmit() {
     await AsyncStorage.setItem(BUDDYID_FORM_KEY, JSON.stringify(form));
-    router.replace('/buddyid/loading' as any);
+    router.replace('/buddyid/auth' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   async function pickPhoto() {
@@ -104,8 +104,6 @@ export default function Flow() {
       case 'q1': return form.name.trim().length < 1;
       case 'q2': return form.breed.trim().length < 1 || !form.size;
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
-      case 'qEmail': return !form.email.includes('@');
-      case 'qPhone': return form.phone.trim().length < 7;
       case 'qLocation': return form.city.trim().length < 2;
       case 'consent': return !form.consentDataUse;
       default: return false;
@@ -129,7 +127,7 @@ export default function Flow() {
       </View>
 
       <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} />
+        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} /> {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
       </View>
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -175,8 +173,6 @@ function StepContent({ step, form, update, toggleMulti, pickPhoto }: StepProps) 
     case 'q6': return <Q6 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q7b': return <Q7b form={form} update={update} />;
     case 'q8': return <Q8 form={form} update={update} />;
-    case 'qEmail': return <QEmail form={form} update={update} />;
-    case 'qPhone': return <QPhone form={form} update={update} />;
     case 'qLocation': return <QLocation form={form} update={update} />;
     case 'q12': return <Q12 form={form} toggleMulti={toggleMulti} />;
     case 'q13': return <Q13 form={form} update={update} toggleMulti={toggleMulti} />;

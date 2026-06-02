@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { apiClient } from '../api/client';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logomark } from '../components/Logo';
 import type { BuddyIDFormData } from './types';
@@ -46,24 +47,71 @@ export default function Loading() {
       const name = form.name || 'meu cão';
       setDogName(name);
 
-      await new Promise((r) => setTimeout(r, 3200));
+      try {
+        // Map frontend form to backend command structure
+        const command = {
+          name: form.name,
+          breed: form.breed,
+          size: form.size?.toLowerCase(), // API expects snake_case enum, Xs -> xs
+          age_range: null,
+          birthdate: null,
+          gender: form.gender === 'Macho' ? 'male' : form.gender === 'Fêmea' ? 'female' : null,
+          neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
+          adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),
+          habits_json: JSON.stringify({
+            housing: form.housing,
+            housemates: form.housemates,
+            sleepingPlace: form.sleepingPlace,
+            exerciseDuration: form.exerciseDuration,
+            separationAnxiety: form.separationAnxiety,
+            services: form.services,
+            customService: form.customService,
+            goals: form.goals,
+          }),
+          behavior_json: JSON.stringify({
+            energy: form.energy,
+            withStrangers: form.withStrangers,
+            withHomePeople: form.withHomePeople,
+            obedience: form.obedience,
+            attachment: form.attachment,
+            touchSensitivity: form.touchSensitivity,
+            newSituations: form.newSituations,
+            leashBehavior: form.leashBehavior,
+            fears: form.fears,
+          }),
+          health_json: JSON.stringify({
+            traumaHistory: form.traumaHistory,
+          }),
+          photo_url: form.photoUri // Backend will accept string for now
+        };
 
-      const buddyId = 'BD-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-      const completionPercent = Math.round(
-        (Object.values(form).filter((v) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).length / 20) * 100
-      );
-      await AsyncStorage.setItem(
-        BUDDYID_RESULT_KEY,
-        JSON.stringify({
-          dogName: name,
-          breed: form.breed || '',
-          age: form.age || '',
-          size: form.size,
-          buddyId,
-          completionPercent: Math.min(completionPercent, 95),
-        })
-      );
-      router.replace('/buddyid/success' as any);
+        // TODO: Handle authentication token in client.ts before this call
+        // const response = await apiClient.post<{ dogId: string }>('/dogs', command);
+        // For now, simulate delay if API fails or auth is not set up
+        await new Promise((r) => setTimeout(r, 3200));
+
+        const buddyId = 'BD-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        const completionPercent = Math.round(
+          (Object.values(form).filter((v) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).length / 20) * 100
+        );
+
+        await AsyncStorage.setItem(
+          BUDDYID_RESULT_KEY,
+          JSON.stringify({
+            dogName: name,
+            breed: form.breed || '',
+            age: form.age || '',
+            size: form.size,
+            buddyId, // In the real flow, use response.dogId
+            completionPercent: Math.min(completionPercent, 95),
+          })
+        );
+        router.replace('/buddyid/success' as any);
+      } catch (e) {
+        console.error('Error creating dog profile', e);
+        // Fallback for demo
+        router.replace('/buddyid/success' as any);
+      }
     });
   }, []);
 

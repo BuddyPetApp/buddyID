@@ -9,6 +9,7 @@ import {
 } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import '../src/i18n/i18n';
 
 SplashScreen.preventAutoHideAsync();
 
