@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Logo } from '../components/Logo';
 import { Button } from '../components/Button';
+import { NavBar } from '../components/NavBar';
 import { colors, font, fontSize, spacing } from '../tokens';
 
 const PARTNERS = [
@@ -142,6 +143,7 @@ export default function Parceiros() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+      <NavBar />
     </SafeAreaView>
   );
 }

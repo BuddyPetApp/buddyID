@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -85,18 +86,65 @@ export default function Flow() {
   }
 
   async function handleSubmit() {
-    await AsyncStorage.setItem(BUDDYID_FORM_KEY, JSON.stringify(form));
-    router.replace('/buddyid/auth' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
+    const dogs = raw ? JSON.parse(raw) : [];
+    dogs.push(form);
+    await AsyncStorage.setItem('buddyid_pending_dogs', JSON.stringify(dogs));
+    await AsyncStorage.removeItem(BUDDYID_FORM_KEY);
+    router.replace('/buddyid/second-dog' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   async function pickPhoto() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+    if (Platform.OS === 'web') {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+      return;
+    }
+
+    Alert.alert(
+      'Adicionar foto',
+      'Como queres adicionar a foto do teu cão?',
+      [
+        {
+          text: 'Tirar Foto',
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert('Aviso', 'Precisamos de acesso à câmara para tirar uma foto.');
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+          },
+        },
+        {
+          text: 'Escolher da Galeria',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+          },
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ]
+    );
   }
 
   function isContinueDisabled(): boolean {
@@ -127,7 +175,7 @@ export default function Flow() {
       </View>
 
       <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} /> {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} />
       </View>
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -185,11 +233,16 @@ function Q1({ form, update, pickPhoto }: Pick<StepProps, 'form' | 'update' | 'pi
   return (
     <View>
       <Text style={s.question}>Como se chama o teu cão?</Text>
-      <TouchableOpacity style={s.photoCircle} onPress={pickPhoto}>
-        {form.photoUri
-          ? <Image source={{ uri: form.photoUri }} style={s.photoImg} />
-          : <View style={s.photoPlaceholder} />}
-      </TouchableOpacity>
+      <View style={s.photoContainer}>
+        <TouchableOpacity style={s.photoCircle} onPress={pickPhoto}>
+          {form.photoUri
+            ? <Image source={{ uri: form.photoUri }} style={s.photoImg} />
+            : <View style={s.photoPlaceholder} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={s.photoPlusBadge} onPress={pickPhoto}>
+          <Text style={s.photoPlusText}>+</Text>
+        </TouchableOpacity>
+      </View>
       <Text style={s.photoLabel}>Foto</Text>
       <SectionLabel>Nome do cão</SectionLabel>
       <TextInput
@@ -503,9 +556,12 @@ const s = StyleSheet.create({
   progressFill: { height: 3, backgroundColor: colors.primary },
   scrollContent: { padding: spacing[6], paddingBottom: spacing[10] },
   question: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[4], lineHeight: 34 },
-  photoCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.surfaceMuted, alignSelf: 'center', marginTop: spacing[4], overflow: 'hidden' },
+  photoContainer: { alignSelf: 'center', marginTop: spacing[4] },
+  photoCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.surfaceMuted, overflow: 'hidden' },
   photoPlaceholder: { flex: 1, backgroundColor: colors.surfaceMuted },
   photoImg: { width: 100, height: 100 },
+  photoPlusBadge: { position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface },
+  photoPlusText: { color: '#fff', fontSize: 20, fontFamily: font.semiBold, marginTop: -2 },
   photoLabel: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, textAlign: 'center', marginTop: spacing[2], marginBottom: spacing[5] },
   input: {
     backgroundColor: colors.surface,

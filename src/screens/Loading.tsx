@@ -42,74 +42,79 @@ export default function Loading() {
       );
     Animated.parallel([dotAnim(dot1, 0), dotAnim(dot2, 200), dotAnim(dot3, 400)]).start();
 
-    AsyncStorage.getItem(BUDDYID_FORM_KEY).then(async (raw) => {
-      const form: Partial<BuddyIDFormData> = raw ? JSON.parse(raw) : {};
-      const name = form.name || 'meu cão';
-      setDogName(name);
+    const BUDDYID_PENDING_DOGS = 'buddyid_pending_dogs';
+    
+    AsyncStorage.getItem(BUDDYID_PENDING_DOGS).then(async (raw) => {
+      const dogsForm: Partial<BuddyIDFormData>[] = raw ? JSON.parse(raw) : [];
+      if (dogsForm.length === 0) dogsForm.push({}); // Fallback
+      
+      const firstDogName = dogsForm[0]?.name || 'meu cão';
+      setDogName(dogsForm.length > 1 ? 'teus cães' : firstDogName);
 
       try {
-        // Map frontend form to backend command structure
-        const command = {
-          name: form.name,
-          breed: form.breed,
-          size: form.size?.toLowerCase(), // API expects snake_case enum, Xs -> xs
-          age_range: null,
-          birthdate: null,
-          gender: form.gender === 'Macho' ? 'male' : form.gender === 'Fêmea' ? 'female' : null,
-          neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
-          adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),
-          habits_json: JSON.stringify({
-            housing: form.housing,
-            housemates: form.housemates,
-            sleepingPlace: form.sleepingPlace,
-            exerciseDuration: form.exerciseDuration,
-            separationAnxiety: form.separationAnxiety,
-            services: form.services,
-            customService: form.customService,
-            goals: form.goals,
-          }),
-          behavior_json: JSON.stringify({
-            energy: form.energy,
-            withStrangers: form.withStrangers,
-            withHomePeople: form.withHomePeople,
-            obedience: form.obedience,
-            attachment: form.attachment,
-            touchSensitivity: form.touchSensitivity,
-            newSituations: form.newSituations,
-            leashBehavior: form.leashBehavior,
-            fears: form.fears,
-          }),
-          health_json: JSON.stringify({
-            traumaHistory: form.traumaHistory,
-          }),
-          photo_url: form.photoUri // Backend will accept string for now
-        };
+        const results = [];
+        
+        for (const form of dogsForm) {
+          // Map frontend form to backend command structure
+          const command = {
+            name: form.name,
+            breed: form.breed,
+            size: form.size?.toLowerCase(), // API expects snake_case enum, Xs -> xs
+            ageRange: null,
+            birthdate: null,
+            gender: form.gender === 'Macho' ? 'male' : form.gender === 'Fêmea' ? 'female' : null,
+            neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
+            adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),
+            habitsJson: JSON.stringify({
+              housing: form.housing,
+              housemates: form.housemates,
+              sleepingPlace: form.sleepingPlace,
+              exerciseDuration: form.exerciseDuration,
+              separationAnxiety: form.separationAnxiety,
+              services: form.services,
+              customService: form.customService,
+              goals: form.goals,
+            }),
+            behaviorJson: JSON.stringify({
+              energy: form.energy,
+              withStrangers: form.withStrangers,
+              withHomePeople: form.withHomePeople,
+              obedience: form.obedience,
+              attachment: form.attachment,
+              touchSensitivity: form.touchSensitivity,
+              newSituations: form.newSituations,
+              leashBehavior: form.leashBehavior,
+              fears: form.fears,
+            }),
+            healthJson: JSON.stringify({
+              traumaHistory: form.traumaHistory,
+            }),
+            photoUrl: form.photoUri // Backend will accept string for now
+          };
 
-        // TODO: Handle authentication token in client.ts before this call
-        // const response = await apiClient.post<{ dogId: string }>('/dogs', command);
-        // For now, simulate delay if API fails or auth is not set up
-        await new Promise((r) => setTimeout(r, 3200));
-
-        const buddyId = 'BD-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-        const completionPercent = Math.round(
-          (Object.values(form).filter((v) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).length / 20) * 100
-        );
-
-        await AsyncStorage.setItem(
-          BUDDYID_RESULT_KEY,
-          JSON.stringify({
-            dogName: name,
+          const response = await apiClient.post<{ dogId: string }>('/dogs', command);
+          const buddyId = response.dogId;
+          const completionPercent = Math.round(
+            (Object.values(form).filter((v) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).length / 20) * 100
+          );
+          
+          results.push({
+            dogName: form.name || 'Cão',
             breed: form.breed || '',
             age: form.age || '',
             size: form.size,
-            buddyId, // In the real flow, use response.dogId
+            buddyId,
             completionPercent: Math.min(completionPercent, 95),
-          })
-        );
+            photoUri: form.photoUri,
+          });
+        }
+
+        await AsyncStorage.setItem(BUDDYID_RESULT_KEY, JSON.stringify(results));
+        // Clear pending dogs
+        await AsyncStorage.removeItem(BUDDYID_PENDING_DOGS);
         router.replace('/buddyid/success' as any);
       } catch (e) {
-        console.error('Error creating dog profile', e);
-        // Fallback for demo
+        console.error('Error creating dog profiles', e);
         router.replace('/buddyid/success' as any);
       }
     });
@@ -130,7 +135,7 @@ export default function Loading() {
           </Animated.View>
         </View>
 
-        <Text style={s.title}>A criar o BuddyID{'\n'}do {dogName || '...'}...</Text>
+        <Text style={s.title}>A criar o BuddyID{'\n'}do(s) {dogName}...</Text>
         <Text style={s.sub}>Estamos a analisar as respostas e{'\n'}a personalizar o perfil do teu cão.</Text>
 
         <View style={s.dots}>

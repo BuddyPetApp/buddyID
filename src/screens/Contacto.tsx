@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Logo } from '../components/Logo';
+import { NavBar } from '../components/NavBar';
 import { colors, font, fontSize, spacing } from '../tokens';
 
 const FAQ_ITEMS = [
@@ -157,6 +158,7 @@ export default function Contacto() {
           <Text style={styles.footerText}>© 2026 Buddy · Lisboa, Portugal</Text>
         </View>
       </ScrollView>
+      <NavBar />
     </SafeAreaView>
   );
 }

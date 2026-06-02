@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, font, fontSize, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
+import { NavBar } from '../components/NavBar';
 
 export default function SobreNos() {
   const router = useRouter();
@@ -82,6 +83,7 @@ export default function SobreNos() {
           </Text>
         </View>
       </ScrollView>
+      <NavBar />
     </SafeAreaView>
   );
 }

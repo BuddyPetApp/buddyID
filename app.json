@@ -35,7 +35,8 @@
           "photosPermission": "Precisamos de acesso às tuas fotos para adicionar uma foto ao BuddyID do teu cão."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store"
     ]
   }
 }

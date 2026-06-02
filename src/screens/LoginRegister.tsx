@@ -11,14 +11,17 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { SectionLabel } from './shared';
 
 export default function LoginRegister() {
-  const [isLogin, setIsLogin] = useState(false);
+  const params = useLocalSearchParams();
+  const isLoginOnly = params.mode === 'login_only';
+
+  const [isLogin, setIsLogin] = useState(isLoginOnly ? true : false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -49,8 +52,11 @@ export default function LoginRegister() {
         if (error) throw error;
       }
       
-      // Navigate to loading/submission step once authenticated
-      router.replace('/buddyid/loading' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (isLoginOnly) {
+        router.replace('/buddyid' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } else {
+        router.replace('/buddyid/loading' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      }
     } catch (err: any) {
       Alert.alert('Erro', err.message || 'Ocorreu um erro ao autenticar.');
     } finally {
@@ -59,7 +65,11 @@ export default function LoginRegister() {
   }
 
   function goBack() {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/buddyid' as any); // fallback
+    }
   }
 
   const isContinueDisabled = isLogin 
@@ -83,28 +93,30 @@ export default function LoginRegister() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={s.tabs}>
-            <TouchableOpacity 
-              style={[s.tab, !isLogin && s.tabActive]} 
-              onPress={() => setIsLogin(false)}
-            >
-              <Text style={[s.tabText, !isLogin && s.tabTextActive]}>Criar Conta</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[s.tab, isLogin && s.tabActive]} 
-              onPress={() => setIsLogin(true)}
-            >
-              <Text style={[s.tabText, isLogin && s.tabTextActive]}>Login</Text>
-            </TouchableOpacity>
-          </View>
+          {!isLoginOnly && (
+            <View style={s.tabs}>
+              <TouchableOpacity 
+                style={[s.tab, !isLogin && s.tabActive]} 
+                onPress={() => setIsLogin(false)}
+              >
+                <Text style={[s.tabText, !isLogin && s.tabTextActive]}>Criar Conta</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[s.tab, isLogin && s.tabActive]} 
+                onPress={() => setIsLogin(true)}
+              >
+                <Text style={[s.tabText, isLogin && s.tabTextActive]}>Login</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-          <Text style={s.question}>
-            {isLogin ? 'Bem-vindo de volta!' : 'Só falta guardarmos o perfil!'}
+          <Text style={[s.question, isLoginOnly && { marginTop: spacing[4] }]}>
+            {isLogin ? 'Bem-vindo de volta!' : 'Cria a tua conta Buddy'}
           </Text>
           <Text style={s.sub}>
             {isLogin 
-              ? 'Faz login para associar o cão à tua conta.' 
-              : 'Cria uma conta para acederes ao BuddyID.'}
+              ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para acederes à tua conta e guardarmos o(s) perfil(is)!')
+              : 'Cria uma conta para guardarmos o perfil do teu cão.'}
           </Text>
 
           <View style={s.form}>

@@ -36,21 +36,36 @@ const CONFETTI = [
 ];
 
 export default function Success() {
-  const [result, setResult] = useState<BuddyIDResult | null>(null);
+  const [results, setResults] = useState<BuddyIDResult[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem(BUDDYID_RESULT_KEY).then((raw) => {
-      if (raw) setResult(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setResults(Array.isArray(parsed) ? parsed : [parsed]);
+      }
     });
   }, []);
 
   async function handleShare() {
-    if (!result) return;
-    await Share.share({ message: `O BuddyID do ${result.dogName} é ${result.buddyId}! Cria o teu em buddy.pet 🐾` });
+    const current = results[selectedIndex];
+    if (!current) return;
+    await Share.share({ message: `O BuddyID do ${current.dogName} é ${current.buddyId}! Cria o teu em buddy.pet 🐾` });
   }
 
-  const initial = result?.dogName?.[0]?.toUpperCase() ?? '?';
-  const pct = result?.completionPercent ?? 65;
+  const current = results[selectedIndex];
+  const initial = current?.dogName?.[0]?.toUpperCase() ?? '?';
+  const pct = current?.completionPercent ?? 65;
+
+  let titleText = '...';
+  if (results.length === 1) {
+    titleText = `O ${results[0].dogName} está\nregistado!`;
+  } else if (results.length > 1) {
+    const names = results.map(r => r.dogName);
+    const last = names.pop();
+    titleText = `O ${names.join(', ')} e o ${last} estão\nregistados!`;
+  }
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
@@ -72,7 +87,27 @@ export default function Success() {
           ))}
         </View>
 
-        <Text style={s.title}>O {result?.dogName ?? '...'} está{'\n'}registado!</Text>
+        <Text style={s.title}>{titleText}</Text>
+
+        {/* Dog Selector */}
+        {results.length > 1 && (
+          <View style={s.selector}>
+            {results.map((r, i) => {
+              const isSelected = i === selectedIndex;
+              return (
+                <TouchableOpacity
+                  key={r.buddyId}
+                  style={[s.selectorAvatar, isSelected && s.selectorAvatarActive]}
+                  onPress={() => setSelectedIndex(i)}
+                >
+                  <Text style={[s.selectorAvatarText, isSelected && s.selectorAvatarTextActive]}>
+                    {r.dogName[0].toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {/* Profile card */}
         <View style={s.card}>
@@ -80,9 +115,9 @@ export default function Success() {
             <Text style={s.avatarText}>{initial}</Text>
           </View>
           <View style={s.cardInfo}>
-            <Text style={s.cardName}>{result?.dogName ?? '...'}</Text>
-            <Text style={s.cardBreed}>{result?.breed}{result?.age ? ` · ${result.age}` : ''}</Text>
-            <Text style={s.cardId}>{result?.buddyId}</Text>
+            <Text style={s.cardName}>{current?.dogName ?? '...'}</Text>
+            <Text style={s.cardBreed}>{current?.breed}{current?.age ? ` · ${current.age}` : ''}</Text>
+            <Text style={s.cardId}>{current?.buddyId}</Text>
             <View style={s.badge}>
               <Text style={s.badgeText}>⭐ Membro Fundador</Text>
             </View>
@@ -98,10 +133,10 @@ export default function Success() {
 
         {/* CTAs */}
         <TouchableOpacity style={s.btnShare} onPress={handleShare}>
-          <Text style={s.btnShareText}>Partilhar o BuddyID do {result?.dogName ?? '...'}</Text>
+          <Text style={s.btnShareText}>Partilhar o BuddyID do {current?.dogName ?? '...'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.btnOutline} onPress={() => router.push('/buddyid/second-dog' as any)}>
-          <Text style={s.btnOutlineText}>Ver perfil completo</Text>
+        <TouchableOpacity style={s.btnOutline} onPress={() => router.replace('/buddyid' as any)}>
+          <Text style={s.btnOutlineText}>Voltar ao Início</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -131,6 +166,23 @@ const s = StyleSheet.create({
     gap: spacing[3],
     marginBottom: spacing[4],
   },
+  selector: { flexDirection: 'row', justifyContent: 'center', gap: spacing[3], marginBottom: spacing[6] },
+  selectorAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectorAvatarActive: {
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  selectorAvatarText: { fontFamily: font.bold, fontSize: fontSize.md, color: 'rgba(255,255,255,0.8)' },
+  selectorAvatarTextActive: { color: '#fff' },
   avatar: {
     width: 68,
     height: 68,

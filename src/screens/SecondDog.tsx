@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 
-const BUDDYID_RESULT_KEY = 'buddyid_result';
+const BUDDYID_PENDING_DOGS = 'buddyid_pending_dogs';
 
 const BENEFITS = [
   'Perfil personalizado para cada cão',
@@ -18,8 +18,13 @@ export default function SecondDog() {
   const [dogName, setDogName] = useState('');
 
   useEffect(() => {
-    AsyncStorage.getItem(BUDDYID_RESULT_KEY).then((raw) => {
-      if (raw) setDogName(JSON.parse(raw).dogName || '');
+    AsyncStorage.getItem(BUDDYID_PENDING_DOGS).then((raw) => {
+      if (raw) {
+        const dogs = JSON.parse(raw);
+        if (dogs.length > 0) {
+          setDogName(dogs[dogs.length - 1].name || '');
+        }
+      }
     });
   }, []);
 
@@ -78,7 +83,7 @@ export default function SecondDog() {
         <TouchableOpacity style={s.btnPrimary} onPress={() => router.push('/buddyid/flow' as any)}>
           <Text style={s.btnPrimaryText}>Criar BuddyID do segundo cão</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.btnGhost} onPress={() => router.back()}>
+        <TouchableOpacity style={s.btnGhost} onPress={() => router.push('/buddyid/auth' as any)}>
           <Text style={s.btnGhostText}>Agora não</Text>
         </TouchableOpacity>
       </View>
