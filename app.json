@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "BuddyID",
+    "slug": "buddyid",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6B5EBF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.buddyapp.buddyid"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6B5EBF"
+      },
+      "package": "com.buddyapp.buddyid"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "scheme": "buddyid",
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Precisamos de acesso às tuas fotos para adicionar uma foto ao BuddyID do teu cão."
+        }
+      ]
+    ]
+  }
+}
