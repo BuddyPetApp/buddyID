@@ -1,8 +1,8 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
-import { Logo } from '../components/Logo';
+import { Logo, Logomark } from '../components/Logo';
 
 const HOW_IT_WORKS = [
   { n: '1', title: 'Raça e perfil genético', sub: 'Quem o teu cão é por dentro' },
@@ -10,9 +10,15 @@ const HOW_IT_WORKS = [
   { n: '3', title: 'Vida do tutor', sub: 'O vosso contexto e rotina juntos' },
 ];
 
-const NAV_ITEMS = ['BuddyID', 'Sobre nós', 'Parceiros', 'Contacto'];
+const NAV_ITEMS = [
+  { label: 'BuddyID', route: '/buddyid' },
+  { label: 'Sobre nós', route: '/buddyid/sobre-nos' },
+  { label: 'Parceiros', route: '/buddyid/parceiros' },
+  { label: 'Contacto', route: '/buddyid/contacto' },
+];
 
 export default function Landing() {
+  const pathname = usePathname();
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -45,14 +51,17 @@ export default function Landing() {
       </ScrollView>
 
       <View style={s.nav}>
-        {NAV_ITEMS.map((label, i) => (
-          <TouchableOpacity key={label} style={s.navItem}>
-            <View style={[s.navIcon, i === 0 && s.navIconActive]}>
-              {i === 0 && <View style={s.navDot} />}
-            </View>
-            <Text style={[s.navLabel, i === 0 && s.navLabelActive]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
+        {NAV_ITEMS.map((item, i) => {
+          const active = pathname === item.route || (i === 0 && pathname === '/buddyid');
+          return (
+            <TouchableOpacity key={item.label} style={s.navItem} onPress={() => router.push(item.route as any)}>
+              {i === 0
+                ? <Logomark color={active ? '#fff' : 'rgba(255,255,255,0.5)'} size={22} />
+                : <View style={[s.navIcon, active && s.navIconActive]} />}
+              <Text style={[s.navLabel, active && s.navLabelActive]}>{item.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </SafeAreaView>
   );
