@@ -1,2 +1,2 @@
-import ProviderFlow from '../../src/screens/ProviderFlow';
-export default function ProvidersRoute() { return <ProviderFlow />; }
+import Providers from '../../src/screens/Providers';
+export default function ProvidersRoute() { return <Providers />; }

@@ -12,29 +12,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SvgXml } from 'react-native-svg';
 import { router } from 'expo-router';
 import { Logo } from '../components/Logo';
 import { colors, font, fontSize, spacing } from '../tokens';
-
-const ICON_EMAIL = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="5" width="20" height="14" rx="3" stroke="#6B5EBF" stroke-width="1.8"/>
-  <path d="M2 8l10 6 10-6" stroke="#6B5EBF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-const ICON_INSTAGRAM = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="20" height="20" rx="6" stroke="#6B5EBF" stroke-width="1.8"/>
-  <circle cx="12" cy="12" r="4" stroke="#6B5EBF" stroke-width="1.8"/>
-  <circle cx="17.5" cy="6.5" r="1" fill="#6B5EBF"/>
-</svg>`;
-
-const ICON_LINKEDIN = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="20" height="20" rx="4" stroke="#6B5EBF" stroke-width="1.8"/>
-  <path d="M7 10v7" stroke="#6B5EBF" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="7" cy="7.5" r="1" fill="#6B5EBF"/>
-  <path d="M11 17v-4a2 2 0 0 1 4 0v4" stroke="#6B5EBF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M11 10v7" stroke="#6B5EBF" stroke-width="1.8" stroke-linecap="round"/>
-</svg>`;
 
 const FAQ_ITEMS = [
   {
@@ -47,7 +27,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Como me torno prestador Buddy?',
-    a: 'Regista-te na secção Juntar-me e entramos em contacto para a validação do perfil.',
+    a: 'Regista-te na secção Parceiros e entraremos em contacto para a validação do perfil.',
   },
 ];
 
@@ -98,13 +78,11 @@ export default function Contacto() {
           <TouchableOpacity
             style={styles.contactCard}
             activeOpacity={0.75}
-            onPress={() => Linking.openURL('mailto:hello@buddy.pet')}
+            onPress={() => Linking.openURL('mailto:contacto@buddy.pet')}
           >
-            <View style={styles.contactIconWrap}>
-              <SvgXml xml={ICON_EMAIL} width={24} height={24} />
-            </View>
+            <Text style={styles.contactEmoji}>📧</Text>
             <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactValue}>hello@buddy.pet</Text>
+            <Text style={styles.contactValue}>contacto@buddy.pet</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -112,23 +90,9 @@ export default function Contacto() {
             activeOpacity={0.75}
             onPress={() => Linking.openURL('https://instagram.com/buddypetapp')}
           >
-            <View style={styles.contactIconWrap}>
-              <SvgXml xml={ICON_INSTAGRAM} width={24} height={24} />
-            </View>
+            <Text style={styles.contactEmoji}>📱</Text>
             <Text style={styles.contactLabel}>Instagram</Text>
             <Text style={styles.contactValue}>@buddypetapp</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.contactCard}
-            activeOpacity={0.75}
-            onPress={() => Linking.openURL('https://www.linkedin.com/company/108814622')}
-          >
-            <View style={styles.contactIconWrap}>
-              <SvgXml xml={ICON_LINKEDIN} width={24} height={24} />
-            </View>
-            <Text style={styles.contactLabel}>LinkedIn</Text>
-            <Text style={styles.contactValue}>buddy-pet</Text>
           </TouchableOpacity>
         </View>
 
@@ -260,27 +224,21 @@ const styles = StyleSheet.create({
   // Contact cards
   contactRow: {
     flexDirection: 'row',
-    paddingHorizontal: spacing[4],
-    gap: spacing[2],
+    paddingHorizontal: spacing[6],
+    gap: spacing[3],
     marginBottom: spacing[6],
   },
   contactCard: {
     flex: 1,
     backgroundColor: colors.surfaceMuted,
     borderRadius: 16,
-    paddingVertical: spacing[4],
-    paddingHorizontal: spacing[2],
+    padding: spacing[4],
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
-  contactIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surfaceAccent,
-    alignItems: 'center',
-    justifyContent: 'center',
+  contactEmoji: {
+    fontSize: fontSize.xl,
     marginBottom: spacing[2],
   },
   contactLabel: {
@@ -292,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[1],
   },
   contactValue: {
-    fontSize: 11,
+    fontSize: fontSize.sm,
     fontFamily: font.medium,
     color: colors.primary,
     textAlign: 'center',
