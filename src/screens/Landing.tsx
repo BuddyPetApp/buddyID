@@ -1,141 +1,177 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { colors, font, fontSize, shadows, spacing } from '../tokens';
+import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
-import { Button } from '../components/Button';
 
 const HOW_IT_WORKS = [
-  '1. Responde às perguntas sobre o teu cão',
-  '2. Geramos o perfil único do teu cão',
-  '3. Acede a recomendações e serviços',
+  { n: '1', title: 'Raça e perfil genético', sub: 'Quem o teu cão é por dentro' },
+  { n: '2', title: 'Condição física e saúde', sub: 'Como vive, dorme e se mexe' },
+  { n: '3', title: 'Vida do tutor', sub: 'O vosso contexto e rotina juntos' },
 ];
+
+const NAV_ITEMS = ['BuddyID', 'Sobre nós', 'Parceiros', 'Contacto'];
 
 export default function Landing() {
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Logo variant="dark" size="sm" />
+          <Logo variant="dark" size="md" />
+          <Text style={s.headerSub}>O passaporte digital do teu cão</Text>
         </View>
 
         <View style={s.heroCard}>
-          <View style={s.heroDecor} />
-          <Text style={s.heroTitle}>O perfil inteligente do teu cão</Text>
-          <Text style={s.heroSubtitle}>
-            Cria o BuddyID em 5 minutos e acede a recomendações personalizadas
-          </Text>
+          <View style={s.heroDecoration} />
+          <Text style={s.heroTitle}>Cria o BuddyID do teu cão</Text>
+          <Text style={s.heroSub}>O passaporte digital em 5 minutos.{'\n'}Ajuda-nos a conhecê-lo melhor.</Text>
+          <TouchableOpacity style={s.heroCta} onPress={() => router.push('/buddyid/flow' as any)}>
+            <Text style={s.heroCtaText}>Começar agora →</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={s.stepsCard}>
-          <Text style={s.stepsHeading}>Como funciona</Text>
-          {HOW_IT_WORKS.map((step) => (
-            <View key={step} style={s.stepRow}>
-              <View style={s.stepDot} />
-              <Text style={s.stepText}>{step}</Text>
+        <Text style={s.sectionTitle}>Como funciona</Text>
+        {HOW_IT_WORKS.map((item) => (
+          <View key={item.n} style={s.stepRow}>
+            <View style={s.stepBadge}>
+              <Text style={s.stepNum}>{item.n}</Text>
             </View>
-          ))}
-        </View>
-
-        <Button
-          label="Criar BuddyID gratuito"
-          onPress={() => router.push('/buddyid/flow' as any)}
-          variant="primary"
-          size="lg"
-        />
-
-        <TouchableOpacity
-          style={s.linkRow}
-          onPress={() => router.push('/buddyid/providers' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={s.linkText}>Para prestadores de serviços →</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={s.linkRow}
-          onPress={() => router.push('/buddyid/associations' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={s.linkText}>Para associações →</Text>
-        </TouchableOpacity>
+            <View style={s.stepCard}>
+              <Text style={s.stepTitle}>{item.title}</Text>
+              <Text style={s.stepSub}>{item.sub}</Text>
+            </View>
+          </View>
+        ))}
       </ScrollView>
+
+      <View style={s.nav}>
+        {NAV_ITEMS.map((label, i) => (
+          <TouchableOpacity key={label} style={s.navItem}>
+            <View style={[s.navIcon, i === 0 && s.navIconActive]}>
+              {i === 0 && <View style={s.navDot} />}
+            </View>
+            <Text style={[s.navLabel, i === 0 && s.navLabelActive]}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
-  scroll: { paddingHorizontal: spacing[5], paddingBottom: spacing[10] },
-  header: { paddingTop: spacing[4], paddingBottom: spacing[6] },
+  scroll: { flex: 1 },
+  content: { paddingBottom: spacing[4] },
+  header: {
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[5],
+    paddingBottom: spacing[4],
+    backgroundColor: colors.surface,
+  },
+  headerSub: {
+    fontFamily: font.regular,
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginTop: spacing[1],
+  },
   heroCard: {
+    marginHorizontal: spacing[6],
+    marginTop: spacing[4],
+    marginBottom: spacing[2],
     backgroundColor: colors.primary,
     borderRadius: 20,
-    padding: spacing[6],
-    marginBottom: spacing[6],
+    padding: spacing[5],
     overflow: 'hidden',
-    ...shadows.elevated,
   },
-  heroDecor: {
+  heroDecoration: {
     position: 'absolute',
-    right: -40,
+    right: -20,
     top: -40,
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   heroTitle: {
     fontFamily: font.bold,
-    fontSize: fontSize.xl,
-    color: '#FFFFFF',
-    marginBottom: spacing[3],
-    lineHeight: 32,
+    fontSize: fontSize.lg,
+    color: '#fff',
+    width: 220,
+    marginBottom: spacing[2],
   },
-  heroSubtitle: {
+  heroSub: {
     fontFamily: font.regular,
-    fontSize: fontSize.base,
+    fontSize: fontSize.sm,
     color: 'rgba(255,255,255,0.85)',
-    lineHeight: 22,
-  },
-  stepsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: spacing[5],
     marginBottom: spacing[6],
-    ...shadows.card,
+    lineHeight: 20,
   },
-  stepsHeading: {
+  heroCta: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    alignSelf: 'flex-start',
+  },
+  heroCtaText: {
     fontFamily: font.semiBold,
-    fontSize: fontSize.md,
-    color: colors.text,
-    marginBottom: spacing[4],
-  },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing[3],
-  },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-    marginTop: 6,
-    marginRight: spacing[3],
-    flexShrink: 0,
-  },
-  stepText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-    flex: 1,
-    lineHeight: 22,
-  },
-  linkRow: { alignItems: 'center', paddingVertical: spacing[3] },
-  linkText: {
-    fontFamily: font.medium,
     fontSize: fontSize.base,
     color: colors.primary,
   },
+  sectionTitle: {
+    fontFamily: font.bold,
+    fontSize: fontSize.md,
+    color: colors.text,
+    marginTop: spacing[6],
+    marginBottom: spacing[3],
+    marginHorizontal: spacing[6],
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing[6],
+    marginBottom: spacing[2],
+    gap: spacing[3],
+  },
+  stepBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  stepNum: { fontFamily: font.bold, fontSize: fontSize.base, color: '#fff' },
+  stepCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  stepTitle: { fontFamily: font.semiBold, fontSize: fontSize.base, color: colors.text },
+  stepSub: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+  nav: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    paddingBottom: spacing[2],
+    paddingTop: spacing[2],
+  },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: spacing[2] },
+  navIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  navIconActive: { backgroundColor: 'transparent' },
+  navDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#fff' },
+  navLabel: { fontFamily: font.medium, fontSize: 11, color: 'rgba(255,255,255,0.6)' },
+  navLabelActive: { color: '#fff', fontFamily: font.semiBold },
 });

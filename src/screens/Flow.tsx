@@ -3,6 +3,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,37 +15,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { colors, font, fontSize, shadows, spacing } from '../tokens';
+import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
-import { Button } from '../components/Button';
-import { ChoiceButton, ChoiceRow, Divider, MultiChoiceList, SectionHint, SectionLabel } from './shared';
+import { ChoiceRow, MultiChoiceList, SectionHint, SectionLabel } from './shared';
 import {
-  INITIAL_FORM_DATA,
-  type Attachment,
   type BuddyIDFormData,
-  type DogOrigin,
   type DogSize,
-  type EnergyLevel,
-  type ExerciseDuration,
   type Gender,
-  type HomePeopleBehavior,
-  type Housing,
-  type NewSituations,
   type NeuteredStatus,
-  type Obedience,
-  type SeparationAnxiety,
-  type SleepingPlace,
+  type EnergyLevel,
   type StrangerBehavior,
+  type HomePeopleBehavior,
+  type Obedience,
+  type Attachment,
   type TouchSensitivity,
+  type NewSituations,
+  type Housing,
+  type SleepingPlace,
+  type ExerciseDuration,
+  type DogOrigin,
+  type SeparationAnxiety,
+  INITIAL_FORM_DATA,
 } from './types';
 
 const TOTAL_QUESTIONS = 14;
 const BUDDYID_FORM_KEY = 'buddyid_pending_form';
 
 const STEPS = [
-  'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7',
-  'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14',
-  'consent',
+  'q1','q2','q3','q4','q5','q6','q7b','q8',
+  'qEmail','qPhone','qLocation','q12','q13','q14','consent',
 ] as const;
 type StepKey = typeof STEPS[number];
 
@@ -64,17 +63,13 @@ export default function Flow() {
   function toggleMulti(key: 'leashBehavior' | 'housemates' | 'fears' | 'services' | 'goals', value: string) {
     setForm((prev) => {
       const list = prev[key] as string[];
-      return {
-        ...prev,
-        [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
-      };
+      return { ...prev, [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] };
     });
   }
 
   function goBack() {
-    if (stepIndex === 0) {
-      router.back();
-    } else {
+    if (stepIndex === 0) router.back();
+    else {
       setStepIndex((s) => s - 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
     }
@@ -101,9 +96,7 @@ export default function Flow() {
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) {
-      update('photoUri', result.assets[0].uri);
-    }
+    if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
   }
 
   function isContinueDisabled(): boolean {
@@ -111,9 +104,9 @@ export default function Flow() {
       case 'q1': return form.name.trim().length < 1;
       case 'q2': return form.breed.trim().length < 1 || !form.size;
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
-      case 'q9': return !form.email.includes('@');
-      case 'q10': return form.phone.trim().length < 7;
-      case 'q11': return form.city.trim().length < 2;
+      case 'qEmail': return !form.email.includes('@');
+      case 'qPhone': return form.phone.trim().length < 7;
+      case 'qLocation': return form.city.trim().length < 2;
       case 'consent': return !form.consentDataUse;
       default: return false;
     }
@@ -124,52 +117,40 @@ export default function Flow() {
     : 'Continuar';
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={goBack} hitSlop={12} style={styles.backBtn}>
-          <Text style={styles.backArrow}>←</Text>
+    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+      <View style={s.header}>
+        <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
+          <Text style={s.backArrow}>{'←'}</Text>
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
-        {questionNumber != null ? (
-          <Text style={styles.stepCounter}>{questionNumber} de {TOTAL_QUESTIONS}</Text>
-        ) : (
-          <View style={styles.stepCounterPlaceholder} />
-        )}
+        {questionNumber != null
+          ? <Text style={s.counter}>{questionNumber} de {TOTAL_QUESTIONS}</Text>
+          : <View style={{ width: 60 }} />}
       </View>
 
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
+      <View style={s.progressTrack}>
+        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-      >
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           ref={scrollRef}
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
+          style={s.flex}
+          contentContainerStyle={s.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <StepContent
-            step={currentStep}
-            form={form}
-            update={update}
-            toggleMulti={toggleMulti}
-            pickPhoto={pickPhoto}
-          />
+          <StepContent step={currentStep} form={form} update={update} toggleMulti={toggleMulti} pickPhoto={pickPhoto} />
         </ScrollView>
 
-        <View style={styles.footer}>
-          <Button
-            label={continueLabel}
+        <View style={s.footer}>
+          <TouchableOpacity
+            style={[s.continueBtn, isContinueDisabled() && s.continueBtnDisabled]}
             onPress={goNext}
             disabled={isContinueDisabled()}
-            variant="primary"
-            size="lg"
-          />
+          >
+            <Text style={s.continueBtnText}>{continueLabel}</Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -191,14 +172,14 @@ function StepContent({ step, form, update, toggleMulti, pickPhoto }: StepProps) 
     case 'q3': return <Q3 form={form} update={update} />;
     case 'q4': return <Q4 form={form} update={update} />;
     case 'q5': return <Q5 form={form} toggleMulti={toggleMulti} />;
-    case 'q6': return <Q6 form={form} update={update} />;
-    case 'q7': return <Q7 form={form} update={update} />;
+    case 'q6': return <Q6 form={form} update={update} toggleMulti={toggleMulti} />;
+    case 'q7b': return <Q7b form={form} update={update} />;
     case 'q8': return <Q8 form={form} update={update} />;
-    case 'q9': return <Q9 form={form} update={update} />;
-    case 'q10': return <Q10 form={form} update={update} />;
-    case 'q11': return <Q11 form={form} update={update} />;
+    case 'qEmail': return <QEmail form={form} update={update} />;
+    case 'qPhone': return <QPhone form={form} update={update} />;
+    case 'qLocation': return <QLocation form={form} update={update} />;
     case 'q12': return <Q12 form={form} toggleMulti={toggleMulti} />;
-    case 'q13': return <Q13 form={form} update={update} />;
+    case 'q13': return <Q13 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q14': return <Q14 form={form} toggleMulti={toggleMulti} />;
     case 'consent': return <Consent form={form} update={update} />;
   }
@@ -207,17 +188,13 @@ function StepContent({ step, form, update, toggleMulti, pickPhoto }: StepProps) 
 function Q1({ form, update, pickPhoto }: Pick<StepProps, 'form' | 'update' | 'pickPhoto'>) {
   return (
     <View>
-      <Text style={s.title}>Como se chama o teu cão?</Text>
-      <TouchableOpacity onPress={pickPhoto} style={s.photoBox} activeOpacity={0.8}>
-        {form.photoUri ? (
-          <Image source={{ uri: form.photoUri }} style={s.photoImage} />
-        ) : (
-          <View style={s.photoPlaceholder}>
-            <Text style={s.photoIcon}>📷</Text>
-            <Text style={s.photoHint}>Adicionar foto</Text>
-          </View>
-        )}
+      <Text style={s.question}>Como se chama o teu cão?</Text>
+      <TouchableOpacity style={s.photoCircle} onPress={pickPhoto}>
+        {form.photoUri
+          ? <Image source={{ uri: form.photoUri }} style={s.photoImg} />
+          : <View style={s.photoPlaceholder} />}
       </TouchableOpacity>
+      <Text style={s.photoLabel}>Foto</Text>
       <SectionLabel>Nome do cão</SectionLabel>
       <TextInput
         style={s.input}
@@ -225,20 +202,16 @@ function Q1({ form, update, pickPhoto }: Pick<StepProps, 'form' | 'update' | 'pi
         placeholderTextColor={colors.textMuted}
         value={form.name}
         onChangeText={(v) => update('name', v)}
-        autoFocus
-        autoCapitalize="words"
-        returnKeyType="done"
       />
     </View>
   );
 }
 
-const DOG_SIZES: DogSize[] = ['XS', 'S', 'M', 'L', 'XL'];
-
 function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  const sizes: DogSize[] = ['XS', 'S', 'M', 'L', 'XL'];
   return (
     <View>
-      <Text style={s.title}>Qual é a raça do teu cão?</Text>
+      <Text style={s.question}>Qual é a raça do teu cão?</Text>
       <SectionLabel>Raça</SectionLabel>
       <TextInput
         style={s.input}
@@ -246,21 +219,17 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
         placeholderTextColor={colors.textMuted}
         value={form.breed}
         onChangeText={(v) => update('breed', v)}
-        autoFocus
-        autoCapitalize="words"
-        returnKeyType="done"
       />
-      <Divider />
       <SectionLabel>Tamanho</SectionLabel>
       <View style={s.sizeRow}>
-        {DOG_SIZES.map((size) => (
-          <ChoiceButton
-            key={size}
-            label={size}
-            selected={form.size === size}
-            onPress={() => update('size', size)}
-            style={s.sizeBtn}
-          />
+        {sizes.map((sz) => (
+          <TouchableOpacity
+            key={sz}
+            style={[s.sizeBtn, form.size === sz && s.sizeBtnOn]}
+            onPress={() => update('size', sz)}
+          >
+            <Text style={[s.sizeBtnText, form.size === sz && s.sizeBtnTextOn]}>{sz}</Text>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -270,7 +239,7 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
 function Q3({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Idade, género e condição</Text>
+      <Text style={s.question}>Idade, género e condição</Text>
       <SectionLabel>Idade</SectionLabel>
       <TextInput
         style={s.input}
@@ -278,23 +247,13 @@ function Q3({ form, update }: Pick<StepProps, 'form' | 'update'>) {
         placeholderTextColor={colors.textMuted}
         value={form.age}
         onChangeText={(v) => update('age', v)}
-        returnKeyType="done"
       />
-      <Divider />
+      <View style={s.divider} />
       <SectionLabel>Género</SectionLabel>
-      <ChoiceRow
-        options={['Macho', 'Fêmea']}
-        selected={form.gender}
-        onSelect={(v) => update('gender', v as Gender)}
-        columns={2}
-      />
-      <Divider />
+      <ChoiceRow options={['Macho', 'Fêmea']} selected={form.gender} onSelect={(v) => update('gender', v as Gender)} columns={2} />
+      <View style={s.divider} />
       <SectionLabel>Castrado / Esterilizado</SectionLabel>
-      <ChoiceRow
-        options={['Sim', 'Não', 'Não sei']}
-        selected={form.neutered}
-        onSelect={(v) => update('neutered', v as NeuteredStatus)}
-      />
+      <ChoiceRow options={['Sim', 'Não', 'Não sei']} selected={form.neutered} onSelect={(v) => update('neutered', v as NeuteredStatus)} />
     </View>
   );
 }
@@ -302,145 +261,143 @@ function Q3({ form, update }: Pick<StepProps, 'form' | 'update'>) {
 function Q4({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Nível de energia</Text>
-      <SectionHint>Escolhe a que melhor descreve o teu cão.</SectionHint>
-      <ChoiceRow
-        options={['Calmo', 'Moderado', 'Muito ativo']}
-        selected={form.energy}
-        onSelect={(v) => update('energy', v as EnergyLevel)}
-      />
-      <Divider />
+      <Text style={s.question}>Como se comporta o teu cão?</Text>
+      <SectionHint>Uma opção por linha.</SectionHint>
+      <SectionLabel>Energia</SectionLabel>
+      <SectionHint>Excitabilidade geral</SectionHint>
+      <ChoiceRow options={['Calmo', 'Moderado', 'Muito ativo']} selected={form.energy} onSelect={(v) => update('energy', v as EnergyLevel)} />
+      <View style={s.divider} />
       <SectionLabel>Com estranhos</SectionLabel>
-      <ChoiceRow
-        options={['Amigável', 'Reservado', 'Reativo']}
-        selected={form.withStrangers}
-        onSelect={(v) => update('withStrangers', v as StrangerBehavior)}
-      />
-      <Divider />
+      <SectionHint>Sociabilidade / reatividade</SectionHint>
+      <ChoiceRow options={['Amigável', 'Reservado', 'Reativo']} selected={form.withStrangers} onSelect={(v) => update('withStrangers', v as StrangerBehavior)} />
+      <View style={s.divider} />
       <SectionLabel>Com pessoas de casa</SectionLabel>
-      <ChoiceRow
-        options={['Nunca', 'Raramente', 'Por vezes']}
-        selected={form.withHomePeople}
-        onSelect={(v) => update('withHomePeople', v as HomePeopleBehavior)}
-      />
+      <SectionHint>Agressividade dirigida (C-BARQ)</SectionHint>
+      <ChoiceRow options={['Nunca', 'Raramente', 'Por vezes']} selected={form.withHomePeople} onSelect={(v) => update('withHomePeople', v as HomePeopleBehavior)} />
+      <View style={s.divider} />
+      <SectionLabel>Obediência</SectionLabel>
+      <SectionHint>Treino e atenção</SectionHint>
+      <ChoiceRow options={['Aprende rápido', 'Seletivo', 'Difícil']} selected={form.obedience} onSelect={(v) => update('obedience', v as Obedience)} />
+      <View style={s.divider} />
+      <SectionLabel>Apego</SectionLabel>
+      <SectionHint>Dependência do tutor</SectionHint>
+      <ChoiceRow options={['Independente', 'Equilibrado', 'Colado']} selected={form.attachment} onSelect={(v) => update('attachment', v as Attachment)} />
+      <View style={s.divider} />
+      <SectionLabel>Ao toque</SectionLabel>
+      <SectionHint>Sensibilidade / manipulação</SectionHint>
+      <ChoiceRow options={['Tranquilo', 'Tolerante', 'Sensível']} selected={form.touchSensitivity} onSelect={(v) => update('touchSensitivity', v as TouchSensitivity)} />
+      <View style={s.divider} />
+      <SectionLabel>Situações novas</SectionLabel>
+      <SectionHint>Medo / curiosidade</SectionHint>
+      <ChoiceRow options={['Curioso', 'Cauteloso', 'Assustado']} selected={form.newSituations} onSelect={(v) => update('newSituations', v as NewSituations)} />
     </View>
   );
 }
-
-const LEASH_OPTIONS = [
-  'Puxa muito',
-  'Puxa moderadamente',
-  'Anda bem',
-  'Reage a outros cães',
-  'Reage a pessoas',
-  'Reage a veículos',
-];
 
 function Q5({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
+  const options = ['Anda calmo ao meu lado','Puxa muito','É reativo a outros cães','É reativo a pessoas','É reativo a bicicletas ou carros','Depende do dia'];
   return (
     <View>
-      <Text style={s.title}>Comportamento na trela</Text>
+      <Text style={s.question}>Na trela, o teu cão...</Text>
+      <MultiChoiceList options={options} selected={form.leashBehavior} onToggle={(v) => toggleMulti('leashBehavior', v)} />
+    </View>
+  );
+}
+
+function Q6({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
+  const housingOpts: Housing[] = ['Apartamento', 'Casa sem jardim', 'Casa com jardim', 'Quinta / rural'];
+  const sleepOpts: SleepingPlace[] = ['Na cama', 'No sofá', 'Cama própria', 'No exterior'];
+  const exerciseOpts: ExerciseDuration[] = ['< 30 min', '30–60 min', '> 60 min'];
+  return (
+    <View>
+      <Text style={s.question}>Onde vivem juntos?</Text>
+      <ChoiceRow options={housingOpts} selected={form.housing} onSelect={(v) => update('housing', v as Housing)} columns={2} />
+      <View style={s.divider} />
+      <SectionLabel>Quem mais vive em casa?</SectionLabel>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList
-        options={LEASH_OPTIONS}
-        selected={form.leashBehavior}
-        onToggle={(v) => toggleMulti('leashBehavior', v)}
-      />
+      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
+      <View style={s.divider} />
+      <SectionLabel>Onde dorme?</SectionLabel>
+      <ChoiceRow options={sleepOpts} selected={form.sleepingPlace} onSelect={(v) => update('sleepingPlace', v as SleepingPlace)} columns={2} />
+      <View style={s.divider} />
+      <SectionLabel>Exercício diário</SectionLabel>
+      <ChoiceRow options={exerciseOpts} selected={form.exerciseDuration} onSelect={(v) => update('exerciseDuration', v as ExerciseDuration)} />
     </View>
   );
 }
 
-function Q6({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function Q7b({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  const origins: DogOrigin[] = ['Adotei de um canil ou associação','Comprei de um criador','Resgatei da rua','Recebi de alguém','Outra forma'];
   return (
     <View>
-      <Text style={s.title}>Comportamento com estranhos e em casa</Text>
-      <SectionLabel>Com estranhos</SectionLabel>
-      <ChoiceRow
-        options={['Amigável', 'Reservado', 'Assustado', 'Protetor', 'Agressivo']}
-        selected={form.withStrangers}
-        onSelect={(v) => update('withStrangers', v as StrangerBehavior)}
-      />
-      <Divider />
-      <SectionLabel>Com pessoas de casa</SectionLabel>
-      <ChoiceRow
-        options={['Nunca', 'Raramente', 'Por vezes']}
-        selected={form.withHomePeople}
-        onSelect={(v) => update('withHomePeople', v as HomePeopleBehavior)}
-      />
-    </View>
-  );
-}
-
-function Q7({ form, update }: Pick<StepProps, 'form' | 'update'>) {
-  return (
-    <View>
-      <Text style={s.title}>Obediência</Text>
-      <ChoiceRow
-        options={['Aprende rápido', 'Seletivo', 'Difícil']}
-        selected={form.obedience}
-        onSelect={(v) => update('obedience', v as Obedience)}
+      <Text style={s.question}>Como se encontraram?</Text>
+      <MultiChoiceList options={origins} selected={form.origin ? [form.origin] : []} onToggle={(v) => update('origin', v as DogOrigin)} />
+      <View style={s.divider} />
+      <SectionLabel>Alguma história traumática?</SectionLabel>
+      <SectionHint>Opcional — ajuda-nos a ser mais cuidadosos.</SectionHint>
+      <TextInput
+        style={[s.input, s.inputMultiline]}
+        placeholder="Ex: Teve um acidente, foi maltratado, tem medo de homens..."
+        placeholderTextColor={colors.textMuted}
+        value={form.traumaHistory || ''}
+        onChangeText={(v) => update('traumaHistory', v)}
+        multiline
+        numberOfLines={4}
+        textAlignVertical="top"
       />
     </View>
   );
 }
 
 function Q8({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  const options: SeparationAnxiety[] = ['Fica calmo e tranquilo','Ladra ou range um pouco','Fica muito ansioso','Destrói coisas quando fico fora','Nunca o deixo sozinho','Não sei'];
   return (
     <View>
-      <Text style={s.title}>Nível de apego</Text>
-      <ChoiceRow
-        options={['Independente', 'Equilibrado', 'Colado']}
-        selected={form.attachment}
-        onSelect={(v) => update('attachment', v as Attachment)}
-      />
+      <Text style={s.question}>Como fica quando ficas fora?</Text>
+      <MultiChoiceList options={options} selected={form.separationAnxiety ? [form.separationAnxiety] : []} onToggle={(v) => update('separationAnxiety', v as SeparationAnxiety)} />
     </View>
   );
 }
 
-function Q9({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function QEmail({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Qual é o teu email?</Text>
+      <Text style={s.question}>Qual é o teu email?</Text>
       <TextInput
-        style={s.input}
+        style={[s.input, { marginTop: spacing[8] }]}
         placeholder="email@exemplo.com"
         placeholderTextColor={colors.textMuted}
         value={form.email}
-        onChangeText={(v) => update('email', v.toLowerCase().trim())}
+        onChangeText={(v) => update('email', v)}
         keyboardType="email-address"
         autoCapitalize="none"
-        autoComplete="email"
-        autoFocus
-        returnKeyType="done"
       />
-      <Text style={s.fieldHint}>Os teus dados são privados e nunca partilhados.</Text>
+      <Text style={s.hint}>Os teus dados são privados e nunca partilhados.</Text>
     </View>
   );
 }
 
-function Q10({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function QPhone({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Qual é o teu telemóvel?</Text>
+      <Text style={s.question}>Qual é o teu telemóvel?</Text>
       <TextInput
-        style={s.input}
+        style={[s.input, { marginTop: spacing[8] }]}
         placeholder="+351 912 345 678"
         placeholderTextColor={colors.textMuted}
         value={form.phone}
         onChangeText={(v) => update('phone', v)}
         keyboardType="phone-pad"
-        autoFocus
-        returnKeyType="done"
       />
-      <Text style={s.fieldHint}>Só para confirmação de reservas.</Text>
+      <Text style={s.hint}>Só para confirmação de reservas.</Text>
     </View>
   );
 }
 
-function Q11({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function QLocation({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Onde moras?</Text>
+      <Text style={s.question}>Onde moras?</Text>
       <SectionLabel>Cidade</SectionLabel>
       <TextInput
         style={s.input}
@@ -448,86 +405,64 @@ function Q11({ form, update }: Pick<StepProps, 'form' | 'update'>) {
         placeholderTextColor={colors.textMuted}
         value={form.city}
         onChangeText={(v) => update('city', v)}
-        autoFocus
-        autoCapitalize="words"
-        returnKeyType="done"
       />
+      <View style={s.optionalRow}>
+        <SectionLabel>Código postal</SectionLabel>
+        <Text style={s.optional}>opcional</Text>
+      </View>
+      <TextInput
+        style={s.input}
+        placeholder="ex: 1050-012"
+        placeholderTextColor={colors.textMuted}
+        value={form.postalCode || ''}
+        onChangeText={(v) => update('postalCode', v)}
+        keyboardType="numbers-and-punctuation"
+      />
+      <Text style={s.hint}>Usamos a tua localização para encontrar prestadores perto de ti.</Text>
     </View>
   );
 }
-
-const HOUSING_OPTIONS: Housing[] = ['Apartamento', 'Casa sem jardim', 'Casa com jardim', 'Quinta / rural'];
 
 function Q12({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
+  const options = ['Trovões e relâmpagos','Fogos de artifício','Outros cães','Pessoas estranhas','Carros e motas','Não tem medos conhecidos'];
   return (
     <View>
-      <Text style={s.title}>Onde vivem juntos?</Text>
+      <Text style={s.question}>O teu cão tem medos ou fobias?</Text>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList
-        options={HOUSING_OPTIONS}
-        selected={form.housemates}
-        onToggle={(v) => toggleMulti('housemates', v)}
-      />
+      <MultiChoiceList options={options} selected={form.fears} onToggle={(v) => toggleMulti('fears', v)} />
     </View>
   );
 }
 
-const SLEEP_OPTIONS: SleepingPlace[] = ['Na cama', 'No sofá', 'Cama própria', 'No exterior'];
-const SEPARATION_OPTIONS: SeparationAnxiety[] = [
-  'Fica calmo e tranquilo',
-  'Ladra ou range um pouco',
-  'Fica muito ansioso',
-  'Destrói coisas quando fico fora',
-  'Nunca o deixo sozinho',
-  'Não sei',
-];
-
-function Q13({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function Q13({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
+  const options = ['Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Veterinário','Outro'];
   return (
     <View>
-      <Text style={s.title}>Rotina e ansiedade</Text>
-      <SectionLabel>Onde dorme?</SectionLabel>
-      <ChoiceRow
-        options={SLEEP_OPTIONS}
-        selected={form.sleepingPlace}
-        onSelect={(v) => update('sleepingPlace', v as SleepingPlace)}
-        columns={2}
-      />
-      <Divider />
-      <SectionLabel>Quando ficas fora de casa, o teu cão...</SectionLabel>
-      {SEPARATION_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          onPress={() => update('separationAnxiety', opt as SeparationAnxiety)}
-          style={[s.listRow, form.separationAnxiety === opt && s.listRowSelected]}
-          activeOpacity={0.8}
-        >
-          <Text style={[s.listRowText, form.separationAnxiety === opt && s.listRowTextSelected]}>
-            {opt}
-          </Text>
-        </TouchableOpacity>
-      ))}
+      <Text style={s.question}>Que serviços normalmente usas?</Text>
+      <SectionHint>Podes escolher mais de uma.</SectionHint>
+      <MultiChoiceList options={options} selected={form.services} onToggle={(v) => toggleMulti('services', v)} />
+      {form.services.includes('Outro') && (
+        <>
+          <SectionLabel>Qual serviço?</SectionLabel>
+          <TextInput
+            style={s.input}
+            placeholder="Descreve o serviço que procuras..."
+            placeholderTextColor={colors.textMuted}
+            value={form.customService || ''}
+            onChangeText={(v) => update('customService', v)}
+          />
+        </>
+      )}
     </View>
   );
 }
-
-const GOAL_OPTIONS = [
-  'Encontrar serviços',
-  'Acompanhar saúde',
-  'Partilhar perfil',
-  'Participar na comunidade',
-];
 
 function Q14({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
+  const options = ['Mais socialização com outros cães','Melhor saúde e bem-estar','Mais exercício e atividade','Encontrar cuidadores de confiança','Aprender mais sobre o meu cão'];
   return (
     <View>
-      <Text style={s.title}>O que mais queres para o teu cão?</Text>
-      <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList
-        options={GOAL_OPTIONS}
-        selected={form.goals}
-        onToggle={(v) => toggleMulti('goals', v)}
-      />
+      <Text style={s.question}>O que mais queres para o teu cão?</Text>
+      <MultiChoiceList options={options} selected={form.goals} onToggle={(v) => toggleMulti('goals', v)} />
     </View>
   );
 }
@@ -535,203 +470,88 @@ function Q14({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
 function Consent({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.title}>Antes de terminar</Text>
-      <Text style={s.consentSubtitle}>Duas confirmações simples.</Text>
-
-      <TouchableOpacity
-        onPress={() => update('consentMarketing', !form.consentMarketing)}
-        style={[s.consentRow, form.consentMarketing && s.consentRowSelected]}
-        activeOpacity={0.8}
-      >
-        <View style={[s.checkbox, form.consentMarketing && s.checkboxChecked]}>
-          {form.consentMarketing && <Text style={s.checkMark}>✓</Text>}
-        </View>
-        <Text style={s.consentText}>
-          Aceito que os dados do meu cão sejam utilizados para melhorar as recomendações
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => update('consentDataUse', !form.consentDataUse)}
-        style={[s.consentRow, form.consentDataUse && s.consentRowSelected]}
-        activeOpacity={0.8}
-      >
-        <View style={[s.checkbox, form.consentDataUse && s.checkboxChecked]}>
-          {form.consentDataUse && <Text style={s.checkMark}>✓</Text>}
-        </View>
-        <Text style={s.consentText}>
-          Aceito os Termos e Condições
-        </Text>
-      </TouchableOpacity>
+      <Text style={s.question}>Antes de terminar.</Text>
+      <Text style={s.consentSub}>Duas confirmações simples.</Text>
+      <ConsentRow checked={form.consentMarketing} onToggle={() => update('consentMarketing', !form.consentMarketing)} label="Aceito receber comunicações da Buddy sobre o lançamento." />
+      <ConsentRow checked={form.consentDataUse} onToggle={() => update('consentDataUse', !form.consentDataUse)} label="Aceito que a Buddy use estes dados de forma anónima para melhorar os serviços." />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.canvas },
+function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
+  return (
+    <Pressable style={s.consentRow} onPress={onToggle}>
+      <View style={[s.checkbox, checked && s.checkboxOn]}>
+        {checked && <Text style={s.checkmark}>{'✓'}</Text>}
+      </View>
+      <Text style={s.consentLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.canvas },
+  flex: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[6],
     height: 68,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  backBtn: { width: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
-  stepCounter: {
-    fontFamily: font.medium,
-    fontSize: fontSize.sm,
-    color: colors.textMuted,
-    width: 60,
-    textAlign: 'right',
-  },
-  stepCounterPlaceholder: { width: 60 },
-  progressTrack: { height: 3, backgroundColor: colors.border },
+  backBtn: { width: 32 },
+  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.bold },
+  counter: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, width: 60, textAlign: 'right' },
+  progressTrack: { height: 3, backgroundColor: colors.borderSoft },
   progressFill: { height: 3, backgroundColor: colors.primary },
-  flex: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[6],
-    paddingBottom: spacing[10],
-  },
-  footer: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-});
-
-const s = StyleSheet.create({
-  title: {
-    fontFamily: font.bold,
-    fontSize: fontSize.lg,
-    color: colors.text,
-    lineHeight: 28,
-    marginBottom: spacing[5],
-  },
+  scrollContent: { padding: spacing[6], paddingBottom: spacing[10] },
+  question: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[4], lineHeight: 34 },
+  photoCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.surfaceMuted, alignSelf: 'center', marginTop: spacing[4], overflow: 'hidden' },
+  photoPlaceholder: { flex: 1, backgroundColor: colors.surfaceMuted },
+  photoImg: { width: 100, height: 100 },
+  photoLabel: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, textAlign: 'center', marginTop: spacing[2], marginBottom: spacing[5] },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.borderSoft,
     borderRadius: 12,
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
+    paddingVertical: spacing[3],
     fontFamily: font.regular,
     fontSize: fontSize.base,
     color: colors.text,
-    marginBottom: spacing[4],
-  },
-  fieldHint: {
-    fontFamily: font.regular,
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: -spacing[2],
-    marginBottom: spacing[4],
-  },
-  photoBox: {
-    alignSelf: 'center',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.surfaceMuted,
-    borderWidth: 2,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    marginBottom: spacing[5],
-  },
-  photoPlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoIcon: { fontSize: 28 },
-  photoHint: {
-    fontFamily: font.regular,
-    fontSize: fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing[1],
-  },
-  photoImage: { width: '100%', height: '100%' },
-  sizeRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
     marginTop: spacing[2],
+    marginBottom: spacing[4],
   },
-  sizeBtn: { flex: 1, margin: 0 },
-  listRow: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSoft,
-    borderRadius: 12,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    marginBottom: spacing[2],
-  },
-  listRowSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceAccent,
-  },
-  listRowText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-  },
-  listRowTextSelected: {
-    color: colors.primary,
-    fontFamily: font.semiBold,
-  },
-  consentSubtitle: {
-    fontFamily: font.regular,
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-    marginTop: -spacing[3],
-    marginBottom: spacing[6],
-  },
+  inputMultiline: { height: 100, paddingTop: spacing[3] },
+  sizeRow: { flexDirection: 'row', gap: spacing[2], marginTop: spacing[2], marginBottom: spacing[4] },
+  sizeBtn: { flex: 1, borderWidth: 1.5, borderColor: colors.borderSoft, borderRadius: 10, paddingVertical: spacing[3], alignItems: 'center', backgroundColor: colors.surface },
+  sizeBtnOn: { borderColor: colors.primary, backgroundColor: colors.surfaceAccent },
+  sizeBtnText: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textSecondary },
+  sizeBtnTextOn: { color: colors.primary, fontFamily: font.semiBold },
+  divider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: spacing[4] },
+  hint: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textMuted, marginTop: spacing[1], marginBottom: spacing[3] },
+  optionalRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing[2], marginTop: spacing[3] },
+  optional: { fontFamily: font.regular, fontSize: fontSize.xs, color: colors.textMuted },
+  footer: { padding: spacing[4], backgroundColor: colors.canvas },
+  continueBtn: { backgroundColor: colors.primary, borderRadius: 14, paddingVertical: spacing[4], alignItems: 'center' },
+  continueBtnDisabled: { opacity: 0.45 },
+  continueBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
+  consentSub: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, marginBottom: spacing[6] },
   consentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: spacing[4],
+    marginBottom: spacing[3],
+    gap: spacing[3],
     borderWidth: 1.5,
     borderColor: colors.borderSoft,
-    borderRadius: 12,
-    padding: spacing[4],
-    marginBottom: spacing[4],
   },
-  consentRowSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceAccent,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: colors.textMuted,
-    marginRight: spacing[3],
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    marginTop: 2,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkMark: {
-    color: '#fff',
-    fontSize: fontSize.xs,
-    fontFamily: font.bold,
-  },
-  consentText: {
-    flex: 1,
-    fontFamily: font.regular,
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
+  checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderSoft, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
+  checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkmark: { color: '#fff', fontSize: 14, fontFamily: font.bold },
+  consentLabel: { flex: 1, fontFamily: font.regular, fontSize: fontSize.sm, color: colors.text, lineHeight: 20 },
 });

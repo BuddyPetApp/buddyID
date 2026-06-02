@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { colors, font, fontSize, shadows, spacing } from '../tokens';
-import { Button } from '../components/Button';
+import { colors, font, fontSize, spacing } from '../tokens';
 
 const BUDDYID_RESULT_KEY = 'buddyid_result';
 
@@ -17,6 +16,25 @@ interface BuddyIDResult {
   completionPercent: number;
 }
 
+const CONFETTI = [
+  { x: 35, y: 70, w: 13, h: 10, color: '#FF6B6B', r: -15 },
+  { x: 85, y: 40, w: 9, h: 15, color: '#4ECDC4', r: 10 },
+  { x: 145, y: 25, w: 15, h: 11, color: '#FFE66D', r: -5 },
+  { x: 215, y: 55, w: 9, h: 9, color: '#A29BFE', r: 20 },
+  { x: 285, y: 35, w: 9, h: 17, color: '#FD79A8', r: -10 },
+  { x: 340, y: 80, w: 12, h: 9, color: '#6C5CE7', r: 5 },
+  { x: 368, y: 130, w: 11, h: 11, color: '#00B894', r: -20 },
+  { x: 55, y: 165, w: 11, h: 14, color: '#E17055', r: 15 },
+  { x: 315, y: 170, w: 11, h: 7, color: '#74B9FF', r: -8 },
+  { x: 175, y: 95, w: 17, h: 9, color: '#55EFC4', r: 12 },
+  { x: 108, y: 125, w: 10, h: 10, color: '#FDCB6E', r: -18 },
+  { x: 258, y: 105, w: 6, h: 12, color: '#FF7675', r: 8 },
+  { x: 18, y: 115, w: 9, h: 9, color: '#81ECEC', r: -12 },
+  { x: 378, y: 55, w: 9, h: 13, color: '#DFE6E9', r: 18 },
+  { x: 130, y: 65, w: 8, h: 8, color: '#BADC58', r: -6 },
+  { x: 240, y: 80, w: 7, h: 7, color: '#F9CA24', r: 22 },
+];
+
 export default function Success() {
   const [result, setResult] = useState<BuddyIDResult | null>(null);
 
@@ -28,183 +46,142 @@ export default function Success() {
 
   async function handleShare() {
     if (!result) return;
-    await Share.share({
-      message: `O BuddyID do meu cão é ${result.buddyId}!`,
-    });
+    await Share.share({ message: `O BuddyID do ${result.dogName} é ${result.buddyId}! Cria o teu em buddy.pet 🐾` });
   }
 
-  if (!result) {
-    return (
-      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-        <View style={s.flex} />
-      </SafeAreaView>
-    );
-  }
-
-  const initial = result.dogName.charAt(0).toUpperCase();
-  const breedAge = [result.breed, result.age].filter(Boolean).join(' · ');
+  const initial = result?.dogName?.[0]?.toUpperCase() ?? '?';
+  const pct = result?.completionPercent ?? 65;
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <View style={s.celebRow}>
-          <Text style={s.celebEmoji}>🎉</Text>
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        {/* Confetti */}
+        <View style={s.confettiArea} pointerEvents="none">
+          {CONFETTI.map((c, i) => (
+            <View
+              key={i}
+              style={[s.confettiPiece, {
+                left: c.x,
+                top: c.y,
+                width: c.w,
+                height: c.h,
+                backgroundColor: c.color,
+                transform: [{ rotate: `${c.r}deg` }],
+              }]}
+            />
+          ))}
         </View>
 
-        <Text style={s.headline}>BuddyID criado com sucesso!</Text>
+        <Text style={s.title}>O {result?.dogName ?? '...'} está{'\n'}registado!</Text>
 
+        {/* Profile card */}
         <View style={s.card}>
-          <View style={s.avatarRow}>
-            <View style={s.avatar}>
-              <Text style={s.avatarText}>{initial}</Text>
-            </View>
-            <View style={s.cardInfo}>
-              <Text style={s.dogName}>{result.dogName}</Text>
-              {!!breedAge && <Text style={s.breedAge}>{breedAge}</Text>}
-              <Text style={s.buddyId}>{result.buddyId}</Text>
-            </View>
+          <View style={s.avatar}>
+            <Text style={s.avatarText}>{initial}</Text>
           </View>
-
-          <View style={s.completionSection}>
-            <View style={s.completionLabelRow}>
-              <Text style={s.completionLabel}>Perfil completo</Text>
-              <View style={s.completionBadge}>
-                <Text style={s.completionBadgeText}>{result.completionPercent}%</Text>
-              </View>
-            </View>
-            <View style={s.progressTrack}>
-              <View style={[s.progressFill, { width: `${result.completionPercent}%` as any }]} />
+          <View style={s.cardInfo}>
+            <Text style={s.cardName}>{result?.dogName ?? '...'}</Text>
+            <Text style={s.cardBreed}>{result?.breed}{result?.age ? ` · ${result.age}` : ''}</Text>
+            <Text style={s.cardId}>{result?.buddyId}</Text>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>⭐ Membro Fundador</Text>
             </View>
           </View>
         </View>
 
-        <Button
-          label={`Partilhar o BuddyID do ${result.dogName}`}
-          onPress={handleShare}
-          variant="primary"
-          size="lg"
-        />
+        {/* Completion */}
+        <Text style={s.pctLabel}>Perfil {pct}% completo</Text>
+        <View style={s.progressTrack}>
+          <View style={[s.progressFill, { width: `${pct}%` as any }]} />
+        </View>
+        <Text style={s.pctHint}>Quanto mais completo, melhores as recomendações.</Text>
 
-        <View style={s.gap} />
-
-        <TouchableOpacity
-          style={s.secondDogLink}
-          onPress={() => router.push('/buddyid/second-dog' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={s.secondDogText}>Adicionar segundo cão</Text>
+        {/* CTAs */}
+        <TouchableOpacity style={s.btnShare} onPress={handleShare}>
+          <Text style={s.btnShareText}>Partilhar o BuddyID do {result?.dogName ?? '...'}</Text>
         </TouchableOpacity>
-
-        <View style={s.gap} />
-
-        <Button
-          label="Explorar marketplace"
-          onPress={() => router.push('/buddyid/providers' as any)}
-          variant="outline"
-          size="lg"
-        />
+        <TouchableOpacity style={s.btnOutline} onPress={() => router.push('/buddyid/second-dog' as any)}>
+          <Text style={s.btnOutlineText}>Ver perfil completo</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  flex: { flex: 1 },
-  scroll: { paddingHorizontal: spacing[5], paddingBottom: spacing[10] },
-  celebRow: { alignItems: 'center', paddingTop: spacing[8], marginBottom: spacing[4] },
-  celebEmoji: { fontSize: 56 },
-  headline: {
+  safe: { flex: 1, backgroundColor: colors.primary },
+  content: { paddingHorizontal: spacing[4], paddingBottom: spacing[8] },
+  confettiArea: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
+  confettiPiece: { position: 'absolute', borderRadius: 2 },
+  title: {
     fontFamily: font.bold,
-    fontSize: fontSize.xl,
-    color: colors.text,
+    fontSize: fontSize.xxl,
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: spacing[6],
-    lineHeight: 30,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: spacing[5],
-    marginBottom: spacing[6],
-    ...shadows.elevated,
-  },
-  avatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    lineHeight: 42,
+    marginTop: 200,
     marginBottom: spacing[5],
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing[4],
-    flexShrink: 0,
-  },
-  avatarText: {
-    fontFamily: font.bold,
-    fontSize: fontSize.xl,
-    color: '#fff',
-  },
-  cardInfo: { flex: 1 },
-  dogName: {
-    fontFamily: font.bold,
-    fontSize: fontSize.lg,
-    color: colors.text,
-    marginBottom: spacing[1],
-  },
-  breedAge: {
-    fontFamily: font.regular,
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing[1],
-  },
-  buddyId: {
-    fontFamily: font.medium,
-    fontSize: fontSize.sm,
-    color: colors.primary,
-  },
-  completionSection: {},
-  completionLabelRow: {
+  card: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 16,
+    padding: spacing[4],
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing[3],
+    marginBottom: spacing[4],
+  },
+  avatar: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: 'rgba(107,94,191,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  avatarText: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.primary },
+  cardInfo: { flex: 1 },
+  cardName: { fontFamily: font.semiBold, fontSize: fontSize.md, color: colors.text },
+  cardBreed: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, marginTop: 2 },
+  cardId: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: spacing[2],
+    marginTop: spacing[2],
+  },
+  badgeText: { fontFamily: font.medium, fontSize: fontSize.xs, color: '#92400E' },
+  pctLabel: {
+    fontFamily: font.regular,
+    fontSize: fontSize.base,
+    color: 'rgba(255,255,255,0.9)',
     marginBottom: spacing[2],
   },
-  completionLabel: {
-    fontFamily: font.medium,
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  completionBadge: {
-    backgroundColor: colors.success,
-    borderRadius: 20,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-  },
-  completionBadgeText: {
-    fontFamily: font.bold,
+  progressTrack: { height: 5, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 3, marginBottom: spacing[2] },
+  progressFill: { height: 5, backgroundColor: '#fff', borderRadius: 3 },
+  pctHint: {
+    fontFamily: font.regular,
     fontSize: fontSize.xs,
-    color: '#fff',
+    color: 'rgba(255,255,255,0.65)',
+    marginBottom: spacing[5],
   },
-  progressTrack: {
-    height: 6,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: 3,
+  btnShare: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    marginBottom: spacing[3],
   },
-  progressFill: {
-    height: 6,
-    backgroundColor: colors.success,
-    borderRadius: 3,
+  btnShareText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: colors.primary },
+  btnOutline: {
+    borderRadius: 14,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
-  gap: { height: spacing[3] },
-  secondDogLink: { alignItems: 'center', paddingVertical: spacing[3] },
-  secondDogText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.base,
-    color: colors.primary,
-  },
+  btnOutlineText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
 });
