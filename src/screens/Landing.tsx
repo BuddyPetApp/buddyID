@@ -127,6 +127,13 @@ export default function Landing() {
           </View>
         ) : (
           <>
+            <View style={s.introSection}>
+              <Text style={s.introTitle}>Encontra os melhores serviços para o teu cão</Text>
+              <Text style={s.introDesc}>
+                A Buddy liga-te aos melhores prestadores de serviços de Passeio, Pet Sitting, Treino e Banho/Corte. Ao mesmo tempo, o BuddyID analisa o comportamento, saúde e rotinas do teu cão para garantir um acompanhamento totalmente personalizado.
+              </Text>
+            </View>
+
             <View style={s.heroCard}>
               <View style={s.heroDecoration} />
               <Text style={s.heroTitle}>Cria o BuddyID do teu cão</Text>
@@ -178,6 +185,24 @@ const s = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     marginTop: spacing[1],
+  },
+  introSection: {
+    paddingHorizontal: spacing[6],
+    marginTop: spacing[5],
+    marginBottom: spacing[1],
+  },
+  introTitle: {
+    fontFamily: font.bold,
+    fontSize: 22,
+    color: colors.text,
+    lineHeight: 28,
+  },
+  introDesc: {
+    fontFamily: font.regular,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginTop: spacing[2],
   },
   heroCard: {
     marginHorizontal: spacing[6],

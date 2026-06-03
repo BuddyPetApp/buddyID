@@ -97,6 +97,47 @@ export default function SobreNos() {
           </View>
         </View>
 
+        {/* Advisor Section */}
+        <View style={styles.advisorSection}>
+          <Text style={styles.sectionTitle}>Advisor Científico</Text>
+          <View style={styles.advisorCard}>
+            <View style={styles.partnerGlow} />
+            <View style={styles.partnerAccent} />
+            <View style={styles.advisorInner}>
+              <View style={styles.advisorHeader}>
+                <Image
+                  source={require('../../assets/advisor-francisco.jpg')}
+                  style={styles.advisorPhoto}
+                />
+                <View style={styles.advisorTitleContainer}>
+                  <Text style={styles.advisorName}>Francisco Campos</Text>
+                  <Text style={styles.advisorRole}>Treinador e Desportista Canino</Text>
+                </View>
+              </View>
+              <Text style={styles.advisorDesc}>
+                <Text style={styles.advisorDescHighlight}>Francisco Campos</Text>
+                {' - Treinador e desportista canino, compete em IGP ao mais alto nível e já representou Portugal no Campeonato do Mundo. Na Buddy, ajuda-nos a perceber o que realmente importa no comportamento de um cão: que perguntas fazer no '}
+                <Text style={styles.advisorDescHighlight}>BuddyID</Text>
+                {' e o que observar para perceber cada cão.'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Join Us / Contact Team CTA */}
+        <View style={styles.joinSection}>
+          <Text style={styles.joinText}>
+            Estamos à procura de mais pessoas que possam contribuir para este projeto.
+          </Text>
+          <TouchableOpacity
+            style={styles.joinButton}
+            onPress={() => router.push('/buddyid/contacto' as any)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.joinButtonText}>Falar com a equipa</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
       <NavBar />
     </SafeAreaView>
@@ -140,27 +181,17 @@ const PARTNERS: {
     ],
   },
   {
-    source: require('../../assets/partner-bsc-full.png'),
-    logoScale: 2.4,
-    category: 'Supercomputador',
-    desc: [
-      { t: 'Coloca o ' },
-      { t: 'MareNostrum 5', h: true },
-      { t: ' ao serviço da Buddy. Hardware otimizado para ' },
-      { t: 'IA generativa', h: true },
-      { t: ' onde a infraestrutura pode treinar à escala europeia.' },
-    ],
-  },
-  {
     source: require('../../assets/partner-deucalion-correct.png'),
     logoScale: 2.0,
     category: 'Infraestrutura GPU',
     desc: [
-      { t: 'Treina a infraestrutura de IA da Buddy. ' },
-      { t: '33 nós GPU NVIDIA A100', h: true },
-      { t: ', 10 PF, arquitectura híbrida ARM e x86 no MACC em Guimarães. O ' },
+      { t: 'Pela incubação na ' },
+      { t: 'BSC AI Factory', h: true },
+      { t: ', temos acesso ao ' },
+      { t: 'Deucalion', h: true },
+      { t: ', o supercomputador mais potente de Portugal, em Guimarães. É onde vamos treinar os modelos da Buddy. O ' },
       { t: 'motor português', h: true },
-      { t: ' do produto.' },
+      { t: ' por trás do produto.' },
     ],
   },
   {
@@ -488,5 +519,104 @@ const styles = StyleSheet.create({
   partnerDescHighlight: {
     fontFamily: font.semiBold,
     color: colors.primary,
+  },
+  advisorSection: {
+    paddingHorizontal: spacing[5],
+    marginBottom: spacing[6],
+  },
+  advisorCard: {
+    backgroundColor: '#F7F5FC',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    overflow: 'hidden',
+    shadowColor: '#6B5EBF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  advisorInner: {
+    padding: 20,
+  },
+  advisorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  advisorPhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: 'rgba(107, 94, 191, 0.15)',
+  },
+  advisorTitleContainer: {
+    flex: 1,
+  },
+  advisorName: {
+    fontFamily: font.semiBold,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  advisorRole: {
+    fontFamily: font.medium,
+    fontSize: 12,
+    color: colors.primary,
+  },
+  advisorDesc: {
+    fontFamily: font.regular,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  advisorDescHighlight: {
+    fontFamily: font.semiBold,
+    color: colors.primary,
+  },
+  joinSection: {
+    marginHorizontal: 24,
+    marginTop: 12,
+    marginBottom: spacing[6],
+    backgroundColor: '#F1EEFA',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e0d9f5',
+    padding: 24,
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#6B5EBF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  joinText: {
+    fontFamily: font.medium,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  joinButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  joinButtonText: {
+    fontFamily: font.bold,
+    fontSize: 14,
+    color: '#FFFFFF',
   },
 });

@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { apiClient } from '../api/client';
 
 const ICON_EMAIL = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="2" y="5" width="20" height="14" rx="3" stroke="#6B5EBF" stroke-width="1.8"/>
@@ -40,11 +41,11 @@ const ICON_LINKEDIN = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3
 const FAQ_ITEMS = [
   {
     q: 'Quando lança a Buddy?',
-    a: 'Estamos a preparar o lançamento em Lisboa. Cria o teu BuddyID para seres o primeiro a saber.',
+    a: 'Estamos a preparar o lançamento em Portugal. Cria o teu BuddyID para seres o primeiro a saber.',
   },
   {
     q: 'A Buddy é gratuita para tutores?',
-    a: 'Sim. Criar o BuddyID e pesquisar prestadores é sempre gratuito para tutores.',
+    a: 'Sim. Criar o BuddyID e pesquisar prestadores é gratuito para tutores.',
   },
   {
     q: 'Como me torno prestador Buddy?',
@@ -56,14 +57,27 @@ export default function Contacto() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const emailValid = email.trim().length > 0 && email.includes('@');
     if (name.trim().length > 0 && emailValid) {
-      Alert.alert('Mensagem enviada! 🐾', 'Obrigado pelo contacto. Respondemos em breve.');
-      setName('');
-      setEmail('');
-      setMessage('');
+      setSubmitting(true);
+      try {
+        await apiClient.post('/contacts', {
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+        });
+        Alert.alert('Mensagem enviada! 🐾', 'Obrigado pelo contacto. Respondemos em breve.');
+        setName('');
+        setEmail('');
+        setMessage('');
+      } catch (err: any) {
+        Alert.alert('Erro ao enviar', err.message || 'Ocorreu um erro ao enviar a mensagem. Por favor, tenta novamente.');
+      } finally {
+        setSubmitting(false);
+      }
     } else {
       Alert.alert('Campos inválidos', 'Por favor preenche o nome e um email válido.');
     }
@@ -172,8 +186,15 @@ export default function Contacto() {
               textAlignVertical="top"
             />
 
-            <TouchableOpacity style={styles.submitButton} activeOpacity={0.85} onPress={handleSubmit}>
-              <Text style={styles.submitText}>Enviar mensagem</Text>
+            <TouchableOpacity 
+              style={[styles.submitButton, submitting && styles.submitButtonDisabled]} 
+              activeOpacity={0.85} 
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              <Text style={styles.submitText}>
+                {submitting ? 'A enviar...' : 'Enviar mensagem'}
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -191,7 +212,7 @@ export default function Contacto() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2026 Buddy · Lisboa, Portugal</Text>
+          <Text style={styles.footerText}>© 2026 Buddy · Portugal</Text>
         </View>
       </ScrollView>
       <NavBar />
@@ -358,6 +379,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: spacing[4],
     alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitText: {
     fontSize: fontSize.base,
