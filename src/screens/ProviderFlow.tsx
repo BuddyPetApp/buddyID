@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { ChoiceRow, SectionLabel, SectionHint } from './shared';
+import { NavBar } from '../components/NavBar';
 
 // ── Icons ─────────────────────────────────────────────────────────────
 const ICO_BADGE_CHECK = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -192,6 +193,7 @@ export default function ProviderFlow() {
           </View>
         )}
       </KeyboardAvoidingView>
+      {step === 'choose' && <NavBar />}
     </SafeAreaView>
   );
 }
