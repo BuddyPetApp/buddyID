@@ -32,7 +32,7 @@ const MailIcon = ({ color }: { color: string }) => (
 const NAV_ITEMS = [
   { label: 'BuddyID', route: '/buddyid', Icon: ({ color }: any) => <Logomark color={color} size={22} /> },
   { label: 'Sobre nós', route: '/buddyid/sobre-nos', Icon: InfoIcon },
-  { label: 'Parceiros', route: '/buddyid/parceiros', Icon: UsersIcon },
+  { label: 'Juntar-me', route: '/buddyid/parceiros', Icon: UsersIcon },
   { label: 'Contacto', route: '/buddyid/contacto', Icon: MailIcon },
 ];
 
