@@ -1,5 +1,6 @@
-import { Image, View, type ViewStyle } from 'react-native';
+import { Image, TouchableOpacity, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { router } from 'expo-router';
 
 const LOGOMARK_XML = `<svg viewBox="0 0 22.0845 22" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M6.03509 13.8691C7.79362 13.858 9.49463 13.3225 11.0402 12.4994C12.5856 13.3225 14.2867 13.858 16.0452 13.8691C18.0446 13.8817 20.3068 12.9577 21.9726 12.1172C22.006 12.1004 22.0392 12.0836 22.0722 12.0667C21.4525 13.1514 20.6582 14.4344 19.7254 15.7139C18.5437 17.3348 17.1628 18.9178 15.6591 20.0876C14.1511 21.2609 12.5947 21.9613 11.0402 21.9613C9.48563 21.9613 7.92921 21.2609 6.42113 20.0876C4.91749 18.9178 3.53662 17.3348 2.35493 15.7139C1.42208 14.4344 0.627798 13.1514 0.00812366 12.0667C0.0411322 12.0836 0.0743233 12.1004 0.107691 12.1172C1.77345 12.9577 4.03575 13.8817 6.03509 13.8691Z" FILL_ATTR/>
@@ -24,17 +25,21 @@ interface Props {
 export function Logo({ variant = 'dark', size = 'md', style }: Props) {
   const { logoW, logoH } = sizes[size];
   return (
-    <View style={style}>
+    <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/buddyid')} style={style}>
       <Image
         source={variant === 'light' ? logoWhite : logoAccent}
         style={{ width: logoW, height: logoH }}
         resizeMode="contain"
       />
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export function Logomark({ color = '#6B5EBF', size = 40 }: { color?: string; size?: number }) {
   const xml = LOGOMARK_XML.replace(/FILL_ATTR/g, `fill="${color}"`);
-  return <SvgXml xml={xml} width={size} height={size} />;
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/buddyid')}>
+      <SvgXml xml={xml} width={size} height={size} />
+    </TouchableOpacity>
+  );
 }
