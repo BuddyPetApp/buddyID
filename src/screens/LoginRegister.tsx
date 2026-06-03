@@ -26,11 +26,13 @@ export default function LoginRegister() {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   async function handleAuth() {
     if (!email || !password || (!isLogin && !phone)) return;
     
     setLoading(true);
+    setVerificationSent(false);
     
     try {
       if (isLogin) {
@@ -52,7 +54,7 @@ export default function LoginRegister() {
         if (error) throw error;
         
         if (!data.session) {
-          Alert.alert('Verifica o teu email', 'Enviámos um link de verificação. Por favor, verifica a tua caixa de entrada para ativares a conta.');
+          setVerificationSent(true);
           setIsLogin(true);
           return;
         }
@@ -64,7 +66,11 @@ export default function LoginRegister() {
         router.replace('/buddyid/loading' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
       }
     } catch (err: any) {
-      Alert.alert('Erro', err.message || 'Ocorreu um erro ao autenticar.');
+      if (Platform.OS === 'web') {
+        window.alert('Erro: ' + (err.message || 'Ocorreu um erro ao autenticar.'));
+      } else {
+        Alert.alert('Erro', err.message || 'Ocorreu um erro ao autenticar.');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,6 +130,13 @@ export default function LoginRegister() {
               ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para acederes à tua conta e guardarmos o(s) perfil(is)!')
               : 'Cria uma conta para guardarmos o perfil do teu cão.'}
           </Text>
+
+          {verificationSent && (
+            <View style={s.successBanner}>
+              <Text style={s.successTitle}>Verifica o teu email</Text>
+              <Text style={s.successText}>Enviámos um link de verificação. Por favor, verifica a tua caixa de entrada para ativares a conta e poderes fazer login.</Text>
+            </View>
+          )}
 
           <View style={s.form}>
             <SectionLabel>Email</SectionLabel>
@@ -242,4 +255,23 @@ const s = StyleSheet.create({
   continueBtn: { backgroundColor: colors.primary, borderRadius: 14, paddingVertical: spacing[4], alignItems: 'center' },
   continueBtnDisabled: { opacity: 0.45 },
   continueBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
+  successBanner: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing[4],
+    marginBottom: spacing[4],
+  },
+  successTitle: {
+    fontFamily: font.semiBold,
+    fontSize: fontSize.base,
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  successText: {
+    fontFamily: font.regular,
+    fontSize: fontSize.sm,
+    color: '#1B5E20',
+  }
 });
