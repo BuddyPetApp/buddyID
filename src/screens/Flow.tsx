@@ -152,7 +152,21 @@ export default function Flow() {
       case 'q1': return form.name.trim().length < 1;
       case 'q2': return form.breed.trim().length < 1 || !form.size;
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
+      case 'q4': 
+        return !form.energy || !form.withStrangers || !form.withHomePeople || 
+               !form.obedience || !form.attachment || !form.touchSensitivity || 
+               !form.newSituations;
+      case 'q5': return !form.leashBehavior || form.leashBehavior.length === 0;
+      case 'q6': return !form.housing || !form.sleepingPlace || !form.exerciseDuration;
+      case 'q7b': return !form.origin;
+      case 'q8': return !form.separationAnxiety;
       case 'qLocation': return form.city.trim().length < 2;
+      case 'q12': return !form.fears || form.fears.length === 0;
+      case 'q13': 
+        if (!form.services || form.services.length === 0) return true;
+        if (form.services.includes('Outro')) return (form.customService || '').trim().length === 0;
+        return false;
+      case 'q14': return !form.goals || form.goals.length === 0;
       case 'consent': return !form.consentDataUse;
       default: return false;
     }

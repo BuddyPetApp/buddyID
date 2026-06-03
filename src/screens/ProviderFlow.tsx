@@ -130,13 +130,15 @@ export default function ProviderFlow() {
     switch (step) {
       case 'N1': return form.ownerName.trim().length < 2 || form.businessName.trim().length < 2;
       case 'N2': return form.services.trim().length < 3;
-      case 'N4': return form.city.trim().length < 2;
+      case 'N3': return !form.bizExperience;
+      case 'N4': return form.city.trim().length < 2 || form.postalCode.trim().length < 4;
+      case 'N5': return form.website.trim().length < 3;
       case 'N6': return form.phone.trim().length < 7 || !form.email.includes('@');
       case 'F1': return form.freelancerName.trim().length < 2;
       case 'F2': return !form.freelancerService;
       case 'F3': return !form.availability;
       case 'F4': return !form.dogExperience;
-      case 'F5': return form.city.trim().length < 2;
+      case 'F5': return form.city.trim().length < 2 || form.postalCode.trim().length < 4;
       case 'F6': return form.phone.trim().length < 7 || !form.email.includes('@');
       default: return false;
     }
