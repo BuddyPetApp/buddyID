@@ -114,7 +114,7 @@ export default function Landing() {
                   <Text style={s.dogMeta}>
                     {[activeDog.breed, activeDog.gender === 'male' ? 'Macho' : 'Fêmea'].filter(Boolean).join(' · ')}
                   </Text>
-                  <TouchableOpacity style={s.buddyIdBtn} onPress={() => Alert.alert('BuddyID', 'Em breve!')}>
+                  <TouchableOpacity style={s.buddyIdBtn} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
                     <Text style={s.buddyIdBtnText}>Ver BuddyID</Text>
                   </TouchableOpacity>
                 </View>

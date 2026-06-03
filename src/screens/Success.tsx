@@ -110,7 +110,10 @@ export default function Success() {
         )}
 
         {/* Profile card */}
-        <View style={s.card}>
+        <TouchableOpacity
+          style={s.card}
+          onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}
+        >
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initial}</Text>
           </View>
@@ -122,7 +125,7 @@ export default function Success() {
               <Text style={s.badgeText}>⭐ Membro Fundador</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Completion */}
         <Text style={s.pctLabel}>Perfil {pct}% completo</Text>
@@ -132,11 +135,18 @@ export default function Success() {
         <Text style={s.pctHint}>Quanto mais completo, melhores as recomendações.</Text>
 
         {/* CTAs */}
+        <TouchableOpacity
+          style={s.btnComplete}
+          onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}
+        >
+          <Text style={s.btnCompleteText}>Completar Perfil</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={s.btnShare} onPress={handleShare}>
           <Text style={s.btnShareText}>Partilhar o BuddyID do {current?.dogName ?? '...'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.btnOutline} onPress={() => router.replace('/buddyid' as any)}>
-          <Text style={s.btnOutlineText}>Voltar ao Início</Text>
+          <Text style={s.btnOutlineText}>Ir para o Início</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -220,6 +230,14 @@ const s = StyleSheet.create({
     color: 'rgba(255,255,255,0.65)',
     marginBottom: spacing[5],
   },
+  btnComplete: {
+    backgroundColor: colors.accent,
+    borderRadius: 14,
+    paddingVertical: spacing[4],
+    alignItems: 'center',
+    marginBottom: spacing[3],
+  },
+  btnCompleteText: { fontFamily: font.bold, fontSize: fontSize.base, color: '#fff' },
   btnShare: {
     backgroundColor: colors.surface,
     borderRadius: 14,

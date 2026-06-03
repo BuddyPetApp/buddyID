@@ -13,6 +13,11 @@ export default function BuddyIDLayout() {
       <Stack.Screen name="sobre-nos" />
       <Stack.Screen name="parceiros" />
       <Stack.Screen name="contacto" />
+      <Stack.Screen name="dog/[id]/index" />
+      <Stack.Screen name="dog/[id]/edit-basic" />
+      <Stack.Screen name="dog/[id]/edit-habits" />
+      <Stack.Screen name="dog/[id]/edit-behavioral" />
+      <Stack.Screen name="dog/[id]/edit-health" />
     </Stack>
   );
 }
