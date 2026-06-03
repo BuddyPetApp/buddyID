@@ -40,7 +40,7 @@ export default function LoginRegister() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -50,6 +50,12 @@ export default function LoginRegister() {
           }
         });
         if (error) throw error;
+        
+        if (!data.session) {
+          Alert.alert('Verifica o teu email', 'Enviámos um link de verificação. Por favor, verifica a tua caixa de entrada para ativares a conta.');
+          setIsLogin(true);
+          return;
+        }
       }
       
       if (isLoginOnly) {
