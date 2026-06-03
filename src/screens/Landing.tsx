@@ -136,17 +136,21 @@ export default function Landing() {
 
             <View style={s.heroCard}>
               <View style={s.heroDecoration} />
+              <View style={s.heroPill}><Text style={s.heroPillText}>First Pack</Text></View>
               <Text style={s.heroTitle}>Cria o BuddyID do teu cão</Text>
-              <Text style={s.heroSub}>O passaporte digital em 5 minutos.{'\n'}Ajuda-nos a conhecê-lo melhor.</Text>
-              <View style={s.heroCtaRow}>
-                <TouchableOpacity style={s.heroCta} onPress={() => router.push('/buddyid/flow' as any)}>
-                  <Text style={s.heroCtaText}>Começar agora →</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={s.heroLoginBtn} onPress={() => router.push('/buddyid/auth?mode=login_only' as any)}>
-                  <Text style={s.heroLoginText}>Login</Text>
-                </TouchableOpacity>
+              <Text style={s.heroSub}>O passaporte digital que o liga a tudo na cidade. Ajuda-nos a conhecê-lo melhor.</Text>
+              
+              <View style={s.heroDonationStrip}>
+                <Text style={s.heroDonationText}>Por cada perfil concluído doamos <Text style={s.heroDonationHighlight}>1€</Text></Text>
               </View>
+
+              <TouchableOpacity style={s.heroCta} onPress={() => router.push('/buddyid/flow' as any)} activeOpacity={0.88}>
+                <Text style={s.heroCtaText}>Começar agora</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push('/buddyid/auth?mode=login_only' as any)} style={{ marginTop: 12, alignSelf: 'center' }}>
+                <Text style={{ fontFamily: font.medium, color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Já tens conta? Iniciar sessão</Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={s.sectionTitle}>Como funciona</Text>
@@ -161,6 +165,20 @@ export default function Landing() {
                 </View>
               </View>
             ))}
+            
+            <TouchableOpacity
+              style={s.fundCard}
+              onPress={() => router.push('/buddyid/buddy-fund' as any)}
+              activeOpacity={0.88}
+            >
+              <View style={s.fundGlow} />
+              <View style={s.fundPill}><Text style={s.fundPillText}>Buddy Fund</Text></View>
+              <View style={s.fundRow}>
+                <Text style={s.fundTitle}>Um cão com família ajuda um que ainda não tem</Text>
+                <Text style={s.fundChevron}>{'›'}</Text>
+              </View>
+              <Text style={s.fundSub}>Cada serviço na Buddy apoia quem ainda espera por uma casa.</Text>
+            </TouchableOpacity>
           </>
         )}
       </ScrollView>
