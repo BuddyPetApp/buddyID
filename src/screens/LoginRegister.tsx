@@ -48,7 +48,8 @@ export default function LoginRegister() {
           options: {
             data: {
               phone, // Stores phone in user_metadata, will sync to public.users via trigger
-            }
+            },
+            emailRedirectTo: 'https://buddy.pet',
           }
         });
         if (error) throw error;
