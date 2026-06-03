@@ -12,10 +12,10 @@ const LOGO_PATHS = `
   <path d="M613.574 126.201C632.703 126.201 650.046 130.664 665.605 139.591C681.418 148.263 693.788 160.633 702.715 176.702C711.642 192.515 716.105 211.006 716.105 232.176C716.105 253.345 711.642 271.964 702.715 288.033C693.788 303.846 681.418 316.216 665.605 325.143C650.046 333.815 632.703 338.151 613.574 338.151C585.263 338.151 563.711 329.224 548.918 311.37V335.09H491.913V51.2151H551.596V151.069C566.644 134.49 587.303 126.201 613.574 126.201ZM603.244 289.18C618.547 289.18 631.045 284.079 640.737 273.877C650.684 263.42 655.658 249.519 655.658 232.176C655.658 214.832 650.684 201.059 640.737 190.857C631.045 180.4 618.547 175.171 603.244 175.171C587.941 175.171 575.316 180.4 565.369 190.857C555.677 201.059 550.831 214.832 550.831 232.176C550.831 249.519 555.677 263.42 565.369 273.877C575.316 284.079 587.941 289.18 603.244 289.18Z" FILL/>
 `;
 
-const LOGOMARK_PATHS = \`
+const LOGOMARK_PATHS = `
   <path d="M107.114 246.043C138.347 245.846 168.56 236.335 196.01 221.715C223.461 236.335 253.673 245.846 284.907 246.043C320.418 246.268 360.6 229.857 390.186 214.928C390.778 214.629 391.368 214.33 391.954 214.031C380.948 233.296 366.84 256.084 350.272 278.81C329.283 307.598 304.757 335.714 278.05 356.493C251.265 377.332 223.621 389.772 196.01 389.772C168.4 389.772 140.755 377.332 113.97 356.493C87.2636 335.714 62.7374 307.598 41.7489 278.81C25.1802 256.084 11.0726 233.296 0.0664062 214.031C0.652684 214.33 1.2422 214.629 1.83485 214.928C31.421 229.857 71.6025 246.268 107.114 246.043Z" FILL/>
   <path d="M196.01 183.371C180.594 173.507 166.033 161.732 152.851 148.909C134.537 131.093 119.544 111.867 109.235 94.2735C98.6289 76.1746 94.0534 61.6354 94.0534 52.8044C94.0534 38.1778 103.084 25.5308 122.177 15.6604C141.379 5.73303 168.19 0.28833 196.01 0.28833C223.831 0.28833 250.641 5.73303 269.844 15.6604C288.936 25.5308 297.967 38.1778 297.967 52.8044C297.967 61.6354 293.392 76.1746 282.786 94.2735C272.476 111.867 257.483 131.093 239.17 148.909C225.987 161.732 211.427 173.507 196.01 183.371Z" FILL/>
-\`;
+`;
 
 const sizes = {
   sm: { w: 80, h: 20 },
@@ -31,12 +31,12 @@ interface Props {
 
 export function Logo({ variant = 'dark', size = 'md', style }: Props) {
   const color = variant === 'light' ? '#ffffff' : '#6B5EBF';
-  const fill = \`fill="\${color}"\`;
-  const xml = \`<svg viewBox="0 0 1648 413" fill="none" xmlns="http://www.w3.org/2000/svg">\${LOGO_PATHS.replace(/FILL/g, fill)}</svg>\`;
+  const fill = `fill="${color}"`;
+  const xml = `<svg viewBox="0 0 1648 413" fill="none" xmlns="http://www.w3.org/2000/svg">${LOGO_PATHS.replace(/FILL/g, fill)}</svg>`;
   const { w, h } = sizes[size];
   
   return (
-    <Link href="/buddyid" replace asChild>
+    <Link href="https://buddy.pet" replace asChild>
       <TouchableOpacity activeOpacity={0.8} style={style}>
         <SvgXml xml={xml} width={w} height={h} />
       </TouchableOpacity>
@@ -45,11 +45,11 @@ export function Logo({ variant = 'dark', size = 'md', style }: Props) {
 }
 
 export function Logomark({ color = '#6B5EBF', size = 40 }: { color?: string; size?: number }) {
-  const fill = \`fill="\${color}"\`;
-  const xml = \`<svg viewBox="0 0 392 413" fill="none" xmlns="http://www.w3.org/2000/svg">\${LOGOMARK_PATHS.replace(/FILL/g, fill)}</svg>\`;
+  const fill = `fill="${color}"`;
+  const xml = `<svg viewBox="0 0 392 413" fill="none" xmlns="http://www.w3.org/2000/svg">${LOGOMARK_PATHS.replace(/FILL/g, fill)}</svg>`;
   
   return (
-    <Link href="/buddyid" replace asChild>
+    <Link href="https://buddy.pet" replace asChild>
       <TouchableOpacity activeOpacity={0.8}>
         <SvgXml xml={xml} width={size} height={size} />
       </TouchableOpacity>
