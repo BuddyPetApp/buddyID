@@ -212,7 +212,16 @@ export default function Contacto() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2026 Buddy · Portugal</Text>
+          <Text style={styles.footerText}>© 2026 Patinhas d’Açafrão Lda</Text>
+          <View style={styles.footerLinks}>
+            <TouchableOpacity onPress={() => Alert.alert('Termos e Condições', 'Em breve.')}>
+              <Text style={styles.footerLinkText}>Termos e Condições</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerDivider}>·</Text>
+            <TouchableOpacity onPress={() => Alert.alert('Políticas de Privacidade', 'Em breve.')}>
+              <Text style={styles.footerLinkText}>Políticas de Privacidade</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
       <NavBar />
@@ -424,11 +433,30 @@ const styles = StyleSheet.create({
   // Footer
   footer: {
     alignItems: 'center',
-    paddingTop: spacing[4],
+    paddingVertical: spacing[6],
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    marginTop: spacing[8],
   },
   footerText: {
-    fontSize: fontSize.sm,
+    fontSize: 12,
+    fontFamily: font.medium,
+    color: colors.textMuted,
+    marginBottom: spacing[2],
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  footerLinkText: {
+    fontSize: 11,
     fontFamily: font.regular,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+  footerDivider: {
+    fontSize: 11,
     color: colors.textMuted,
   },
 });
