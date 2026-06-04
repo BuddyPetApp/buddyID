@@ -57,20 +57,20 @@ const HOW_IT_WORKS = [
 const VISION_CARDS = [
   {
     icon: ICO.badgeCheck,
-    title: 'Os profissionais conhecem-no à chegada',
-    sub: 'Antes, durante e depois de cada serviço, quem o recebe consulta o BuddyID e sabe exatamente como cuidar dele.',
+    title: 'Os profissionais conhecem o teu animal',
+    sub: 'Quem cuida dele tem acesso ao BuddyID para saber exatamente como o tratar.',
     badge: null,
   },
   {
     icon: ICO.store,
     title: 'O marketplace abre este verão',
-    sub: 'Todos os serviços para o teu cão num só lugar. Regista-te agora e a conta fica pronta para o primeiro dia.',
+    sub: 'Encontra todos os serviços num só lugar e reserva de forma rápida e segura.',
     badge: null,
   },
   {
     icon: ICO.sparkles,
     title: 'Recomendações à medida',
-    sub: 'Cada perfil ajuda-nos a perceber que serviços fazem sentido para cada cão. Quanto mais o conhecermos, mais certeiras serão.',
+    sub: 'Sugestões personalizadas e adequadas para cada época do ano com base no perfil.',
     badge: 'Em desenvolvimento',
   },
 ];
@@ -193,13 +193,15 @@ export default function Landing() {
               <View style={s.heroPill}>
                 <Text style={s.heroPillText}>First Pack</Text>
               </View>
-              <Text style={s.heroTitle}>Cria o BuddyID do teu cão</Text>
+              <Text style={s.heroTitle}>
+                Cria o <Text style={s.heroTitleHighlight}>BuddyID</Text> do teu cão
+              </Text>
               <Text style={s.heroSub}>
-                O passaporte digital que o liga a tudo na cidade. Ajuda-nos a conhecê-lo melhor.
+                O passaporte digital do teu cão. Serviços, saúde e histórico num só lugar.
               </Text>
               <View style={s.heroDonationStrip}>
                 <Text style={s.heroDonationText}>
-                  Por cada perfil concluído doamos <Text style={s.heroDonationHighlight}>1€</Text>
+                  Por cada perfil concluído doamos <Text style={s.heroDonationHighlight}>1€</Text> no primeiro serviço
                 </Text>
               </View>
               <TouchableOpacity style={s.heroCta} onPress={() => router.push('/buddyid/flow' as any)} activeOpacity={0.88}>
@@ -209,6 +211,52 @@ export default function Landing() {
               <TouchableOpacity onPress={() => router.push('/buddyid/auth?mode=login_only' as any)} style={{ marginTop: 12, alignSelf: 'center' }}>
                 <Text style={{ fontFamily: font.medium, color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Já tens conta? Iniciar sessão</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* ── Buddy Fund entry card (Moved here and highlighted) ── */}
+            <TouchableOpacity
+              style={s.fundCard}
+              onPress={() => router.push('/buddyid/buddy-fund' as any)}
+              activeOpacity={0.88}
+            >
+              <View style={s.fundGlow} />
+              <View style={s.fundPill}><Text style={s.fundPillText}>Buddy Fund</Text></View>
+              <View style={s.fundRow}>
+                <Text style={s.fundTitle}>Um cão com família ajuda um que ainda não tem</Text>
+              </View>
+              <Text style={s.fundSub}>Por cada serviço, apoiamos um cão à espera de uma família.</Text>
+              <View style={s.fundActionRow}>
+                <Text style={s.fundActionText}>Saber mais</Text>
+                <Text style={s.fundChevron}>{'›'}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* ── Secção: Serviços do Marketplace ── */}
+            <Text style={s.sectionTitle}>Serviços na tua zona</Text>
+            <Text style={s.sectionIntro}>
+              A Buddy facilita a reserva de serviços profissionais. Com base no BuddyID do teu cão, sugerimos os cuidados mais adequados e recomendados para cada época do ano.
+            </Text>
+            <View style={s.servicesGrid}>
+              <View style={s.serviceCard}>
+                <Text style={s.serviceIcon}>🦮</Text>
+                <Text style={s.serviceTitle}>Passeio</Text>
+                <Text style={s.serviceDesc}>Exercício e socialização diária</Text>
+              </View>
+              <View style={s.serviceCard}>
+                <Text style={s.serviceIcon}>🏠</Text>
+                <Text style={s.serviceTitle}>Pet Sitting</Text>
+                <Text style={s.serviceDesc}>Cuidados no conforto do lar</Text>
+              </View>
+              <View style={s.serviceCard}>
+                <Text style={s.serviceIcon}>🎓</Text>
+                <Text style={s.serviceTitle}>Treino</Text>
+                <Text style={s.serviceDesc}>Educação e comportamento positivo</Text>
+              </View>
+              <View style={s.serviceCard}>
+                <Text style={s.serviceIcon}>✂️</Text>
+                <Text style={s.serviceTitle}>Banho e Corte</Text>
+                <Text style={s.serviceDesc}>Higiene e estética especializada</Text>
+              </View>
             </View>
 
             {/* ── Como funciona ── */}
@@ -249,21 +297,6 @@ export default function Landing() {
                 </View>
               </View>
             ))}
-
-            {/* ── Buddy Fund entry card ── */}
-            <TouchableOpacity
-              style={s.fundCard}
-              onPress={() => router.push('/buddyid/buddy-fund' as any)}
-              activeOpacity={0.88}
-            >
-              <View style={s.fundGlow} />
-              <View style={s.fundPill}><Text style={s.fundPillText}>Buddy Fund</Text></View>
-              <View style={s.fundRow}>
-                <Text style={s.fundTitle}>Um cão com família ajuda um que ainda não tem</Text>
-                <Text style={s.fundChevron}>{'›'}</Text>
-              </View>
-              <Text style={s.fundSub}>Cada serviço na Buddy apoia quem ainda espera por uma casa.</Text>
-            </TouchableOpacity>
           </>
         )}
       </ScrollView>
@@ -287,12 +320,14 @@ const s = StyleSheet.create({
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: T.cardBorder,
+    alignItems: 'center',
   },
   headerSub: {
     fontFamily: font.regular,
     fontSize: 11,
     color: T.aux,
     marginTop: 3,
+    textAlign: 'center',
   },
 
   // ── Hero Card ──
@@ -334,6 +369,11 @@ const s = StyleSheet.create({
     marginBottom: spacing[2],
     lineHeight: 26,
   },
+  heroTitleHighlight: {
+    fontFamily: font.bold,
+    fontSize: 24,
+    color: '#fff',
+  },
   heroSub: {
     fontFamily: font.regular,
     fontSize: 13,
@@ -356,6 +396,7 @@ const s = StyleSheet.create({
   },
   heroDonationHighlight: {
     fontFamily: font.bold,
+    fontSize: 18,
     color: '#FFFFFF',
   },
   heroCta: {
@@ -512,7 +553,66 @@ const s = StyleSheet.create({
   fundRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[2], marginBottom: spacing[2] },
   fundTitle: { fontFamily: font.bold, fontSize: 17, color: '#fff', flex: 1, lineHeight: 24 },
   fundSub: { fontFamily: font.regular, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 19 },
-  fundChevron: { fontSize: 24, color: 'rgba(255,255,255,0.6)', fontFamily: font.regular, lineHeight: 28 },
+  fundActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: spacing[3],
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  fundActionText: {
+    fontFamily: font.semiBold,
+    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  fundChevron: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontFamily: font.bold,
+    lineHeight: 16,
+  },
+
+  // ── Services Section ──
+  servicesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginHorizontal: spacing[6],
+    marginBottom: spacing[4],
+  },
+  serviceCard: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e8e0f5',
+    shadowColor: '#6B5EBF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  serviceIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  serviceTitle: {
+    fontFamily: font.bold,
+    fontSize: 14,
+    color: '#1d1a2a',
+    marginBottom: 4,
+  },
+  serviceDesc: {
+    fontFamily: font.regular,
+    fontSize: 11,
+    color: '#70678c',
+    lineHeight: 15,
+  },
 
   // ── Dashboard Styles ──
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200 },

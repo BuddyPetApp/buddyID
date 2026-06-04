@@ -157,7 +157,7 @@ export default function ProviderFlow() {
         <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
           <Text style={s.backArrow}>{'←'}</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Junta-te a nós</Text>
+        <Logo variant="dark" size="sm" />
         {current != null
           ? <Text style={s.counter}>{current} de {total}</Text>
           : <View style={{ width: 60 }} />}
@@ -229,12 +229,28 @@ function StepContent({
 }
 
 // ── Ecrã 0: Escolha do caminho ───────────────────────────────────────
+const ICO_STORE = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 9l1-6h16l1 6" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M5 21V9M19 9v12H9V9" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="9" y="15" width="4" height="6" rx="0.5" stroke="#FFFFFF" stroke-width="1.75"/>
+</svg>`;
+
+const ICO_PAW = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 14c-1.66 0-3 1.34-3 3 0 1.66 1.34 2 3 2s3-.34 3-2c0-1.66-1.34-3-3-3z" fill="#FFFFFF"/>
+  <circle cx="7.5" cy="10.5" r="1.5" fill="#FFFFFF"/>
+  <circle cx="10.5" cy="7.5" r="1.5" fill="#FFFFFF"/>
+  <circle cx="13.5" cy="7.5" r="1.5" fill="#FFFFFF"/>
+  <circle cx="16.5" cy="10.5" r="1.5" fill="#FFFFFF"/>
+</svg>`;
+
 const PATH_CARDS: {
   pill: string;
   title: string;
   hook: string;
   btnLabel: string;
   branch: Branch;
+  icon: string;
 }[] = [
   {
     pill: 'Já tenho negócio',
@@ -242,6 +258,7 @@ const PATH_CARDS: {
     hook: 'Apareces primeiro aos tutores da tua zona, desde o dia um.',
     btnLabel: 'Quero ser parceiro',
     branch: 'negocio',
+    icon: ICO_STORE,
   },
   {
     pill: 'Começo do zero',
@@ -249,6 +266,7 @@ const PATH_CARDS: {
     hook: 'Defines o teu horário e trabalhas ao teu ritmo.',
     btnLabel: 'Quero começar',
     branch: 'freelancer',
+    icon: ICO_PAW,
   },
 ];
 
@@ -262,8 +280,8 @@ function ChoosePath({ chooseBranch }: { chooseBranch: (b: Branch) => void }) {
 
       {/* Título com realce */}
       <Text style={s.questionTitle}>
-        <Text style={s.questionTitleAccent}>Sê dos primeiros</Text>
-        {' a trabalhar com cães na Buddy'}
+        <Text style={s.questionTitleAccent}>Faz parte</Text>
+        {' dos primeiros prestadores na Buddy'}
       </Text>
 
       {/* Subtítulo */}
@@ -286,19 +304,24 @@ function ChoosePath({ chooseBranch }: { chooseBranch: (b: Branch) => void }) {
   );
 }
 
-function PathCard({ pill, title, hook, btnLabel, onPress }: {
-  pill: string; title: string; hook: string; btnLabel: string; onPress: () => void;
+function PathCard({ pill, title, hook, btnLabel, icon, onPress }: {
+  pill: string; title: string; hook: string; btnLabel: string; icon: string; onPress: () => void;
 }) {
   return (
     <View style={s.pathCard}>
       <View style={s.pathGlow} />
-      <View style={s.pathPill}><Text style={s.pathPillText}>{pill}</Text></View>
+      <View style={s.pathRow}>
+        <View style={s.pathPill}><Text style={s.pathPillText}>{pill}</Text></View>
+        <View style={s.pathIconWrap}>
+          <SvgXml xml={icon} width={22} height={22} />
+        </View>
+      </View>
       <Text style={s.pathTitle}>{title}</Text>
       <Text style={s.pathHook}>{hook}</Text>
       <View style={s.pathStrip}>
         <Text style={s.pathStripText}>
           <Text style={s.pathStripBold}>0%</Text>
-          {' de comissão no primeiro ano para quem entra no pré-lançamento.'}
+          {' de comissão nos primeiros 6 meses para quem entra no pré-lançamento.'}
         </Text>
       </View>
       <TouchableOpacity style={s.pathBtn} onPress={onPress} activeOpacity={0.85}>
@@ -590,7 +613,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: { width: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  backBtn: { width: 60, alignItems: 'flex-start', justifyContent: 'center' },
   backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
   headerTitle: { fontFamily: font.semiBold, fontSize: fontSize.base, color: colors.text },
   counter: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textMuted, width: 60, textAlign: 'right' },
@@ -659,13 +682,26 @@ const s = StyleSheet.create({
     borderRadius: 80,
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
+  pathRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[3],
+  },
+  pathIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   pathPill: {
     alignSelf: 'flex-start',
     backgroundColor: '#FFFFFF',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginBottom: spacing[3],
   },
   pathPillText: { fontFamily: font.semiBold, fontSize: 11, color: colors.primary },
   pathTitle: {
@@ -674,6 +710,7 @@ const s = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: spacing[2],
     lineHeight: 26,
+    marginTop: spacing[2],
   },
   pathHook: {
     fontFamily: font.regular,
@@ -697,6 +734,7 @@ const s = StyleSheet.create({
   },
   pathStripBold: {
     fontFamily: font.bold,
+    fontSize: 18,
     color: '#FFFFFF',
   },
   pathBtn: {
