@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Image,
@@ -272,7 +273,15 @@ function Q1({ form, update, pickPhoto }: Pick<StepProps, 'form' | 'update' | 'pi
 }
 
 function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
-  const sizes: DogSize[] = ['XS', 'S', 'M', 'L', 'XL'];
+  const { i18n } = useTranslation();
+  const isEn = i18n.language?.startsWith('en');
+  const sizes: { value: DogSize; label: string }[] = [
+    { value: 'XS', label: isEn ? '(up to 5 kg)' : '(até 5 kg)' },
+    { value: 'S', label: '(5–10 kg)' },
+    { value: 'M', label: '(10–25 kg)' },
+    { value: 'L', label: '(25–40 kg)' },
+    { value: 'XL', label: isEn ? '(over 40 kg)' : '(mais de 40 kg)' },
+  ];
   return (
     <View>
       <Text style={s.question}>Qual é a raça do teu cão?</Text>
@@ -285,14 +294,16 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
         onChangeText={(v) => update('breed', v)}
       />
       <SectionLabel>Tamanho</SectionLabel>
-      <View style={s.sizeRow}>
-        {sizes.map((sz) => (
+      <View style={s.sizeCol}>
+        {sizes.map((item) => (
           <TouchableOpacity
-            key={sz}
-            style={[s.sizeBtn, form.size === sz && s.sizeBtnOn]}
-            onPress={() => update('size', sz)}
+            key={item.value}
+            style={[s.sizeBtnCol, form.size === item.value && s.sizeBtnOn]}
+            onPress={() => update('size', item.value)}
           >
-            <Text style={[s.sizeBtnText, form.size === sz && s.sizeBtnTextOn]}>{sz}</Text>
+            <Text style={[s.sizeBtnTextCol, form.size === item.value && s.sizeBtnTextOn]}>
+              <Text style={[s.sizeBtnLetter, form.size === item.value && { color: colors.primary }]}>{item.value}</Text> {item.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -593,8 +604,12 @@ const s = StyleSheet.create({
   inputMultiline: { height: 100, paddingTop: spacing[3] },
   sizeRow: { flexDirection: 'row', gap: spacing[2], marginTop: spacing[2], marginBottom: spacing[4] },
   sizeBtn: { flex: 1, borderWidth: 1.5, borderColor: colors.borderSoft, borderRadius: 10, paddingVertical: spacing[3], alignItems: 'center', backgroundColor: colors.surface },
+  sizeCol: { flexDirection: 'column', gap: spacing[2], marginTop: spacing[2], marginBottom: spacing[4] },
+  sizeBtnCol: { borderWidth: 1.5, borderColor: colors.borderSoft, borderRadius: 12, paddingVertical: spacing[4], paddingHorizontal: spacing[4], backgroundColor: colors.surface },
   sizeBtnOn: { borderColor: colors.primary, backgroundColor: colors.surfaceAccent },
   sizeBtnText: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textSecondary },
+  sizeBtnTextCol: { fontFamily: font.medium, fontSize: fontSize.base, color: colors.textSecondary },
+  sizeBtnLetter: { fontFamily: font.bold, color: colors.text },
   sizeBtnTextOn: { color: colors.primary, fontFamily: font.semiBold },
   divider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: spacing[4] },
   hint: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textMuted, marginTop: spacing[1], marginBottom: spacing[3] },

@@ -33,6 +33,7 @@ import {
   DOG_BREEDS_PT,
   GENDER_LABELS_PT,
   SIZE_LABELS_PT,
+  SIZE_LABELS_EN,
   TEMPERAMENT_LABELS_PT,
   ageFromBirthdate,
   type DogGender,
@@ -69,7 +70,7 @@ function displayToIso(display: string): string | null {
 }
 
 export default function EditBasicInfo({ id }: { id?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -147,9 +148,12 @@ export default function EditBasicInfo({ id }: { id?: string }) {
     { value: 'unknown', label: t('tutor.editBasicInfo.preferNotToSay') },
   ];
 
+  const isEn = i18n.language?.startsWith('en');
+  const sizeLabels = isEn ? SIZE_LABELS_EN : SIZE_LABELS_PT;
+
   const sizeOptions: PickerOption<DogSize>[] = (
     ['xs', 'sm', 'md', 'lg', 'xl'] as DogSize[]
-  ).map((v) => ({ value: v, label: SIZE_LABELS_PT[v] }));
+  ).map((v) => ({ value: v, label: sizeLabels[v] }));
 
   const age = ageFromBirthdate(birthdate || undefined);
   const birthdateDisplay = birthdate
@@ -447,7 +451,7 @@ export default function EditBasicInfo({ id }: { id?: string }) {
 
             <RowButton
               label={t('tutor.editBasicInfo.size')}
-              value={size ? SIZE_LABELS_PT[size] : undefined}
+              value={size ? sizeLabels[size] : undefined}
               onPress={() => openSheet('size')}
               isLast
             />

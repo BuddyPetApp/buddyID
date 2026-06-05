@@ -46,7 +46,13 @@ export default function Loading() {
         for (const form of dogs) {
           const command = {
             name: form.name, breed: form.breed,
-            size: form.size?.toLowerCase(), ageRange: null, birthdate: null,
+            size: form.size === 'XS' ? 'xs' :
+                  form.size === 'S' ? 'sm' :
+                  form.size === 'M' ? 'md' :
+                  form.size === 'L' ? 'lg' :
+                  form.size === 'XL' ? 'xl' :
+                  undefined,
+            ageRange: null, birthdate: null,
             gender: form.gender === 'Macho' ? 'male' : form.gender === 'Fêmea' ? 'female' : null,
             neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
             adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),

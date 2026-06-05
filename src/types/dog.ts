@@ -224,11 +224,19 @@ export const DOG_BREEDS_PT: readonly string[] = [
 ];
 
 export const SIZE_LABELS_PT: Record<DogSize, string> = {
-  xs: 'Muito pequeno (até 5 kg)',
-  sm: 'Pequeno (5–10 kg)',
-  md: 'Médio (10–25 kg)',
-  lg: 'Grande (25–45 kg)',
-  xl: 'Gigante (+45 kg)',
+  xs: 'XS (até 5 kg)',
+  sm: 'S (5–10 kg)',
+  md: 'M (10–25 kg)',
+  lg: 'L (25–40 kg)',
+  xl: 'XL (mais de 40 kg)',
+};
+
+export const SIZE_LABELS_EN: Record<DogSize, string> = {
+  xs: 'XS (up to 5 kg)',
+  sm: 'S (5–10 kg)',
+  md: 'M (10–25 kg)',
+  lg: 'L (25–40 kg)',
+  xl: 'XL (over 40 kg)',
 };
 
 export const GENDER_LABELS_PT: Record<DogGender, string> = {
