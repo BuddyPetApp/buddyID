@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { colors, font, fontSize, spacing, shadows } from '../tokens';
+import { colors, font, fontSize, spacing } from '../tokens';
+import { CheckIcon } from '../components/Icons';
 
 export function ChoiceButton({ label, selected, onPress, style }: {
   label: string; selected: boolean; onPress: () => void; style?: ViewStyle;
@@ -37,7 +38,7 @@ export function MultiChoiceList({ options, selected, onToggle }: {
         return (
           <Pressable key={opt} onPress={() => onToggle(opt)} style={[s.multiRow, on && s.multiRowOn]}>
             <View style={[s.checkbox, on && s.checkboxOn]}>
-              {on && <Text style={s.checkmark}>✓</Text>}
+              {on && <CheckIcon size={13} color="#fff" strokeWidth={2.5} />}
             </View>
             <Text style={[s.multiRowText, on && s.multiRowTextOn]}>{opt}</Text>
           </Pressable>
@@ -81,7 +82,6 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkmark: { color: '#fff', fontSize: 13, fontFamily: font.bold },
   multiRowText: { fontFamily: font.medium, fontSize: fontSize.base, color: colors.textSecondary, flex: 1 },
   multiRowTextOn: { color: colors.primary, fontFamily: font.semiBold },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing[5] },

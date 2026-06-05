@@ -10,13 +10,14 @@ import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
+import { ChevronLeftIcon } from '../components/Icons';
 
 export default function BuddyFund() {
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} hitSlop={12}>
-          <Text style={s.backArrow}>{'←'}</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
         <View style={{ width: 44 }} />
@@ -90,7 +91,6 @@ const s = StyleSheet.create({
     backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   backBtn: { width: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
   scroll: { flex: 1 },
   content: { paddingHorizontal: spacing[5], paddingTop: spacing[5], paddingBottom: spacing[10] },
 

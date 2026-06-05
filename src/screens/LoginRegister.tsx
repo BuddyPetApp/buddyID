@@ -1,193 +1,146 @@
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert
+  KeyboardAvoidingView, Platform, ScrollView, StyleSheet,
+  Text, TextInput, TouchableOpacity, View, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { colors, font, fontSize, spacing } from '../tokens';
+import { colors, font, fontSize, radius, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
-import { SectionLabel } from './shared';
+import { ChevronLeftIcon, LockIcon, MailIcon, CheckIcon } from '../components/Icons';
 
 export default function LoginRegister() {
-  const params = useLocalSearchParams();
+  const params      = useLocalSearchParams();
   const isLoginOnly = params.mode === 'login_only';
 
-  const [isLogin, setIsLogin] = useState(isLoginOnly ? true : false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [isLogin,           setIsLogin]           = useState(isLoginOnly);
+  const [email,             setEmail]             = useState('');
+  const [password,          setPassword]          = useState('');
+  const [phone,             setPhone]             = useState('');
+  const [loading,           setLoading]           = useState(false);
+  const [verificationSent,  setVerificationSent]  = useState(false);
 
   async function handleAuth() {
     if (!email || !password || (!isLogin && !phone)) return;
-    
     setLoading(true);
     setVerificationSent(false);
-    
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
         const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              phone, // Stores phone in user_metadata, will sync to public.users via trigger
-            },
-            emailRedirectTo: 'https://buddy.pet',
-          }
+          email, password,
+          options: { data: { phone }, emailRedirectTo: 'https://buddy.pet' },
         });
         if (error) throw error;
-        
-        if (!data.session) {
-          setVerificationSent(true);
-          setIsLogin(true);
-          return;
-        }
+        if (!data.session) { setVerificationSent(true); setIsLogin(true); return; }
       }
-      
       if (isLoginOnly) {
-        router.replace('/buddyid' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        router.replace('/buddyid' as any);
       } else {
-        router.replace('/buddyid/loading' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        router.replace('/buddyid/loading' as any);
       }
     } catch (err: any) {
-      if (Platform.OS === 'web') {
-        window.alert('Erro: ' + (err.message || 'Ocorreu um erro ao autenticar.'));
-      } else {
-        Alert.alert('Erro', err.message || 'Ocorreu um erro ao autenticar.');
-      }
+      if (Platform.OS === 'web') window.alert('Erro: ' + (err.message || 'Ocorreu um erro.'));
+      else Alert.alert('Erro', err.message || 'Ocorreu um erro ao autenticar.');
     } finally {
       setLoading(false);
     }
   }
 
   function goBack() {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/buddyid' as any); // fallback
-    }
+    if (router.canGoBack()) router.back();
+    else router.replace('/buddyid' as any);
   }
 
-  const isContinueDisabled = isLogin 
+  const disabled = isLogin
     ? !email.includes('@') || password.length < 6
     : !email.includes('@') || password.length < 6 || phone.length < 7;
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+      {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <Text style={s.backArrow}>{'←'}</Text>
+        <TouchableOpacity onPress={goBack} style={s.backBtn} hitSlop={12}>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
         <View style={{ width: 32 }} />
       </View>
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={s.flex}
-          contentContainerStyle={s.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {!isLoginOnly && (
-            <View style={s.tabs}>
-              <TouchableOpacity 
-                style={[s.tab, !isLogin && s.tabActive]} 
-                onPress={() => setIsLogin(false)}
-              >
-                <Text style={[s.tabText, !isLogin && s.tabTextActive]}>Criar Conta</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[s.tab, isLogin && s.tabActive]} 
-                onPress={() => setIsLogin(true)}
-              >
-                <Text style={[s.tabText, isLogin && s.tabTextActive]}>Login</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        <ScrollView style={s.flex} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-          <Text style={[s.question, isLoginOnly && { marginTop: spacing[4] }]}>
-            {isLogin ? 'Bem-vindo de volta!' : 'Cria a tua conta Buddy'}
-          </Text>
-          <Text style={s.sub}>
-            {isLogin 
-              ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para acederes à tua conta e guardarmos o(s) perfil(is)!')
-              : 'Cria uma conta para guardarmos o perfil do teu cão.'}
-          </Text>
-
-          {verificationSent && (
-            <View style={s.successBanner}>
-              <Text style={s.successTitle}>Verifica o teu email</Text>
-              <Text style={s.successText}>Enviámos um link de verificação. Por favor, verifica a tua caixa de entrada para ativares a conta e poderes fazer login.</Text>
-            </View>
-          )}
-
-          <View style={s.form}>
-            <SectionLabel>Email</SectionLabel>
-            <TextInput
-              style={s.input}
-              placeholder="email@exemplo.com"
-              placeholderTextColor={colors.textMuted}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-
-            {!isLogin && (
-              <>
-                <SectionLabel>Telemóvel</SectionLabel>
-                <TextInput
-                  style={s.input}
-                  placeholder="+351 912 345 678"
-                  placeholderTextColor={colors.textMuted}
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                />
-              </>
+          {/* Card */}
+          <View style={s.card}>
+            {!isLoginOnly && (
+              <View style={s.tabs}>
+                <TouchableOpacity style={[s.tab, !isLogin && s.tabActive]} onPress={() => setIsLogin(false)}>
+                  <Text style={[s.tabText, !isLogin && s.tabTextActive]}>Criar Conta</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[s.tab, isLogin && s.tabActive]} onPress={() => setIsLogin(true)}>
+                  <Text style={[s.tabText, isLogin && s.tabTextActive]}>Entrar</Text>
+                </TouchableOpacity>
+              </View>
             )}
 
-            <SectionLabel>Palavra-passe</SectionLabel>
-            <TextInput
-              style={s.input}
-              placeholder="••••••••"
-              placeholderTextColor={colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <Text style={s.title}>{isLogin ? 'Bem-vindo de volta' : 'Cria a tua conta Buddy'}</Text>
+            <Text style={s.sub}>
+              {isLogin
+                ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para acederes à tua conta.')
+                : 'Cria uma conta para guardarmos o perfil do teu cão.'}
+            </Text>
+
+            {verificationSent && (
+              <View style={s.successBanner}>
+                <CheckIcon size={18} color={colors.success} />
+                <View style={s.successText}>
+                  <Text style={s.successTitle}>Verifica o teu email</Text>
+                  <Text style={s.successBody}>Enviámos um link de verificação para a tua caixa de entrada.</Text>
+                </View>
+              </View>
+            )}
+
+            <View style={s.form}>
+              <View style={s.inputWrap}>
+                <MailIcon size={18} color={colors.textMuted} strokeWidth={1.75} />
+                <TextInput
+                  style={s.input} placeholder="Email" placeholderTextColor={colors.textMuted}
+                  value={email} onChangeText={setEmail}
+                  keyboardType="email-address" autoCapitalize="none" autoComplete="email"
+                />
+              </View>
+
+              {!isLogin && (
+                <View style={s.inputWrap}>
+                  <Text style={s.inputIcon}>+</Text>
+                  <TextInput
+                    style={s.input} placeholder="Telemóvel" placeholderTextColor={colors.textMuted}
+                    value={phone} onChangeText={setPhone}
+                    keyboardType="phone-pad" autoComplete="tel"
+                  />
+                </View>
+              )}
+
+              <View style={s.inputWrap}>
+                <LockIcon size={18} color={colors.textMuted} strokeWidth={1.75} />
+                <TextInput
+                  style={s.input} placeholder="Palavra-passe" placeholderTextColor={colors.textMuted}
+                  value={password} onChangeText={setPassword} secureTextEntry
+                />
+              </View>
+            </View>
           </View>
         </ScrollView>
 
         <View style={s.footer}>
           <TouchableOpacity
-            style={[s.continueBtn, (isContinueDisabled || loading) && s.continueBtnDisabled]}
-            onPress={handleAuth}
-            disabled={isContinueDisabled || loading}
+            style={[s.cta, (disabled || loading) && s.ctaDisabled]}
+            onPress={handleAuth} disabled={disabled || loading}
           >
-            <Text style={s.continueBtnText}>
-              {loading ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar Conta e Continuar'}
-            </Text>
+            <Text style={s.ctaText}>{loading ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar conta e continuar'}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -196,83 +149,34 @@ export default function LoginRegister() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
-  flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing[6],
-    height: 68,
-  },
-  backBtn: { width: 32 },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.bold },
-  scrollContent: { padding: spacing[6], paddingBottom: spacing[10] },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: spacing[6],
-    borderWidth: 1.5,
-    borderColor: colors.borderSoft,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing[3],
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-  },
-  tabText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  tabTextActive: {
-    color: '#fff',
-    fontFamily: font.semiBold,
-  },
-  question: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[2], lineHeight: 34 },
-  sub: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, marginBottom: spacing[6] },
-  form: { marginTop: spacing[2] },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderSoft,
-    borderRadius: 12,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    fontFamily: font.regular,
-    fontSize: fontSize.base,
-    color: colors.text,
-    marginTop: spacing[2],
-    marginBottom: spacing[4],
-  },
-  footer: { padding: spacing[4], backgroundColor: colors.canvas },
-  continueBtn: { backgroundColor: colors.primary, borderRadius: 14, paddingVertical: spacing[4], alignItems: 'center' },
-  continueBtnDisabled: { opacity: 0.45 },
-  continueBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
-  successBanner: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: spacing[4],
-    marginBottom: spacing[4],
-  },
-  successTitle: {
-    fontFamily: font.semiBold,
-    fontSize: fontSize.base,
-    color: '#2E7D32',
-    marginBottom: 4,
-  },
-  successText: {
-    fontFamily: font.regular,
-    fontSize: fontSize.sm,
-    color: '#1B5E20',
-  }
+  safe:        { flex: 1, backgroundColor: colors.canvas },
+  flex:        { flex: 1 },
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, paddingHorizontal: spacing[5], height: 64, borderBottomWidth: 1, borderBottomColor: colors.border },
+  backBtn:     { width: 32, alignItems: 'flex-start' },
+  scrollContent: { padding: spacing[5], paddingBottom: spacing[10] },
+
+  card:        { backgroundColor: colors.surface, borderRadius: radius.xxl, padding: spacing[6], ...shadows.card },
+  tabs:        { flexDirection: 'row', backgroundColor: colors.surfaceMuted, borderRadius: radius.lg, padding: 4, marginBottom: spacing[6] },
+  tab:         { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: radius.md },
+  tabActive:   { backgroundColor: colors.primary },
+  tabText:     { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textSecondary },
+  tabTextActive: { color: '#fff', fontFamily: font.semiBold },
+
+  title:       { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[2] },
+  sub:         { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing[5], lineHeight: 20 },
+
+  successBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3], backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: radius.lg, padding: spacing[4], marginBottom: spacing[4] },
+  successText:  { flex: 1 },
+  successTitle: { fontFamily: font.semiBold, fontSize: fontSize.sm, color: '#065F46', marginBottom: 2 },
+  successBody:  { fontFamily: font.regular, fontSize: fontSize.xs, color: '#047857', lineHeight: 17 },
+
+  form:        { gap: spacing[3] },
+  inputWrap:   { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceMuted, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing[4], height: 52, gap: spacing[3] },
+  inputIcon:   { fontFamily: font.bold, fontSize: fontSize.md, color: colors.textMuted, width: 18, textAlign: 'center' },
+  input:       { flex: 1, fontFamily: font.regular, fontSize: fontSize.base, color: colors.text },
+
+  footer:      { padding: spacing[5], backgroundColor: colors.canvas },
+  cta:         { backgroundColor: colors.primary, borderRadius: radius.lg, height: 52, alignItems: 'center', justifyContent: 'center', ...shadows.purple },
+  ctaDisabled: { opacity: 0.45 },
+  ctaText:     { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
 });

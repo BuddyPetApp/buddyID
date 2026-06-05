@@ -13,6 +13,7 @@ import { router, useRouter } from 'expo-router';
 import { colors, font, fontSize, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
+import { ChevronRightIcon } from '../components/Icons';
 
 export default function SobreNos() {
   const router = useRouter();
@@ -21,9 +22,7 @@ export default function SobreNos() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
-        </TouchableOpacity>
+        <View style={{ width: 72 }} />
         <Logo variant="dark" size="sm" />
         <View style={styles.headerSpacer} />
       </View>
@@ -73,7 +72,7 @@ export default function SobreNos() {
               {' a associações de animais em Portugal.'}
             </Text>
           </View>
-          <Text style={styles.fundBlockChevron}>{'›'}</Text>
+          <ChevronRightIcon size={20} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
 
         {/* Founders */}
@@ -294,16 +293,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-  },
-  backBtn: {
-    paddingVertical: spacing[1],
-    paddingRight: spacing[2],
-    minWidth: 72,
-  },
-  backText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.base,
-    color: colors.primary,
   },
   headerSpacer: {
     minWidth: 72,

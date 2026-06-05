@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,28 +8,42 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { colors, font, fontSize, shadows, spacing } from '../tokens';
+import { SvgXml } from 'react-native-svg';
+import { colors, font, fontSize, shadows, spacing, radius } from '../tokens';
 import { Button } from '../components/Button';
 import { Logo } from '../components/Logo';
+import {
+  ChevronLeftIcon,
+  CheckIcon,
+  WalkIcon,
+  AwardIcon,
+  HomeHeartIcon,
+  HomeIcon,
+  PawIcon,
+  TruckIcon,
+  ScissorsIcon,
+  ShieldCheckIcon,
+} from '../components/Icons';
 
-const SERVICE_TYPES = [
-  { id: 'passeios', label: 'Passeios', emoji: '🦮' },
-  { id: 'treino', label: 'Treino', emoji: '🎓' },
-  { id: 'creche', label: 'Creche', emoji: '🏠' },
-  { id: 'hotel', label: 'Hotel', emoji: '🛏️' },
-  { id: 'pet-sitting', label: 'Pet Sitting', emoji: '🐶' },
-  { id: 'transporte', label: 'Transporte', emoji: '🚗' },
-  { id: 'grooming', label: 'Grooming', emoji: '✂️' },
-  { id: 'veterinario', label: 'Veterinário', emoji: '🩺' },
+const SERVICE_TYPES: { id: string; label: string; Icon: React.FC<{ color: string }> }[] = [
+  { id: 'passeios',    label: 'Passeios',    Icon: ({ color }) => <WalkIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'treino',      label: 'Treino',      Icon: ({ color }) => <AwardIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'creche',      label: 'Creche',      Icon: ({ color }) => <HomeHeartIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'hotel',       label: 'Hotel',       Icon: ({ color }) => <HomeIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'pet-sitting', label: 'Pet Sitting', Icon: ({ color }) => <PawIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'transporte',  label: 'Transporte',  Icon: ({ color }) => <TruckIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'grooming',    label: 'Grooming',    Icon: ({ color }) => <ScissorsIcon size={16} color={color} strokeWidth={2} /> },
+  { id: 'veterinário', label: 'Veterinário', Icon: ({ color }) => <ShieldCheckIcon size={16} color={color} strokeWidth={2} /> },
 ];
 
 const BENEFITS = [
-  'Acesso a clientes qualificados',
-  'Perfis verificados',
-  'Gestão de agenda integrada',
+  { title: 'Clientes com perfil completo', sub: 'Acedes ao BuddyID do animal antes de cada serviço.' },
+  { title: '0% de comissão no arranque', sub: 'Nos primeiros 6 meses para quem entrar no pré-lançamento.' },
+  { title: 'Agenda e pagamentos integrados', sub: 'Tudo numa só plataforma, sem apps extra.' },
 ];
 
 interface ProviderForm {
@@ -45,6 +58,7 @@ export default function Providers() {
   const [form, setForm] = useState<ProviderForm>({
     name: '', email: '', phone: '', city: '', services: [],
   });
+  const [submitted, setSubmitted] = useState(false);
 
   function toggleService(id: string) {
     setForm((prev) => ({
@@ -60,20 +74,24 @@ export default function Providers() {
   }
 
   function handleSubmit() {
-    Alert.alert('Obrigado!', 'Entraremos em contacto em breve.');
+    setSubmitted(true);
+    Alert.alert('Candidatura enviada', 'Entraremos em contacto em breve para conhecer o teu trabalho.');
   }
 
-  const isValid = form.name.trim().length > 1
-    && form.email.includes('@')
-    && form.city.trim().length > 1
-    && form.services.length > 0;
+  const isValid =
+    form.name.trim().length > 1 &&
+    form.email.includes('@') &&
+    form.city.trim().length > 1 &&
+    form.services.length > 0;
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+
+        {/* Header */}
         <View style={s.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12} style={s.backBtn}>
-            <Text style={s.backArrow}>←</Text>
+            <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
           </TouchableOpacity>
           <Logo variant="dark" size="sm" />
           <View style={s.headerSpacer} />
@@ -85,27 +103,45 @@ export default function Providers() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={s.heroCard}>
-            <Text style={s.heroTitle}>Torna-te um prestador Buddy</Text>
-            <Text style={s.heroSubtitle}>
-              Junta-te à rede de prestadores verificados e chega a tutores com BuddyID perto de ti.
+          {/* Hero */}
+          <View style={s.hero}>
+            <View style={s.heroGlow} />
+            <View style={s.heroBadge}>
+              <Text style={s.heroBadgeText}>Para prestadores</Text>
+            </View>
+            <Text style={s.heroTitle}>
+              Os primeiros clientes{'\n'}já têm BuddyID
             </Text>
+            <Text style={s.heroSub}>
+              Chega a tutores verificados em Lisboa antes do lançamento. Zero fricção, clientes qualificados.
+            </Text>
+            <View style={s.heroStat}>
+              <Text style={s.heroStatNum}>0%</Text>
+              <Text style={s.heroStatLabel}>comissão nos primeiros 6 meses</Text>
+            </View>
           </View>
 
+          {/* Benefits */}
           <View style={s.benefitsCard}>
-            {BENEFITS.map((benefit) => (
-              <View key={benefit} style={s.benefitRow}>
-                <View style={s.checkIcon}>
-                  <Text style={s.checkIconText}>✓</Text>
+            <Text style={s.benefitsTitle}>O que ganhas</Text>
+            {BENEFITS.map((b) => (
+              <View key={b.title} style={s.benefitRow}>
+                <View style={s.checkCircle}>
+                  <CheckIcon size={13} color="#fff" strokeWidth={2.5} />
                 </View>
-                <Text style={s.benefitText}>{benefit}</Text>
+                <View style={s.benefitText}>
+                  <Text style={s.benefitTitle}>{b.title}</Text>
+                  <Text style={s.benefitSub}>{b.sub}</Text>
+                </View>
               </View>
             ))}
           </View>
 
-          <Text style={s.sectionTitle}>Candidatura</Text>
+          {/* Form */}
+          <Text style={s.sectionTitle}>Candidatura rápida</Text>
+          <Text style={s.sectionSub}>Preenche em menos de 2 minutos. Entramos em contacto antes do lançamento.</Text>
 
-          <Text style={s.fieldLabel}>Nome / nome do negócio</Text>
+          <Text style={s.fieldLabel}>Nome ou nome do negócio</Text>
           <TextInput
             style={s.input}
             placeholder="Ex: João Silva ou PetWalker Lisboa"
@@ -148,19 +184,22 @@ export default function Providers() {
 
           <Text style={s.fieldLabel}>Que serviços ofereces?</Text>
           <View style={s.servicesGrid}>
-            {SERVICE_TYPES.map((svc) => (
-              <TouchableOpacity
-                key={svc.id}
-                onPress={() => toggleService(svc.id)}
-                style={[s.serviceChip, form.services.includes(svc.id) && s.serviceChipSelected]}
-                activeOpacity={0.8}
-              >
-                <Text style={s.serviceEmoji}>{svc.emoji}</Text>
-                <Text style={[s.serviceLabel, form.services.includes(svc.id) && s.serviceLabelSelected]}>
-                  {svc.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {SERVICE_TYPES.map((svc) => {
+              const active = form.services.includes(svc.id);
+              return (
+                <TouchableOpacity
+                  key={svc.id}
+                  onPress={() => toggleService(svc.id)}
+                  style={[s.serviceChip, active && s.serviceChipSelected]}
+                  activeOpacity={0.8}
+                >
+                  <svc.Icon color={active ? colors.primary : colors.textMuted} />
+                  <Text style={[s.serviceLabel, active && s.serviceLabelSelected]}>
+                    {svc.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <View style={s.bottomSpacer} />
@@ -183,6 +222,7 @@ export default function Providers() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   flex: { flex: 1 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -194,67 +234,118 @@ const s = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backBtn: { width: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
   headerSpacer: { width: 44 },
-  scroll: { paddingHorizontal: spacing[5], paddingTop: spacing[5] },
-  heroCard: {
+
+  scroll: { paddingBottom: spacing[10] },
+
+  // Hero
+  hero: {
     backgroundColor: colors.primary,
-    borderRadius: 20,
+    marginHorizontal: spacing[5],
+    marginTop: spacing[5],
+    marginBottom: spacing[5],
+    borderRadius: 24,
     padding: spacing[6],
-    marginBottom: spacing[6],
-    ...shadows.elevated,
+    overflow: 'hidden',
+    ...shadows.purple,
   },
+  heroGlow: {
+    position: 'absolute', right: -40, top: -40,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
+  heroBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: spacing[4],
+  },
+  heroBadgeText: { fontFamily: font.semiBold, fontSize: fontSize.xs, color: '#fff' },
   heroTitle: {
     fontFamily: font.bold,
     fontSize: fontSize.xl,
     color: '#fff',
-    marginBottom: spacing[3],
     lineHeight: 30,
+    marginBottom: spacing[3],
   },
-  heroSubtitle: {
+  heroSub: {
     fontFamily: font.regular,
-    fontSize: fontSize.base,
-    color: 'rgba(255,255,255,0.85)',
-    lineHeight: 22,
+    fontSize: fontSize.sm,
+    color: 'rgba(255,255,255,0.82)',
+    lineHeight: 21,
+    marginBottom: spacing[5],
   },
+  heroStat: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+    alignSelf: 'flex-start',
+  },
+  heroStatNum: { fontFamily: font.bold, fontSize: 28, color: '#fff' },
+  heroStatLabel: { fontFamily: font.regular, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.85)', flexShrink: 1 },
+
+  // Benefits
   benefitsCard: {
+    marginHorizontal: spacing[5],
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: spacing[5],
     marginBottom: spacing[6],
     ...shadows.card,
   },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing[3],
-  },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing[3],
-    flexShrink: 0,
-  },
-  checkIconText: { color: '#fff', fontSize: fontSize.xs, fontFamily: font.bold },
-  benefitText: {
-    fontFamily: font.medium,
-    fontSize: fontSize.base,
-    color: colors.text,
-  },
-  sectionTitle: {
+  benefitsTitle: {
     fontFamily: font.bold,
     fontSize: fontSize.md,
     color: colors.text,
     marginBottom: spacing[4],
   },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing[4],
+    gap: spacing[3],
+  },
+  checkCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: 1,
+  },
+  benefitText: { flex: 1 },
+  benefitTitle: { fontFamily: font.semiBold, fontSize: fontSize.sm, color: colors.text, marginBottom: 2 },
+  benefitSub: { fontFamily: font.regular, fontSize: fontSize.xs, color: colors.textSecondary, lineHeight: 17 },
+
+  // Form
+  sectionTitle: {
+    fontFamily: font.bold,
+    fontSize: fontSize.md,
+    color: colors.text,
+    marginHorizontal: spacing[5],
+    marginBottom: spacing[1],
+  },
+  sectionSub: {
+    fontFamily: font.regular,
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginHorizontal: spacing[5],
+    marginBottom: spacing[5],
+    lineHeight: 20,
+  },
   fieldLabel: {
     fontFamily: font.semiBold,
     fontSize: fontSize.sm,
     color: colors.text,
+    marginHorizontal: spacing[5],
     marginBottom: spacing[2],
   },
   input: {
@@ -268,12 +359,14 @@ const s = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.text,
     marginBottom: spacing[4],
+    marginHorizontal: spacing[5],
   },
   servicesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing[2],
     marginBottom: spacing[4],
+    paddingHorizontal: spacing[5],
   },
   serviceChip: {
     flexDirection: 'row',
@@ -284,13 +377,12 @@ const s = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.borderSoft,
     backgroundColor: colors.surface,
-    gap: spacing[1],
+    gap: spacing[2],
   },
   serviceChipSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.surfaceAccent,
   },
-  serviceEmoji: { fontSize: 16 },
   serviceLabel: {
     fontFamily: font.medium,
     fontSize: fontSize.sm,
@@ -300,7 +392,8 @@ const s = StyleSheet.create({
     color: colors.primary,
     fontFamily: font.semiBold,
   },
-  bottomSpacer: { height: spacing[8] },
+
+  bottomSpacer: { height: spacing[4] },
   footer: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[4],

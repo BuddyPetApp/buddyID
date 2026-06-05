@@ -69,7 +69,7 @@ export default function Contacto() {
           email: email.trim(),
           message: message.trim(),
         });
-        Alert.alert('Mensagem enviada! 🐾', 'Obrigado pelo contacto. Respondemos em breve.');
+        Alert.alert('Mensagem enviada', 'Obrigado pelo contacto. Respondemos em breve.');
         setName('');
         setEmail('');
         setMessage('');
@@ -87,9 +87,7 @@ export default function Contacto() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerSide}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
+        <View style={styles.headerSide} />
         <View style={styles.headerCenter}>
           <Logo variant="dark" size="sm" />
         </View>
@@ -253,11 +251,6 @@ const styles = StyleSheet.create({
   headerCenter: {
     flex: 1,
     alignItems: 'center',
-  },
-  backButton: {
-    fontSize: fontSize.lg,
-    color: colors.text,
-    fontFamily: font.medium,
   },
 
   // Scroll

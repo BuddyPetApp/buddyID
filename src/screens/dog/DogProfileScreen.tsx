@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
+import { ChevronLeftIcon } from '../../components/Icons';
 import { apiClient } from '../../api/client';
 import {
   DOG_COLORS,
@@ -143,7 +144,7 @@ export default function DogProfileScreen({ id }: { id?: string }) {
       {/* Header bar */}
       <View style={styles.header}>
         <Pressable onPress={() => router.replace('/buddyid' as any)} hitSlop={12} style={styles.backBtn}>
-          <Text style={styles.backArrow}>←</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('tutor.dogProfile.profile')}</Text>
         <View style={{ width: 44 }} />
@@ -328,7 +329,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backArrow: { fontSize: 24, color: colors.primary, fontFamily: font.bold },
   headerTitle: { fontFamily: font.bold, fontSize: fontSize.md, color: colors.text },
   
   scroll: { paddingBottom: spacing[8] },

@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
+import { ChevronLeftIcon, CheckIcon } from '../components/Icons';
 import { SectionLabel } from './shared';
 
 interface AssocForm {
@@ -93,7 +94,7 @@ export default function Associations() {
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <Text style={s.backArrow}>{'←'}</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
         {step !== 'success' ? (
@@ -216,7 +217,7 @@ export default function Associations() {
             <View style={s.successCard}>
               <View style={s.successGlow} />
               <View style={s.successIconWrap}>
-                <Text style={s.successIcon}>🎉</Text>
+                <CheckIcon size={36} color={colors.primary} strokeWidth={2} />
               </View>
               <Text style={s.successTitle}>Candidatura enviada!</Text>
               <Text style={s.successSub}>
@@ -266,7 +267,6 @@ const s = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backBtn: { width: 60, alignItems: 'flex-start', justifyContent: 'center' },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
   counter: {
     fontFamily: font.medium,
     fontSize: fontSize.sm,
@@ -362,7 +362,6 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  successIcon: { fontSize: 36 },
   successTitle: {
     fontFamily: font.bold,
     fontSize: 22,

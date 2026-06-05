@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
+import { ChevronLeftIcon } from '../../components/Icons';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
 
@@ -150,7 +151,7 @@ export function DogScreenShell({
       {/* Header */}
       <View style={shellStyles.header}>
         <Pressable onPress={onBack ?? (() => router.back())} hitSlop={12} style={shellStyles.backBtn}>
-          <Text style={shellStyles.backArrow}>←</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </Pressable>
         <Text style={shellStyles.headerTitle}>{title}</Text>
         <View style={{ width: 44 }} />
@@ -182,11 +183,6 @@ const shellStyles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backArrow: {
-    fontSize: 24,
-    color: colors.primary,
-    fontFamily: font.bold,
   },
   headerTitle: {
     fontFamily: font.bold,
@@ -783,7 +779,7 @@ const chipStyles = StyleSheet.create({
 
 // ─── ScaleSelector (1–5 com emojis) ────────────────
 
-const SCALE_EMOJIS = ['😰', '😟', '😐', '🙂', '😍'];
+const SCALE_LABELS = ['1', '2', '3', '4', '5'];
 
 export function ScaleSelector({
   value,
@@ -794,7 +790,7 @@ export function ScaleSelector({
 }) {
   return (
     <View style={scaleStyles.wrap}>
-      {SCALE_EMOJIS.map((emoji, idx) => {
+      {SCALE_LABELS.map((label, idx) => {
         const n = idx + 1;
         const selected = value === n;
         return (
@@ -810,8 +806,7 @@ export function ScaleSelector({
             accessibilityLabel={`Nível ${n} de 5`}
             accessibilityState={{ selected }}
           >
-            <Text style={scaleStyles.emoji}>{emoji}</Text>
-            <Text style={[scaleStyles.number, selected && scaleStyles.numberSelected]}>{n}</Text>
+            <Text style={[scaleStyles.number, selected && scaleStyles.numberSelected]}>{label}</Text>
           </Pressable>
         );
       })}
@@ -837,7 +832,6 @@ const scaleStyles = StyleSheet.create({
     borderColor: DOG_COLORS.primary,
     backgroundColor: DOG_COLORS.primaryLight,
   },
-  emoji: { fontSize: 20, lineHeight: 24 },
   number: {
     fontFamily: font.semiBold,
     fontSize: fontSize.xs,

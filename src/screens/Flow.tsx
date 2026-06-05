@@ -16,8 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { colors, font, fontSize, spacing } from '../tokens';
+import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
+import { ChevronLeftIcon, CheckIcon, CameraIcon } from '../components/Icons';
 import { ChoiceRow, MultiChoiceList, SectionHint, SectionLabel } from './shared';
 import {
   type BuddyIDFormData,
@@ -69,7 +70,7 @@ export default function Flow() {
   }
 
   function goBack() {
-    if (stepIndex === 0) router.back();
+    if (stepIndex === 0) router.replace('/buddyid' as any);
     else {
       setStepIndex((s) => s - 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -180,7 +181,7 @@ export default function Flow() {
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.header}>
         <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <Text style={s.backArrow}>{'←'}</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
         {questionNumber != null
@@ -254,7 +255,7 @@ function Q1({ form, update, pickPhoto }: Pick<StepProps, 'form' | 'update' | 'pi
             : <View style={s.photoPlaceholder} />}
         </TouchableOpacity>
         <TouchableOpacity style={s.photoPlusBadge} onPress={pickPhoto}>
-          <Text style={s.photoPlusText}>+</Text>
+          <CameraIcon size={14} color="#fff" strokeWidth={2} />
         </TouchableOpacity>
       </View>
       <Text style={s.photoLabel}>Foto</Text>
@@ -545,7 +546,7 @@ function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: 
   return (
     <Pressable style={s.consentRow} onPress={onToggle}>
       <View style={[s.checkbox, checked && s.checkboxOn]}>
-        {checked && <Text style={s.checkmark}>{'✓'}</Text>}
+        {checked && <CheckIcon size={13} color="#fff" strokeWidth={2.5} />}
       </View>
       <Text style={s.consentLabel}>{label}</Text>
     </Pressable>
@@ -564,7 +565,6 @@ const s = StyleSheet.create({
     height: 68,
   },
   backBtn: { width: 32 },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.bold },
   counter: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, width: 60, textAlign: 'right' },
   progressTrack: { height: 3, backgroundColor: colors.borderSoft },
   progressFill: { height: 3, backgroundColor: colors.primary },
@@ -618,6 +618,5 @@ const s = StyleSheet.create({
   },
   checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderSoft, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
   checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkmark: { color: '#fff', fontSize: 14, fontFamily: font.bold },
   consentLabel: { flex: 1, fontFamily: font.regular, fontSize: fontSize.sm, color: colors.text, lineHeight: 20 },
 });

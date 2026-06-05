@@ -3,8 +3,9 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { colors, font, fontSize, spacing } from '../tokens';
+import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
+import { CheckIcon } from '../components/Icons';
 
 const BUDDYID_PENDING_DOGS = 'buddyid_pending_dogs';
 
@@ -48,7 +49,7 @@ export default function SecondDog() {
             <Text style={s.dogStatus}>BuddyID criado</Text>
           </View>
           <View style={s.checkCircle}>
-            <Text style={s.checkMark}>✓</Text>
+            <CheckIcon size={16} color={colors.success} strokeWidth={2.5} />
           </View>
         </View>
 
@@ -117,7 +118,6 @@ const s = StyleSheet.create({
   dogStatus: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
   dogStatusPending: { color: colors.primary },
   checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: colors.success, alignItems: 'center', justifyContent: 'center' },
-  checkMark: { color: colors.success, fontSize: 16, fontFamily: font.bold },
   connector: { width: 1, height: 20, backgroundColor: colors.borderSoft, alignSelf: 'center', marginVertical: 2 },
   headline: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, lineHeight: 34, marginTop: spacing[6], marginBottom: spacing[3] },
   body: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, lineHeight: 22, marginBottom: spacing[4] },

@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import { ChevronLeftIcon } from '../components/Icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -155,7 +156,7 @@ export default function ProviderFlow() {
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <Text style={s.backArrow}>{'←'}</Text>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </TouchableOpacity>
         <Logo variant="dark" size="sm" />
         {current != null
@@ -614,7 +615,6 @@ const s = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backBtn: { width: 60, alignItems: 'flex-start', justifyContent: 'center' },
-  backArrow: { fontSize: 22, color: colors.primary, fontFamily: font.regular },
   headerTitle: { fontFamily: font.semiBold, fontSize: fontSize.base, color: colors.text },
   counter: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textMuted, width: 60, textAlign: 'right' },
 

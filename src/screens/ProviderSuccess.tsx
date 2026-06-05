@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
+import { CheckIcon } from '../components/Icons';
 
 export default function ProviderSuccess() {
   const scale = useRef(new Animated.Value(0.7)).current;
@@ -25,7 +26,7 @@ export default function ProviderSuccess() {
       <View style={s.content}>
         <Animated.View style={[s.iconWrap, { transform: [{ scale }], opacity }]}>
           <View style={s.iconCircle}>
-            <Text style={s.iconCheck}>✓</Text>
+            <CheckIcon size={36} color="#fff" strokeWidth={2} />
           </View>
         </Animated.View>
 
@@ -69,7 +70,6 @@ const s = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
   },
-  iconCheck: { color: '#fff', fontSize: 36, fontFamily: font.bold },
   title: { fontFamily: font.bold, fontSize: fontSize.xxl, color: colors.text, textAlign: 'center', marginBottom: spacing[3] },
   body: {
     fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary,
