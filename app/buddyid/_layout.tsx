@@ -18,6 +18,7 @@ export default function BuddyIDLayout() {
       <Stack.Screen name="dog/[id]/edit-habits" />
       <Stack.Screen name="dog/[id]/edit-behavioral" />
       <Stack.Screen name="dog/[id]/edit-health" />
+      <Stack.Screen name="public/[id]/index" />
     </Stack>
   );
 }

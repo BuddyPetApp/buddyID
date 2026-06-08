@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -38,8 +38,10 @@ export default function Loading() {
     AsyncStorage.getItem(BUDDYID_PENDING_DOGS).then(async (raw) => {
       const dogs: Partial<BuddyIDFormData>[] = raw ? JSON.parse(raw) : [];
       if (!dogs.length) dogs.push({});
-      const first = dogs[0]?.name || 'meu cão';
-      setDogName(dogs.length > 1 ? 'dos teus cães' : `do ${first}`);
+      const firstDog = dogs[0];
+      const article = firstDog?.gender === 'Fêmea' ? 'da' : 'do';
+      const first = firstDog?.name || (firstDog?.gender === 'Fêmea' ? 'minha cadela' : 'meu cão');
+      setDogName(dogs.length > 1 ? 'dos teus cães' : `${article} ${first}`);
 
       try {
         const results = [];
@@ -63,13 +65,23 @@ export default function Loading() {
           };
           const response = await apiClient.post<{ dogId: string }>('/dogs', command);
           const pct = Math.min(Math.round((Object.values(form).filter(v => v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)).length / 20) * 100), 95);
-          results.push({ dogName: form.name || 'Cão', breed: form.breed || '', age: form.age || '', size: form.size, buddyId: response.dogId, completionPercent: pct, photoUri: form.photoUri });
+          results.push({ dogName: form.name || 'Cão', breed: form.breed || '', age: form.age || '', size: form.size, buddyId: response.dogId, completionPercent: pct, photoUri: form.photoUri, gender: form.gender });
         }
         await AsyncStorage.setItem(BUDDYID_RESULT_KEY, JSON.stringify(results));
         await AsyncStorage.removeItem(BUDDYID_PENDING_DOGS);
         router.replace('/buddyid/success' as any);
-      } catch {
-        router.replace('/buddyid/success' as any);
+      } catch (err: any) {
+        console.error('Error creating BuddyID:', err);
+        if (Platform.OS === 'web') {
+          window.alert('Erro ao criar BuddyID: ' + (err.message || 'Não foi possível ligar ao servidor.'));
+          router.replace('/buddyid' as any);
+        } else {
+          Alert.alert(
+            'Erro ao criar BuddyID',
+            err.message || 'Não foi possível ligar ao servidor. Verifica a tua ligação.',
+            [{ text: 'Ok', onPress: () => router.replace('/buddyid' as any) }]
+          );
+        }
       }
     });
   }, []);

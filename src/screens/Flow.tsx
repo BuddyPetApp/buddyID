@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -20,6 +20,8 @@ import { router } from 'expo-router';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { ChevronLeftIcon, CheckIcon, CameraIcon } from '../components/Icons';
+import Svg, { Polyline } from 'react-native-svg';
+import { DOG_BREEDS_PT } from '../types/dog';
 import { ChoiceRow, MultiChoiceList, SectionHint, SectionLabel } from './shared';
 import {
   type BuddyIDFormData,
@@ -50,7 +52,14 @@ const STEPS = [
 ] as const;
 type StepKey = typeof STEPS[number];
 
+const ChevronDownIcon = ({ size = 20, color = colors.primary }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Polyline points="6 9 12 15 18 9" />
+  </Svg>
+);
+
 export default function Flow() {
+  const { t, i18n } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<BuddyIDFormData>(INITIAL_FORM_DATA);
   const scrollRef = useRef<ScrollView>(null);
@@ -152,7 +161,7 @@ export default function Flow() {
   function isContinueDisabled(): boolean {
     switch (currentStep) {
       case 'q1': return form.name.trim().length < 1;
-      case 'q2': return form.breed.trim().length < 1 || !form.size;
+      case 'q2': return !DOG_BREEDS_PT.includes(form.breed) || !form.size;
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
       case 'q4': 
         return !form.energy || !form.withStrangers || !form.withHomePeople || 
@@ -175,8 +184,14 @@ export default function Flow() {
   }
 
   const continueLabel = currentStep === 'consent'
-    ? `Criar o BuddyID do ${form.name || 'meu cão'}`
-    : 'Continuar';
+    ? form.name.trim()
+      ? form.gender === 'Fêmea'
+        ? t('buddyId.flow.ctaCreateFemale', { name: form.name })
+        : t('buddyId.flow.ctaCreateMale', { name: form.name })
+      : form.gender === 'Fêmea'
+        ? t('buddyId.flow.ctaCreateDefaultFemale')
+        : t('buddyId.flow.ctaCreateDefaultMale')
+    : t('buddyId.flow.continue');
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
@@ -282,17 +297,61 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
     { value: 'L', label: '(25–40 kg)' },
     { value: 'XL', label: isEn ? '(over 40 kg)' : '(mais de 40 kg)' },
   ];
+
+  const [search, setSearch] = useState(form.breed);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query || query === form.breed.toLowerCase()) return DOG_BREEDS_PT;
+    return DOG_BREEDS_PT.filter(b => b.toLowerCase().includes(query));
+  }, [search, form.breed]);
+
+  function handleSelect(breedName: string) {
+    update('breed', breedName);
+    setSearch(breedName);
+    setShowSuggestions(false);
+  }
+
+  function handleChangeText(text: string) {
+    setSearch(text);
+    const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
+    if (exactMatch) {
+      update('breed', exactMatch);
+    } else {
+      update('breed', '');
+    }
+    setShowSuggestions(true);
+  }
+
   return (
-    <View>
+    <View style={{ zIndex: 10 }}>
       <Text style={s.question}>Qual é a raça do teu cão?</Text>
       <SectionLabel>Raça</SectionLabel>
-      <TextInput
-        style={s.input}
-        placeholder="Ex: Border Collie, Labrador..."
-        placeholderTextColor={colors.textMuted}
-        value={form.breed}
-        onChangeText={(v) => update('breed', v)}
-      />
+      <View style={s.inputContainer}>
+        <TextInput
+          style={s.inputInside}
+          placeholder="Ex: Border Collie, Labrador..."
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={handleChangeText}
+          onFocus={() => setShowSuggestions(true)}
+        />
+        <TouchableOpacity style={s.dropdownArrow} onPress={() => setShowSuggestions(!showSuggestions)}>
+          <ChevronDownIcon size={20} color={colors.textMuted} />
+        </TouchableOpacity>
+      </View>
+      {showSuggestions && suggestions.length > 0 && (
+        <View style={s.suggestionsContainer}>
+          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {suggestions.map((item) => (
+              <TouchableOpacity key={item} style={s.suggestionItem} onPress={() => handleSelect(item)}>
+                <Text style={s.suggestionItemText}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
       <SectionLabel>Tamanho</SectionLabel>
       <View style={s.sizeCol}>
         {sizes.map((item) => (
@@ -600,6 +659,55 @@ const s = StyleSheet.create({
     color: colors.text,
     marginTop: spacing[2],
     marginBottom: spacing[4],
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.borderSoft,
+    borderRadius: 12,
+    marginTop: spacing[2],
+    marginBottom: spacing[4],
+  },
+  inputInside: {
+    flex: 1,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    fontFamily: font.regular,
+    fontSize: fontSize.base,
+    color: colors.text,
+  },
+  dropdownArrow: {
+    paddingHorizontal: spacing[3],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suggestionsContainer: {
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.borderSoft,
+    borderRadius: 12,
+    marginTop: -spacing[3],
+    marginBottom: spacing[4],
+    maxHeight: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 100,
+  },
+  suggestionItem: {
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+  },
+  suggestionItemText: {
+    fontFamily: font.medium,
+    fontSize: fontSize.base,
+    color: colors.text,
   },
   inputMultiline: { height: 100, paddingTop: spacing[3] },
   sizeRow: { flexDirection: 'row', gap: spacing[2], marginTop: spacing[2], marginBottom: spacing[4] },

@@ -7,7 +7,7 @@ import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon } from '../components/Icons';
 
 const BUDDYID_RESULT_KEY = 'buddyid_result';
-interface Result { dogName: string; breed: string; age: string; buddyId: string; completionPercent: number; }
+interface Result { dogName: string; breed: string; age: string; buddyId: string; completionPercent: number; gender?: string; }
 
 export default function Success() {
   const [results,       setResults]       = useState<Result[]>([]);
@@ -22,15 +22,28 @@ export default function Success() {
   async function handleShare() {
     const r = results[selectedIndex];
     if (!r) return;
-    await Share.share({ message: `O BuddyID do ${r.dogName} é ${r.buddyId}! Cria o teu em buddy.pet` });
+    const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || 'http://localhost:8081';
+    const article = r.gender === 'Fêmea' ? 'da' : 'do';
+    const link = `${baseWebUrl}/buddyid/public/${r.buddyId}`;
+    await Share.share({
+      message: `O BuddyID ${article} ${r.dogName} foi criado! Vê o perfil aqui: ${link}`,
+      url: link,
+    });
   }
 
   const current = results[selectedIndex];
   const pct     = current?.completionPercent ?? 65;
+  
+  const article = current?.gender === 'Fêmea' ? 'A' : 'O';
+  const wordGender = current?.gender === 'Fêmea' ? 'registada' : 'registado';
+  
+  const allFemale = results.every(r => r.gender === 'Fêmea');
+  const wordGenderPlural = allFemale ? 'registadas' : 'registados';
+
   const title   = current
     ? results.length === 1
-      ? `O ${results[0].dogName} está\nregistado!`
-      : `${results.map(r => r.dogName).join(', ')}\nestão registados!`
+      ? `${article} ${results[0].dogName} está\n${wordGender}!`
+      : `${results.map(r => r.dogName).join(', ')}\nestão ${wordGenderPlural}!`
     : '...';
 
   return (
@@ -78,7 +91,7 @@ export default function Success() {
 
         <TouchableOpacity style={s.ctaSecondary} onPress={handleShare}>
           <ShareIcon size={18} color={colors.primary} />
-          <Text style={s.ctaSecondaryText}>Partilhar o BuddyID do {current?.dogName ?? '...'}</Text>
+          <Text style={s.ctaSecondaryText}>Partilhar o BuddyID {current?.gender === 'Fêmea' ? 'da' : 'do'} {current?.dogName ?? '...'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.ctaGhost} onPress={() => router.replace('/buddyid' as any)}>

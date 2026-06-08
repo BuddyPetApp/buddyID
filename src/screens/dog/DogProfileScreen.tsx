@@ -7,6 +7,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -43,16 +44,19 @@ const HERO_HEIGHT = 150;
 const AVATAR_SIZE = 110;
 const AVATAR_BORDER = 4;
 
-export default function DogProfileScreen({ id }: { id?: string }) {
+export default function DogProfileScreen({ id, isPublic = false }: { id?: string; isPublic?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
   const [profile, setProfile] = useState<DogProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isReadOnly = isPublic;
+
   const fetchProfile = () => {
     if (!id) return;
     setLoading(true);
-    apiClient.get<any>(`/dogs/${id}`)
+    const endpoint = isPublic ? `/dogs/${id}/public` : `/dogs/${id}`;
+    apiClient.get<any>(endpoint)
       .then((data) => {
         if (data) {
           const mappedProfile: DogProfile = {
@@ -132,10 +136,17 @@ export default function DogProfileScreen({ id }: { id?: string }) {
     .join(' · ');
 
   const handleShare = () => {
-    Alert.alert(t('tutor.dogProfile.comingSoon'), t('tutor.dogProfile.sharingSoon', { name: basic.name }));
+    const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || 'http://localhost:8081';
+    const article = basic.gender === 'female' ? 'da' : 'do';
+    const link = `${baseWebUrl}/buddyid/public/${profile.id}`;
+    Share.share({
+      message: `Vê o BuddyID ${article} ${basic.name}! ${link}`,
+      url: link,
+    }).catch(console.error);
   };
 
   const goToEdit = (section: 'basic' | 'habits' | 'behavior' | 'health') => {
+    if (isReadOnly) return;
     router.push(`/buddyid/dog/${profile.id}/edit-${section}` as any);
   };
 
@@ -173,39 +184,41 @@ export default function DogProfileScreen({ id }: { id?: string }) {
         </View>
 
         {/* Progress Card */}
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressTitle}>{t('tutor.dogProfile.knowBetter', { name: basic.name })}</Text>
-            <Text style={styles.progressPct}>{progress}%</Text>
-          </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
-          </View>
-          <Text style={styles.progressBody}>
-            {progress === 100
-              ? t('tutor.dogProfile.profileComplete')
-              : t('tutor.dogProfile.theMoreTheyTell', { name: basic.name })}
-          </Text>
+        {!isReadOnly && (
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>{t('tutor.dogProfile.knowBetter', { name: basic.name })}</Text>
+              <Text style={styles.progressPct}>{progress}%</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            </View>
+            <Text style={styles.progressBody}>
+              {progress === 100
+                ? t('tutor.dogProfile.profileComplete')
+                : t('tutor.dogProfile.theMoreTheyTell', { name: basic.name })}
+            </Text>
 
-          <View style={styles.progressRows}>
-            <ProgressRow
-              label={t('tutor.dogProfile.basicInfo')}
-              complete={completeness.basic}
-              onPress={() => goToEdit('basic')}
-            />
-            <ProgressRow
-              label={t('tutor.dogProfile.habits')}
-              complete={completeness.habits}
-              onPress={() => goToEdit('habits')}
-            />
-            <ProgressRow
-              label={t('tutor.dogProfile.behavioralProfile')}
-              complete={completeness.behavior}
-              onPress={() => goToEdit('behavior')}
-              isLast
-            />
+            <View style={styles.progressRows}>
+              <ProgressRow
+                label={t('tutor.dogProfile.basicInfo')}
+                complete={completeness.basic}
+                onPress={() => goToEdit('basic')}
+              />
+              <ProgressRow
+                label={t('tutor.dogProfile.habits')}
+                complete={completeness.habits}
+                onPress={() => goToEdit('habits')}
+              />
+              <ProgressRow
+                label={t('tutor.dogProfile.behavioralProfile')}
+                complete={completeness.behavior}
+                onPress={() => goToEdit('behavior')}
+                isLast
+              />
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Section Links */}
         <Text style={styles.sectionTitle}>Secções do Perfil</Text>
@@ -214,22 +227,26 @@ export default function DogProfileScreen({ id }: { id?: string }) {
             title={t('tutor.dogProfile.basicInfo')}
             complete={completeness.basic}
             onPress={() => goToEdit('basic')}
+            disabled={isReadOnly}
           />
           <SectionLink
             title={t('tutor.dogProfile.habits')}
             complete={completeness.habits}
             onPress={() => goToEdit('habits')}
+            disabled={isReadOnly}
           />
           <SectionLink
             title={t('tutor.dogProfile.behavioralProfile')}
             complete={completeness.behavior}
             onPress={() => goToEdit('behavior')}
+            disabled={isReadOnly}
           />
           <SectionLink
             title={t('tutor.dogProfile.health')}
             complete={!!profile.health && Object.keys(profile.health).length > 0}
             optional
             onPress={() => goToEdit('health')}
+            disabled={isReadOnly}
             isLast
           />
         </View>
@@ -278,21 +295,23 @@ function SectionLink({
   optional = false,
   onPress,
   isLast = false,
+  disabled = false,
 }: {
   title: string;
   complete: boolean;
   optional?: boolean;
   onPress: () => void;
   isLast?: boolean;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [
         styles.sLink,
         !isLast && styles.sLinkDivider,
-        pressed && { backgroundColor: 'rgba(0,0,0,0.02)' },
+        pressed && !disabled && { backgroundColor: 'rgba(0,0,0,0.02)' },
       ]}
     >
       <View style={{ flex: 1 }}>
@@ -305,7 +324,7 @@ function SectionLink({
             : t('tutor.dogProfile.addLower')}
         </Text>
       </View>
-      <ChevronRight />
+      {!disabled && <ChevronRight />}
     </Pressable>
   );
 }
