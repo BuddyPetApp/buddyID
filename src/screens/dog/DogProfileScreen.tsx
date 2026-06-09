@@ -457,7 +457,8 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
           </View>
         )}
 
-        <View style={styles.linksCard}>
+        {isReadOnly && (
+          <View style={styles.linksCard}>
           <AccordionSection
             title={t('tutor.dogProfile.basicInfo')}
             summary={basicSummary}
@@ -549,7 +550,8 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
               ))}
             </AccordionSection>
           )}
-        </View>
+          </View>
+        )}
 
         {!isReadOnly && (
           <Pressable
