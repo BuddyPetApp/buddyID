@@ -48,7 +48,8 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
   const fetchProfile = () => {
     if (!id) return;
     setLoading(true);
-    apiClient.get<any>(`/dogs/${id}`)
+    const endpoint = isReadOnly ? `/dogs/${id}/public` : `/dogs/${id}`;
+    apiClient.get<any>(endpoint)
       .then((data) => {
         if (data) {
           setProfile(data);

@@ -96,7 +96,8 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
   const fetchProfile = () => {
     if (!id) return;
     setLoading(true);
-    apiClient.get<any>(`/dogs/${id}`)
+    const endpoint = isReadOnly ? `/dogs/${id}/public` : `/dogs/${id}`;
+    apiClient.get<any>(endpoint)
       .then((data) => {
         if (data) {
           setProfile(data);
