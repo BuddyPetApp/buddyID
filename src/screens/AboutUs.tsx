@@ -15,7 +15,7 @@ import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
 import { ChevronRightIcon } from '../components/Icons';
 
-export default function SobreNos() {
+export default function AboutUs() {
   const router = useRouter();
 
   return (
@@ -131,7 +131,7 @@ export default function SobreNos() {
           </Text>
           <TouchableOpacity
             style={styles.joinButton}
-            onPress={() => router.push('/buddyid/contacto' as any)}
+            onPress={() => router.push('/buddyid/contact' as any)}
             activeOpacity={0.8}
           >
             <Text style={styles.joinButtonText}>Falar com a equipa</Text>

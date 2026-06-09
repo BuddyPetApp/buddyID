@@ -7,9 +7,9 @@ import { colors, font, spacing } from '../tokens';
 
 const NAV_ITEMS = [
   { label: 'BuddyID',    route: '/buddyid',            Icon: ({ color }: any) => <Logomark color={color} size={22} /> },
-  { label: 'Sobre nós',  route: '/buddyid/sobre-nos',  Icon: ({ color }: any) => <InfoIcon size={22} color={color} strokeWidth={2} /> },
-  { label: 'Marketplace', route: '/buddyid/parceiros',  Icon: ({ color }: any) => <UsersIcon size={22} color={color} strokeWidth={2} /> },
-  { label: 'Contacto',   route: '/buddyid/contacto',   Icon: ({ color }: any) => <MailIcon size={22} color={color} strokeWidth={2} /> },
+  { label: 'Sobre nós',  route: '/buddyid/about-us',  Icon: ({ color }: any) => <InfoIcon size={22} color={color} strokeWidth={2} /> },
+  { label: 'Marketplace', route: '/buddyid/providers',  Icon: ({ color }: any) => <UsersIcon size={22} color={color} strokeWidth={2} /> },
+  { label: 'Contacto',   route: '/buddyid/contact',   Icon: ({ color }: any) => <MailIcon size={22} color={color} strokeWidth={2} /> },
 ];
 
 export function NavBar() {

@@ -53,7 +53,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-export default function Contacto() {
+export default function Contact() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');

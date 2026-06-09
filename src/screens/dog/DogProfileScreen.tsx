@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -136,11 +137,13 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     .join(' · ');
 
   const handleShare = () => {
-    const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || 'http://localhost:8081';
+    const baseWebUrl = Platform.OS === 'web' && typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.EXPO_PUBLIC_FORM_WEB_URL || 'https://buddy.pet');
     const article = basic.gender === 'female' ? 'da' : 'do';
     const link = `${baseWebUrl}/buddyid/public/${profile.id}`;
     Share.share({
-      message: `Vê o BuddyID ${article} ${basic.name}! ${link}`,
+      message: Platform.OS === 'android' ? `Vê o BuddyID ${article} ${basic.name}! ${link}` : `Vê o BuddyID ${article} ${basic.name}!`,
       url: link,
     }).catch(console.error);
   };

@@ -10,9 +10,8 @@ export default function BuddyIDLayout() {
       <Stack.Screen name="second-dog" options={{ gestureEnabled: false }} />
       <Stack.Screen name="providers" />
       <Stack.Screen name="associations" />
-      <Stack.Screen name="sobre-nos" />
-      <Stack.Screen name="parceiros" />
-      <Stack.Screen name="contacto" />
+      <Stack.Screen name="about-us" />
+      <Stack.Screen name="contact" />
       <Stack.Screen name="dog/[id]/index" />
       <Stack.Screen name="dog/[id]/edit-basic" />
       <Stack.Screen name="dog/[id]/edit-habits" />
