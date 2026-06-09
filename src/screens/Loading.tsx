@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View, Alert, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { supabase } from '../lib/supabase';
 import { apiClient } from '../api/client';
 import { colors, font, fontSize, spacing } from '../tokens';
 import { Logomark } from '../components/Logo';
@@ -46,6 +47,35 @@ export default function Loading() {
       try {
         const results = [];
         for (const form of dogs) {
+          let finalPhotoUrl = form.photoUri;
+          if (form.photoUri && form.photoUri.startsWith('file://')) {
+            try {
+              const fileResponse = await fetch(form.photoUri);
+              const blob = await fileResponse.blob();
+              let fileExt = 'jpg';
+              const parts = form.photoUri.split('.');
+              const lastPart = parts[parts.length - 1];
+              fileExt = lastPart.split('?')[0] || 'jpg';
+              fileExt = fileExt.toLowerCase();
+              if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) fileExt = 'jpg';
+              
+              const fileName = `buddyid_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+              const filePath = `avatars/${fileName}`;
+              
+              const { error: uploadError } = await supabase.storage.from('dogs').upload(filePath, blob, {
+                contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
+                upsert: true,
+              });
+              
+              if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage.from('dogs').getPublicUrl(filePath);
+                finalPhotoUrl = publicUrl;
+              }
+            } catch (err) {
+              console.warn('Failed to upload buddyid photo', err);
+            }
+          }
+
           const command = {
             name: form.name, breed: form.breed,
             size: form.size === 'XS' ? 'xs' :
@@ -61,7 +91,7 @@ export default function Loading() {
             habitsJson: JSON.stringify({ housing: form.housing, housemates: form.housemates, sleepingPlace: form.sleepingPlace, exerciseDuration: form.exerciseDuration, separationAnxiety: form.separationAnxiety, services: form.services, customService: form.customService, goals: form.goals }),
             behaviorJson: JSON.stringify({ energy: form.energy, withStrangers: form.withStrangers, withHomePeople: form.withHomePeople, obedience: form.obedience, attachment: form.attachment, touchSensitivity: form.touchSensitivity, newSituations: form.newSituations, leashBehavior: form.leashBehavior, fears: form.fears, customFear: form.customFear }),
             healthJson: JSON.stringify({ traumaHistory: form.traumaHistory, concerns: form.hasConcerns, concernsText: form.concernsText }),
-            photoUrl: form.photoUri,
+            photoUrl: finalPhotoUrl,
           };
           const response = await apiClient.post<{ dogId: string }>('/dogs', command);
           const pct = Math.min(Math.round((Object.values(form).filter(v => v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)).length / 20) * 100), 95);
