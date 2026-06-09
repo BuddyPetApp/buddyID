@@ -264,7 +264,7 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
 
   if (loading) {
     return (
-      <DogScreenShell title={t('tutor.editHealthScreen.healthAndVets')} onBack={handleBack}>
+      <DogScreenShell title={t('tutor.editHealth.health')} onBack={handleBack}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -274,7 +274,7 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
 
   return (
     <DogScreenShell
-      title={t('tutor.editHealthScreen.healthAndVets')}
+      title={t('tutor.editHealth.health')}
       contentBackground={DOG_COLORS.white}
       onBack={handleBack}
       bottomBar={!isReadOnly ? <ConfirmButton label={t('tutor.dogEditShared.save')} onPress={handleSave} disabled={saving} /> : undefined}
