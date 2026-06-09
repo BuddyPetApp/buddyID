@@ -165,6 +165,11 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     return computeProgress(profile);
   }, [profile]);
 
+  const basicSummary = useMemo(() => buildBasicSummary(profile), [profile]);
+  const habitsSummary = useMemo(() => buildHabitsSummary(profile, t), [profile, t]);
+  const behaviorSummary = useMemo(() => buildBehaviorSummary(profile, t), [profile, t]);
+  const healthSummary = useMemo(() => buildHealthSummary(profile, t), [profile, t]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingWrap}>
@@ -194,11 +199,6 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
   ]
     .filter(Boolean)
     .join(' · ');
-
-  const basicSummary = useMemo(() => buildBasicSummary(profile), [profile]);
-  const habitsSummary = useMemo(() => buildHabitsSummary(profile, t), [profile, t]);
-  const behaviorSummary = useMemo(() => buildBehaviorSummary(profile, t), [profile, t]);
-  const healthSummary = useMemo(() => buildHealthSummary(profile, t), [profile, t]);
 
   const handleShare = () => {
     const baseWebUrl = Platform.OS === 'web' && typeof window !== 'undefined'
