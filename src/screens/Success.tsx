@@ -3,6 +3,7 @@ import { ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon, EyeIcon } from '../components/Icons';
 
@@ -10,6 +11,7 @@ const BUDDYID_RESULT_KEY = 'buddyid_result';
 interface Result { dogName: string; breed: string; age: string; buddyId: string; completionPercent: number; gender?: string; }
 
 export default function Success() {
+  const { t } = useTranslation();
   const [results,       setResults]       = useState<Result[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -23,28 +25,32 @@ export default function Success() {
     const r = results[selectedIndex];
     if (!r) return;
     const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || 'http://localhost:8081';
-    const article = r.gender === 'Fêmea' ? 'da' : 'do';
     const link = `${baseWebUrl}/buddyid/public/${r.buddyId}`;
-    await Share.share({
-      message: `O BuddyID ${article} ${r.dogName} foi criado! Vê o perfil aqui: ${link}`,
-      url: link,
-    });
+    
+    const isFemale = r.gender === 'Fêmea';
+    const message = isFemale 
+      ? t('buddyId.flow.successShareMessageFemale', { name: r.dogName, buddyId: r.buddyId })
+      : t('buddyId.flow.successShareMessageMale', { name: r.dogName, buddyId: r.buddyId });
+      
+    await Share.share({ message, url: link });
   }
 
   const current = results[selectedIndex];
   const pct     = current?.completionPercent ?? 65;
   
-  const article = current?.gender === 'Fêmea' ? 'A' : 'O';
-  const wordGender = current?.gender === 'Fêmea' ? 'registada' : 'registado';
-  
   const allFemale = results.every(r => r.gender === 'Fêmea');
-  const wordGenderPlural = allFemale ? 'registadas' : 'registados';
 
-  const title   = current
-    ? results.length === 1
-      ? `${article} ${results[0].dogName} está\n${wordGender}!`
-      : `${results.map(r => r.dogName).join(', ')}\nestão ${wordGenderPlural}!`
-    : '...';
+  let title = '...';
+  if (current && results.length === 1) {
+    title = current.gender === 'Fêmea'
+      ? t('buddyId.flow.successTitleFemale', { name: results[0].dogName })
+      : t('buddyId.flow.successTitleMale', { name: results[0].dogName });
+  } else if (current && results.length > 1) {
+    const names = results.map(r => r.dogName).join(', ');
+    title = allFemale 
+      ? t('buddyId.flow.successTitlePluralFemale', { names })
+      : t('buddyId.flow.successTitlePluralMale', { names });
+  }
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
@@ -69,7 +75,7 @@ export default function Success() {
             <Text style={s.cardId}>{current?.buddyId}</Text>
             <View style={s.founderBadge}>
               <StarIcon size={11} color="#92400E" strokeWidth={2} />
-              <Text style={s.founderBadgeText}>Membro Fundador</Text>
+              <Text style={s.founderBadgeText}>{t('buddyId.flow.successFounder')}</Text>
             </View>
           </View>
           <ChevronRightIcon size={18} color="rgba(255,255,255,0.5)" />
@@ -77,30 +83,34 @@ export default function Success() {
 
         <View style={s.progressBlock}>
           <View style={s.progressRow}>
-            <Text style={s.progressLabel}>Perfil completo</Text>
+            <Text style={s.progressLabel}>{t('buddyId.flow.successProfileComplete')}</Text>
             <Text style={s.progressPct}>{pct}%</Text>
           </View>
           <View style={s.progressTrack}><View style={[s.progressFill, { width: `${pct}%` as any }]} /></View>
-          <Text style={s.progressHint}>Quanto mais completo, melhores as recomendações.</Text>
+          <Text style={s.progressHint}>{t('buddyId.flow.successProfileHint')}</Text>
         </View>
 
         <TouchableOpacity style={s.ctaPrimary} onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}>
           <CheckIcon size={18} color="#fff" strokeWidth={2.5} />
-          <Text style={s.ctaPrimaryText}>Completar Perfil</Text>
+          <Text style={s.ctaPrimaryText}>{t('buddyId.flow.successCompleteProfile')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.ctaSecondary} onPress={() => current?.buddyId && router.push(`/buddyid/public/${current.buddyId}` as any)}>
           <EyeIcon size={18} color={colors.primary} />
-          <Text style={s.ctaSecondaryText}>Ver BuddyID Público</Text>
+          <Text style={s.ctaSecondaryText}>{t('buddyId.flow.successPublicBuddyId')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.ctaSecondary} onPress={handleShare}>
           <ShareIcon size={18} color={colors.primary} />
-          <Text style={s.ctaSecondaryText}>Partilhar o BuddyID {current?.gender === 'Fêmea' ? 'da' : 'do'} {current?.dogName ?? '...'}</Text>
+          <Text style={s.ctaSecondaryText}>
+            {current?.gender === 'Fêmea' 
+              ? t('buddyId.flow.successShareBtnFemale', { name: current.dogName }) 
+              : t('buddyId.flow.successShareBtnMale', { name: current?.dogName ?? '...' })}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.ctaGhost} onPress={() => router.replace('/buddyid' as any)}>
-          <Text style={s.ctaGhostText}>Ir para o início</Text>
+          <Text style={s.ctaGhostText}>{t('buddyId.flow.successGoHome')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

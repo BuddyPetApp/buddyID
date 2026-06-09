@@ -35,6 +35,12 @@ export default {
         successShareMessageFemale: "O BuddyID da {{name}} é {{buddyId}}! Cria o teu em buddy.pet",
         successShareBtnMale: "Partilhar o BuddyID do {{name}}",
         successShareBtnFemale: "Partilhar o BuddyID da {{name}}",
+        successPublicBuddyId: "Ver BuddyID Público",
+        successCompleteProfile: "Completar Perfil",
+        successGoHome: "Ir para o início",
+        successFounder: "Membro Fundador",
+        successProfileComplete: "Perfil completo",
+        successProfileHint: "Quanto mais completo, melhores as recomendações.",
       }
     },
     tutor: {
