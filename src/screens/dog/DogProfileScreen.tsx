@@ -295,6 +295,11 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
                 label={t('tutor.dogProfile.behavioralProfile')}
                 complete={completeness.behavior}
                 onPress={() => goToEdit('behavior')}
+              />
+              <ProgressRow
+                label={t('tutor.dogProfile.health')}
+                complete={hasHealth}
+                onPress={() => goToEdit('health')}
                 isLast
               />
             </View>
@@ -319,10 +324,10 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             <DataRow label="Género" value={basic.gender ? GENDER_LABELS_PT[basic.gender] : null} />
             <DataRow label="Peso" value={basic.weightKg ? `${basic.weightKg} kg` : null} />
             <DataRow label="Tamanho" value={basic.size ? SIZE_LABELS_PT[basic.size] : null} />
-            <DataRow label="Esterilizado" value={basic.isSterilized === true ? 'Sim' : basic.isSterilized === false ? 'Não' : 'Desconhecido'} />
+            <DataRow label="Esterilizado" value={basic.isSterilized === true ? 'Sim' : basic.isSterilized === false ? 'Não' : null} />
           </AccordionSection>
 
-          {(!isReadOnly || hasHabits) && (
+          {hasHabits && (
             <AccordionSection
               title={t('tutor.dogProfile.habits')}
               summary={habitsSummary}
@@ -346,7 +351,7 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             </AccordionSection>
           )}
 
-          {(!isReadOnly || hasBehavior) && (
+          {hasBehavior && (
             <AccordionSection
               title={t('tutor.dogProfile.behavioralProfile')}
               summary={behaviorSummary}
@@ -365,7 +370,7 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             </AccordionSection>
           )}
 
-          {(!isReadOnly || hasHealth) && (
+          {hasHealth && (
             <AccordionSection
               title={t('tutor.dogProfile.health')}
               summary={healthSummary}
@@ -482,7 +487,7 @@ function AccordionSection({
              )
           )}
         </View>
-        <View style={[styles.chevronWrap, expanded && { transform: [{ rotate: '90deg' }] }]}>
+        <View style={[styles.chevronWrap, { transform: [{ rotate: expanded ? '-90deg' : '90deg' }] }]}>
           <ChevronRight />
         </View>
       </Pressable>
