@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, usePathname } from 'expo-router';
 import { colors, font, fontSize, radius, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
@@ -150,8 +151,14 @@ export default function Landing() {
       Animated.timing(slide, { toValue: 0, duration: 500, useNativeDriver: true }),
     ]).start();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
+        const pending = await AsyncStorage.getItem('buddyid_pending_dogs');
+        if (pending && pending !== '[]') {
+          router.replace('/buddyid/loading' as any);
+          return;
+        }
+
         setHasSession(true);
         apiClient.get<any>('/tutors/me')
           .then((data) => {
@@ -191,11 +198,23 @@ export default function Landing() {
               <ActivityIndicator size="large" color={colors.primary} />
             </View>
 
-          ) : hasSession && dogs.length > 0 ? (
+          ) : hasSession ? (
             // ── Dashboard ──
             <View style={s.dashboard}>
-              <Text style={s.welcome}>Olá, {tutorName}</Text>
-              <Text style={s.dashTitle}>O teu BuddyID</Text>
+              <View style={s.dashHeader}>
+                <View>
+                  <Text style={s.welcome}>Olá, {tutorName}</Text>
+                  <Text style={s.dashTitle}>O teu BuddyID</Text>
+                </View>
+                <TouchableOpacity onPress={async () => {
+                  await supabase.auth.signOut();
+                  setHasSession(false);
+                  setDogs([]);
+                  setTutorName('');
+                }}>
+                  <Text style={s.logoutText}>Terminar Sessão</Text>
+                </TouchableOpacity>
+              </View>
 
               {dogs.length > 1 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.switcher} contentContainerStyle={s.switcherContent}>
@@ -214,6 +233,14 @@ export default function Landing() {
                     );
                   })}
                 </ScrollView>
+              )}
+
+              {dogs.length === 0 && (
+                <View style={{ marginBottom: spacing[4] }}>
+                  <Text style={{ fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary }}>
+                    Ainda não tens nenhum cão registado.
+                  </Text>
+                </View>
               )}
 
               {activeDog && (
@@ -413,8 +440,10 @@ const s = StyleSheet.create({
   // Loading / Dashboard
   loadingWrap: { minHeight: 300, alignItems: 'center', justifyContent: 'center' },
   dashboard:   { paddingHorizontal: spacing[5], paddingTop: spacing[6] },
+  dashHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   welcome:     { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, marginBottom: spacing[1] },
   dashTitle:   { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[6] },
+  logoutText:  { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.primary, paddingTop: spacing[1] },
 
   // Dog switcher
   switcher:        { marginBottom: spacing[5] },
