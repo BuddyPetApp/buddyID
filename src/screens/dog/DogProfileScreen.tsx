@@ -163,7 +163,7 @@ function buildHabitsSummary(profile: any, t: any): string | null {
   
   if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing as HousingType] || h.lifestyle.housing);
   if (h.origin) parts.push(h.origin);
-  if (h.preferredServices?.length) parts.push(`${h.preferredServices.length} serviço${h.preferredServices.length === 1 ? '' : 's'}`);
+  if (Array.isArray(h.preferredServices) && h.preferredServices.length) parts.push(`${h.preferredServices.length} serviço${h.preferredServices.length === 1 ? '' : 's'}`);
   if (h.activity?.level) parts.push(`Atividade ${ACTIVITY_LEVEL_LABELS_PT[h.activity.level as ActivityLevel]?.toLowerCase() || h.activity.level}`);
   
   return parts.length > 0 ? parts.slice(0, 3).join(' · ') : null;
@@ -175,16 +175,17 @@ function buildBehaviorSummary(profile: any, t: any): string | null {
   const parts: string[] = [];
 
   if (b.separationAnxiety) {
-    parts.push(`Ansiedade: ${b.separationAnxiety.toLowerCase()}`);
+    const sa = Array.isArray(b.separationAnxiety) ? b.separationAnxiety[0] : b.separationAnxiety;
+    if (sa) parts.push(`Ansiedade: ${String(sa).toLowerCase()}`);
   }
-  if (b.likes?.length) {
+  if (Array.isArray(b.likes) && b.likes.length) {
     parts.push(`Gosta de ${b.likes.slice(0, 2).join(', ').toLowerCase()}`);
   }
-  if (b.fears?.length) {
+  if (Array.isArray(b.fears) && b.fears.length) {
     parts.push(b.fears.length === 1 ? '1 medo' : `${b.fears.length} medos`);
   }
-  if (b.leashBehavior?.length) {
-    parts.push(`Trela: ${b.leashBehavior[0].toLowerCase()}`);
+  if (Array.isArray(b.leashBehavior) && b.leashBehavior.length) {
+    parts.push(`Trela: ${String(b.leashBehavior[0]).toLowerCase()}`);
   }
 
   return parts.length > 0 ? parts.slice(0, 3).join(' · ') : null;
@@ -194,10 +195,16 @@ function buildHealthSummary(profile: any, t: any): string | null {
   const health = profile?.health;
   if (!health) return null;
   const parts: string[] = [];
-  const vaccines = health.vaccines ?? [];
+  const vaccines = Array.isArray(health.vaccines) ? health.vaccines : [];
   if (vaccines.length > 0) {
-    const latest = [...vaccines].sort((a: any, b: any) => b.date.localeCompare(a.date))[0];
-    parts.push(t('tutor.dogProfile.lastVaccine', { date: isoToShortDisplay(latest.date) }));
+    const latest = [...vaccines].sort((a: any, b: any) => {
+      const dA = a?.date || '';
+      const dB = b?.date || '';
+      return dB.localeCompare(dA);
+    })[0];
+    if (latest && latest.date) {
+      parts.push(t('tutor.dogProfile.lastVaccine', { date: isoToShortDisplay(latest.date) }));
+    }
   }
   const allergyCount = (health.allergies?.tags?.length ?? 0) + (health.allergies?.other ? 1 : 0);
   if (allergyCount > 0) {
@@ -687,14 +694,14 @@ function DataRow({ label, value }: { label: string; value?: string | number | nu
 }
 
 function DataTags({ label, values }: { label: string; values?: string[] }) {
-  if (!values || values.length === 0) return null;
+  if (!values || !Array.isArray(values) || values.length === 0) return null;
   return (
     <View style={styles.dataTagsWrap}>
       <Text style={styles.dataLabel}>{label}</Text>
       <View style={styles.tagsContainer}>
-        {values.map(v => (
-          <View key={v} style={styles.tag}>
-            <Text style={styles.tagText}>{v}</Text>
+        {values.map((v, idx) => (
+          <View key={idx} style={styles.tag}>
+            <Text style={styles.tagText}>{String(v)}</Text>
           </View>
         ))}
       </View>
