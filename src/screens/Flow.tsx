@@ -328,7 +328,7 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
     <View style={{ zIndex: 10 }}>
       <Text style={s.question}>Qual é a raça do teu cão?</Text>
       <SectionLabel>Raça</SectionLabel>
-      <View style={s.inputContainer}>
+      <View style={[s.inputContainer, { zIndex: 20 }]}>
         <TextInput
           style={s.inputInside}
           placeholder="Ex: Border Collie, Labrador..."
@@ -341,17 +341,19 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
           <ChevronDownIcon size={20} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
-      {showSuggestions && suggestions.length > 0 && (
-        <View style={s.suggestionsContainer}>
-          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-            {suggestions.map((item) => (
-              <TouchableOpacity key={item} style={s.suggestionItem} onPress={() => handleSelect(item)}>
-                <Text style={s.suggestionItemText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <View style={{ zIndex: 100, elevation: 10 }}>
+        {showSuggestions && suggestions.length > 0 && (
+          <View style={[s.suggestionsContainer, { position: 'absolute', top: -spacing[3], left: 0, right: 0 }]}>
+            <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+              {suggestions.map((item) => (
+                <TouchableOpacity key={item} style={s.suggestionItem} onPress={() => handleSelect(item)}>
+                  <Text style={s.suggestionItemText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
       <SectionLabel>Tamanho</SectionLabel>
       <View style={s.sizeCol}>
         {sizes.map((item) => (
