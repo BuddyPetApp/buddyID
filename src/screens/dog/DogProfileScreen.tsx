@@ -20,7 +20,95 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
 import { ChevronLeftIcon } from '../../components/Icons';
+import Svg, { Path } from 'react-native-svg';
 import { apiClient } from '../../api/client';
+
+function ShareIcon({ size = 20, color = colors.primary }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function ShareSheet({
+  visible,
+  dogName,
+  hasHabits,
+  hasBehavior,
+  hasHealth,
+  onClose,
+  onShare,
+}: {
+  visible: boolean;
+  dogName: string;
+  hasHabits: boolean;
+  hasBehavior: boolean;
+  hasHealth: boolean;
+  onClose: () => void;
+  onShare: (sections: string[]) => void;
+}) {
+  const { t } = useTranslation();
+  const [selected, setSelected] = useState<string[]>(['basic']);
+
+  useEffect(() => {
+    if (visible) setSelected(['basic']);
+  }, [visible]);
+
+  const toggle = (sec: string) => {
+    if (sec === 'basic') return; // Basic is always included
+    setSelected((prev) => prev.includes(sec) ? prev.filter(s => s !== sec) : [...prev, sec]);
+  };
+
+  const translateY = useRef(new Animated.Value(600)).current;
+  useEffect(() => {
+    Animated.timing(translateY, { toValue: visible ? 0 : 600, duration: 250, useNativeDriver: true }).start();
+  }, [visible]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.sheetBackdrop} onPress={onClose}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]} onStartShouldSetResponder={() => true}>
+          <View style={styles.sheetGrabber} />
+          <Text style={styles.sheetTitle}>Partilhar BuddyID</Text>
+          <Text style={styles.sheetSub}>O que queres partilhar do perfil de {dogName}?</Text>
+
+          <View style={styles.sheetOptions}>
+            <Pressable style={[styles.sheetOpt, styles.sheetOptSelected]}>
+              <CheckCircleFilled size={20} />
+              <Text style={[styles.sheetOptLabel, styles.sheetOptLabelSelected]}>Informações Básicas</Text>
+            </Pressable>
+            
+            {hasHabits && (
+              <Pressable style={[styles.sheetOpt, selected.includes('habits') && styles.sheetOptSelected]} onPress={() => toggle('habits')}>
+                {selected.includes('habits') ? <CheckCircleFilled size={20} /> : <CheckCircleOutline size={20} />}
+                <Text style={[styles.sheetOptLabel, selected.includes('habits') && styles.sheetOptLabelSelected]}>Hábitos & Rotinas</Text>
+              </Pressable>
+            )}
+
+            {hasBehavior && (
+              <Pressable style={[styles.sheetOpt, selected.includes('behavior') && styles.sheetOptSelected]} onPress={() => toggle('behavior')}>
+                {selected.includes('behavior') ? <CheckCircleFilled size={20} /> : <CheckCircleOutline size={20} />}
+                <Text style={[styles.sheetOptLabel, selected.includes('behavior') && styles.sheetOptLabelSelected]}>Perfil Comportamental</Text>
+              </Pressable>
+            )}
+
+            {hasHealth && (
+              <Pressable style={[styles.sheetOpt, selected.includes('health') && styles.sheetOptSelected]} onPress={() => toggle('health')}>
+                {selected.includes('health') ? <CheckCircleFilled size={20} /> : <CheckCircleOutline size={20} />}
+                <Text style={[styles.sheetOptLabel, selected.includes('health') && styles.sheetOptLabelSelected]}>Saúde</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <Pressable style={({pressed}) => [styles.sheetBtn, pressed && { opacity: 0.85 }]} onPress={() => onShare(selected)}>
+            <Text style={styles.sheetBtnText}>Gerar Link</Text>
+          </Pressable>
+        </Animated.View>
+      </Pressable>
+    </Modal>
+  );
+}
 import {
   DOG_COLORS,
   DOG_SHADOW,
@@ -122,11 +210,12 @@ const HERO_HEIGHT = 150;
 const AVATAR_SIZE = 110;
 const AVATAR_BORDER = 4;
 
-export default function DogProfileScreen({ id, isPublic = false }: { id?: string; isPublic?: boolean }) {
+export default function DogProfileScreen({ id, isPublic = false, sections }: { id?: string; isPublic?: boolean; sections?: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const [profile, setProfile] = useState<DogProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shareSheetVisible, setShareSheetVisible] = useState(false);
 
   const isReadOnly = isPublic;
 
@@ -209,9 +298,20 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
   const behaviorSummary = useMemo(() => buildBehaviorSummary(profile, t), [profile, t]);
   const healthSummary = useMemo(() => buildHealthSummary(profile, t), [profile, t]);
 
-  const hasHabits = useMemo(() => !!profile && !!profile.habits && Object.keys(profile.habits).length > 0, [profile]);
-  const hasBehavior = useMemo(() => !!profile && !!profile.behavior && Object.keys(profile.behavior).length > 0, [profile]);
-  const hasHealth = useMemo(() => !!profile && !!profile.health && Object.keys(profile.health).length > 0, [profile]);
+  const hasHabits = useMemo(() => {
+    if (isPublic && sections && !sections.includes('habits')) return false;
+    return !!profile && !!profile.habits && Object.keys(profile.habits).length > 0;
+  }, [profile, isPublic, sections]);
+
+  const hasBehavior = useMemo(() => {
+    if (isPublic && sections && !sections.includes('behavior')) return false;
+    return !!profile && !!profile.behavior && Object.keys(profile.behavior).length > 0;
+  }, [profile, isPublic, sections]);
+
+  const hasHealth = useMemo(() => {
+    if (isPublic && sections && !sections.includes('health')) return false;
+    return !!profile && !!profile.health && Object.keys(profile.health).length > 0;
+  }, [profile, isPublic, sections]);
 
   if (loading) {
     return (
@@ -243,12 +343,17 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     .filter(Boolean)
     .join(' · ');
 
-  const handleShare = () => {
+  const handleShare = (sections: string[] = []) => {
     const baseWebUrl = Platform.OS === 'web' && typeof window !== 'undefined'
       ? window.location.origin
       : (process.env.EXPO_PUBLIC_FORM_WEB_URL || 'https://buddy.pet');
     const article = basic.gender === 'female' ? 'da' : 'do';
-    const link = `${baseWebUrl}/buddyid/public/${profile.id}`;
+    
+    let link = `${baseWebUrl}/buddyid/public/${profile.id}`;
+    if (sections.length > 0) {
+      link += `?sections=${sections.join(',')}`;
+    }
+    
     Share.share({
       message: Platform.OS === 'android' ? `Vê o BuddyID ${article} ${basic.name}! ${link}` : `Vê o BuddyID ${article} ${basic.name}!`,
       url: link,
@@ -271,7 +376,13 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
           <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
         </Pressable>
         <Text style={styles.headerTitle}>{isReadOnly ? 'BuddyID' : t('tutor.dogProfile.profile')}</Text>
-        <View style={{ width: 44 }} />
+        {!isReadOnly ? (
+          <Pressable onPress={() => setShareSheetVisible(true)} hitSlop={12} style={styles.shareHeaderBtn}>
+            <ShareIcon size={20} color={colors.primary} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 44 }} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -436,13 +547,28 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
 
         {!isReadOnly && (
           <Pressable
-            onPress={handleShare}
+            onPress={() => setShareSheetVisible(true)}
             style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}
           >
             <Text style={styles.shareBtnText}>{t('tutor.dogProfile.shareCard', { name: basic.name })}</Text>
           </Pressable>
         )}
       </ScrollView>
+
+      {profile && (
+        <ShareSheet
+          visible={shareSheetVisible}
+          dogName={basic.name}
+          hasHabits={hasHabits}
+          hasBehavior={hasBehavior}
+          hasHealth={hasHealth}
+          onClose={() => setShareSheetVisible(false)}
+          onShare={(sections) => {
+            setShareSheetVisible(false);
+            handleShare(sections);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -592,10 +718,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
-    backgroundColor: '#fff',
   },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontFamily: font.bold, fontSize: fontSize.md, color: colors.text },
+  shareHeaderBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   
   scroll: { paddingBottom: spacing[8] },
   hero: {
@@ -694,4 +820,17 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
   },
   shareBtnText: { color: '#fff', fontFamily: font.semiBold, fontSize: fontSize.base },
+
+  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: colors.canvas || '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingBottom: 32 },
+  sheetGrabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.borderSoft || '#eee', alignSelf: 'center', marginBottom: 16 },
+  sheetTitle: { fontFamily: font.bold, fontSize: fontSize.lg, color: colors.text, paddingHorizontal: 20, marginBottom: 4 },
+  sheetSub: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, paddingHorizontal: 20, marginBottom: 20 },
+  sheetOptions: { paddingHorizontal: 20, gap: 12, marginBottom: 24 },
+  sheetOpt: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft || '#eee' },
+  sheetOptSelected: { borderColor: colors.primary, backgroundColor: 'rgba(107, 94, 191, 0.05)' },
+  sheetOptLabel: { fontFamily: font.medium, fontSize: fontSize.base, color: colors.text },
+  sheetOptLabelSelected: { color: colors.primary, fontFamily: font.semiBold },
+  sheetBtn: { backgroundColor: colors.text || '#000', borderRadius: 28, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20 },
+  sheetBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
 });
