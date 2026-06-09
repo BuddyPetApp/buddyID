@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import EditHealthScreen from '../../../../src/screens/dog/EditHealthScreen';
+import PublicHealthScreen from '../../../../src/screens/dog/public/PublicHealthScreen';
 
 export default function Screen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <EditHealthScreen id={id} isReadOnly={true} />;
+  return <PublicHealthScreen id={id} />;
 }
