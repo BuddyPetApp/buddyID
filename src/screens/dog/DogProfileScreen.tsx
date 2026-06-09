@@ -232,13 +232,9 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     <View style={styles.root}>
       {/* Header bar */}
       <View style={styles.header}>
-        {isReadOnly ? (
-          <View style={{ width: 44 }} />
-        ) : (
-          <Pressable onPress={() => router.replace('/buddyid' as any)} hitSlop={12} style={styles.backBtn}>
-            <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
-          </Pressable>
-        )}
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/buddyid' as any)} hitSlop={12} style={styles.backBtn}>
+          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
+        </Pressable>
         <Text style={styles.headerTitle}>{isReadOnly ? 'BuddyID' : t('tutor.dogProfile.profile')}</Text>
         <View style={{ width: 44 }} />
       </View>
