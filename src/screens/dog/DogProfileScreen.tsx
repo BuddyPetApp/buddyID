@@ -457,8 +457,6 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
           </View>
         )}
 
-        {/* Section Links */}
-        <Text style={styles.sectionTitle}>Secções do Perfil</Text>
         <View style={styles.linksCard}>
           <AccordionSection
             title={t('tutor.dogProfile.basicInfo')}
