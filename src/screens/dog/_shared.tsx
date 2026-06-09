@@ -266,6 +266,7 @@ export function RowButton({
 }) {
   const { t } = useTranslation();
   const isEmpty = !value;
+  if (isReadOnly && isEmpty) return null;
   return (
     <Pressable
       onPress={isReadOnly ? undefined : onPress}
@@ -709,10 +710,12 @@ export function ChipsMultiSelect({
 }: {
   options: readonly string[];
   selected: readonly string[];
-  onToggle: (value: string) => void;
+  onToggle: (opt: string) => void;
   variant?: 'primary' | 'amber';
   disabled?: boolean;
 }) {
+  if (disabled && (!selected || selected.length === 0)) return null;
+
   return (
     <View style={chipStyles.wrap}>
       {options.map((opt) => {

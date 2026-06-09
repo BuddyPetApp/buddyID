@@ -228,10 +228,14 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     <View style={styles.root}>
       {/* Header bar */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.replace('/buddyid' as any)} hitSlop={12} style={styles.backBtn}>
-          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{t('tutor.dogProfile.profile')}</Text>
+        {isReadOnly ? (
+          <View style={{ width: 44 }} />
+        ) : (
+          <Pressable onPress={() => router.replace('/buddyid' as any)} hitSlop={12} style={styles.backBtn}>
+            <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
+          </Pressable>
+        )}
+        <Text style={styles.headerTitle}>{isReadOnly ? 'BuddyID' : t('tutor.dogProfile.profile')}</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -329,12 +333,14 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
           />
         </View>
 
-        <Pressable
-          onPress={handleShare}
-          style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}
-        >
-          <Text style={styles.shareBtnText}>{t('tutor.dogProfile.shareCard', { name: basic.name })}</Text>
-        </Pressable>
+        {!isReadOnly && (
+          <Pressable
+            onPress={handleShare}
+            style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={styles.shareBtnText}>{t('tutor.dogProfile.shareCard', { name: basic.name })}</Text>
+          </Pressable>
+        )}
       </ScrollView>
     </View>
   );
