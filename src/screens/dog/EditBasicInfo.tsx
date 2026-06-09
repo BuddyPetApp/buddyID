@@ -69,7 +69,7 @@ function displayToIso(display: string): string | null {
   return d.toISOString().slice(0, 10);
 }
 
-export default function EditBasicInfo({ id }: { id?: string }) {
+export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string; isReadOnly?: boolean }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
 

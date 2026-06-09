@@ -12,6 +12,8 @@ import {
   Text,
   View,
   Platform,
+  UIManager,
+  LayoutAnimation,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +38,7 @@ import {
   FOOD_TYPE_LABELS_PT,
   ACTIVITY_LEVEL_LABELS_PT,
   HOUSING_LABELS_PT,
+  SIZE_LABELS_PT,
   type DogGender,
   type FoodType,
   type ActivityLevel,
@@ -301,44 +304,87 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
         {/* Section Links */}
         <Text style={styles.sectionTitle}>Secções do Perfil</Text>
         <View style={styles.linksCard}>
-          <SectionCard
+          <AccordionSection
             title={t('tutor.dogProfile.basicInfo')}
             summary={basicSummary}
             complete={completeness.basic}
-            onPress={() => goToEdit('basic')}
+            onEdit={() => goToEdit('basic')}
             isReadOnly={isReadOnly}
             isLast={isReadOnly && !hasHabits && !hasBehavior && !hasHealth}
-          />
+          >
+            <DataRow label="Nome" value={basic.name} />
+            <DataRow label="Raça" value={basic.breed} />
+            <DataRow label="Data de Nasc." value={basic.birthdate ? isoToShortDisplay(basic.birthdate) : null} />
+            <DataRow label="Idade" value={age !== null ? `${age} anos` : null} />
+            <DataRow label="Género" value={basic.gender ? GENDER_LABELS_PT[basic.gender] : null} />
+            <DataRow label="Peso" value={basic.weightKg ? `${basic.weightKg} kg` : null} />
+            <DataRow label="Tamanho" value={basic.size ? SIZE_LABELS_PT[basic.size] : null} />
+            <DataRow label="Esterilizado" value={basic.isSterilized === true ? 'Sim' : basic.isSterilized === false ? 'Não' : 'Desconhecido'} />
+          </AccordionSection>
+
           {(!isReadOnly || hasHabits) && (
-            <SectionCard
+            <AccordionSection
               title={t('tutor.dogProfile.habits')}
               summary={habitsSummary}
               complete={completeness.habits}
-              onPress={() => goToEdit('habits')}
+              onEdit={() => goToEdit('habits')}
               isReadOnly={isReadOnly}
               isLast={isReadOnly && !hasBehavior && !hasHealth}
-            />
+            >
+              <DataRow label="Tipo de Alimentação" value={profile.habits?.food?.type ? FOOD_TYPE_LABELS_PT[profile.habits.food.type] : null} />
+              <DataRow label="Marca de Ração" value={profile.habits?.food?.brand} />
+              <DataRow label="Refeições/dia" value={profile.habits?.food?.mealsPerDay} />
+              <DataRow label="Nível de Atividade" value={profile.habits?.activity?.level ? ACTIVITY_LEVEL_LABELS_PT[profile.habits.activity.level] : null} />
+              <DataRow label="Passeios/dia" value={profile.habits?.activity?.walksPerDay} />
+              <DataRow label="Habitação" value={profile.habits?.lifestyle?.housing ? HOUSING_LABELS_PT[profile.habits.lifestyle.housing] : null} />
+              <DataRow label="Local de Descanso" value={profile.habits?.lifestyle?.sleepingPlace} />
+              <DataRow label="Duração Exercício" value={profile.habits?.lifestyle?.exerciseDuration} />
+              <DataRow label="Ansiedade de Separação" value={profile.behavior?.separationAnxiety} />
+              <DataTags label="Serviços Preferidos" values={profile.habits?.preferredServices} />
+              <DataRow label="Outros Serviços" value={profile.habits?.customService} />
+              <DataRow label="Origem" value={profile.habits?.origin} />
+            </AccordionSection>
           )}
+
           {(!isReadOnly || hasBehavior) && (
-            <SectionCard
+            <AccordionSection
               title={t('tutor.dogProfile.behavioralProfile')}
               summary={behaviorSummary}
               complete={completeness.behavior}
-              onPress={() => goToEdit('behavior')}
+              onEdit={() => goToEdit('behavior')}
               isReadOnly={isReadOnly}
               isLast={isReadOnly && !hasHealth}
-            />
+            >
+              <DataRow label="Socialização (Pessoas)" value={profile.behavior?.socialization?.people ? `${profile.behavior.socialization.people}/5` : null} />
+              <DataRow label="Socialização (Cães)" value={profile.behavior?.socialization?.dogs ? `${profile.behavior.socialization.dogs}/5` : null} />
+              <DataRow label="Socialização (Crianças)" value={profile.behavior?.socialization?.children ? `${profile.behavior.socialization.children}/5` : null} />
+              <DataTags label="Comportamento à Trela" values={profile.behavior?.leashBehavior} />
+              <DataTags label="Do que gosta" values={profile.behavior?.likes} />
+              <DataTags label="Medos / Fobias" values={profile.behavior?.fears} />
+              <DataTags label="Objetivos" values={profile.behavior?.goals} />
+            </AccordionSection>
           )}
+
           {(!isReadOnly || hasHealth) && (
-            <SectionCard
+            <AccordionSection
               title={t('tutor.dogProfile.health')}
               summary={healthSummary}
               complete={hasHealth}
               optional
-              onPress={() => goToEdit('health')}
+              onEdit={() => goToEdit('health')}
               isLast
               isReadOnly={isReadOnly}
-            />
+            >
+              <DataRow label="Histórico de Trauma" value={profile.habits?.traumaHistory} />
+              <DataRow label="Tem Preocupações?" value={profile.health?.concerns} />
+              <DataRow label="Quais Preocupações?" value={profile.health?.concernsText} />
+              <DataTags label="Alergias" values={profile.health?.allergies?.tags} />
+              <DataRow label="Outras Alergias" value={profile.health?.allergies?.other} />
+              <DataRow label="Medicação Atual" value={profile.health?.medication} />
+              {profile.health?.vaccines?.map((v: any, i: number) => (
+                <DataRow key={i} label={`Vacina: ${v.name}`} value={isoToShortDisplay(v.date)} />
+              ))}
+            </AccordionSection>
           )}
         </View>
 
@@ -382,51 +428,105 @@ function ProgressRow({
   );
 }
 
-function SectionCard({
+function AccordionSection({
   title,
   summary,
   complete,
   optional = false,
-  onPress,
   isLast = false,
   isReadOnly = false,
+  onEdit,
+  children
 }: {
   title: string;
   summary?: string | null;
   complete: boolean;
   optional?: boolean;
-  onPress: () => void;
   isLast?: boolean;
   isReadOnly?: boolean;
+  onEdit: () => void;
+  children: React.ReactNode;
 }) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  const toggle = () => {
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded(!expanded);
+  };
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.sLink,
-        !isLast && styles.sLinkDivider,
-        pressed && { backgroundColor: 'rgba(0,0,0,0.02)' },
-      ]}
-    >
-      <View style={{ flex: 1 }}>
-        <Text style={styles.sLinkTitle}>{title}</Text>
-        {summary ? (
-          <Text style={styles.sLinkSummary} numberOfLines={2}>{summary}</Text>
-        ) : (
-          <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete, isReadOnly && !complete && { color: colors.textSecondary }]}>
-            {complete
-              ? 'Preenchido'
-              : isReadOnly
-              ? 'Sem informação'
-              : optional
-              ? t('tutor.dogProfile.optionalAdd')
-              : t('tutor.dogProfile.addLower')}
-          </Text>
-        )}
+    <View style={[styles.accordionWrap, !isLast && styles.accordionDivider]}>
+      <Pressable onPress={toggle} style={({ pressed }) => [
+        styles.accordionHeader,
+        pressed && { backgroundColor: 'rgba(0,0,0,0.02)' }
+      ]}>
+        <View style={styles.accordionTitleWrap}>
+          <Text style={styles.sLinkTitle}>{title}</Text>
+          {!expanded && (
+             summary ? (
+               <Text style={styles.sLinkSummary} numberOfLines={2}>{summary}</Text>
+             ) : (
+               <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete, isReadOnly && !complete && { color: colors.textSecondary }]}>
+                 {complete
+                   ? 'Preenchido'
+                   : isReadOnly
+                   ? 'Sem informação'
+                   : optional
+                   ? t('tutor.dogProfile.optionalAdd')
+                   : t('tutor.dogProfile.addLower')}
+               </Text>
+             )
+          )}
+        </View>
+        <View style={[styles.chevronWrap, expanded && { transform: [{ rotate: '90deg' }] }]}>
+          <ChevronRight />
+        </View>
+      </Pressable>
+      
+      {expanded && (
+        <View style={styles.accordionContent}>
+          {children}
+          {!isReadOnly && (
+            <Pressable onPress={onEdit} style={({ pressed }) => [
+              styles.accordionEditBtn,
+              pressed && { opacity: 0.8 }
+            ]}>
+              <Text style={styles.accordionEditBtnText}>Editar {title}</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function DataRow({ label, value }: { label: string; value?: string | number | null }) {
+  if (!value) return null;
+  return (
+    <View style={styles.dataRow}>
+      <Text style={styles.dataLabel}>{label}</Text>
+      <Text style={styles.dataValue}>{value}</Text>
+    </View>
+  );
+}
+
+function DataTags({ label, values }: { label: string; values?: string[] }) {
+  if (!values || values.length === 0) return null;
+  return (
+    <View style={styles.dataTagsWrap}>
+      <Text style={styles.dataLabel}>{label}</Text>
+      <View style={styles.tagsContainer}>
+        {values.map(v => (
+          <View key={v} style={styles.tag}>
+            <Text style={styles.tagText}>{v}</Text>
+          </View>
+        ))}
       </View>
-      <ChevronRight />
-    </Pressable>
+    </View>
   );
 }
 
@@ -522,6 +622,22 @@ const styles = StyleSheet.create({
   sLinkStatusComplete: { color: colors.success },
   sLinkSummary: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   
+  accordionWrap: {},
+  accordionDivider: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  accordionHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 18, paddingHorizontal: 16, gap: 12 },
+  accordionTitleWrap: { flex: 1 },
+  chevronWrap: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  accordionContent: { paddingHorizontal: 16, paddingBottom: 20, paddingTop: 4 },
+  accordionEditBtn: { alignSelf: 'flex-start', marginTop: 16, paddingVertical: 10, paddingHorizontal: 16, backgroundColor: 'rgba(107,94,191,0.08)', borderRadius: 10 },
+  accordionEditBtnText: { color: colors.primary, fontFamily: font.semiBold, fontSize: fontSize.sm },
+  dataRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  dataLabel: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.textSecondary },
+  dataValue: { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.text, textAlign: 'right', flex: 1, marginLeft: 16 },
+  dataTagsWrap: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderSoft },
+  tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  tag: { backgroundColor: colors.surfaceMuted, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft },
+  tagText: { fontFamily: font.medium, fontSize: fontSize.xs, color: colors.text },
+
   shareBtn: {
     marginHorizontal: spacing[4],
     backgroundColor: colors.primary,

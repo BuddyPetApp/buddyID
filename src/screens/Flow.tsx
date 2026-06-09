@@ -649,6 +649,42 @@ function Consent({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   );
 }
 
+function Q15({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  const hasConcerns = form.hasConcerns === 'Sim';
+  return (
+    <View>
+      <Text style={s.question}>Há alguma coisa que te preocupe no teu cão?</Text>
+      <View style={s.sizeCol}>
+        <Pressable
+          style={[s.sizeBtnCol, form.hasConcerns === 'Não' && s.sizeBtnOn]}
+          onPress={() => { update('hasConcerns', 'Não'); update('concernsText', ''); }}
+        >
+          <Text style={[s.sizeBtnTextCol, form.hasConcerns === 'Não' && s.sizeBtnTextOn]}>Não</Text>
+        </Pressable>
+        <Pressable
+          style={[s.sizeBtnCol, form.hasConcerns === 'Sim' && s.sizeBtnOn]}
+          onPress={() => update('hasConcerns', 'Sim')}
+        >
+          <Text style={[s.sizeBtnTextCol, form.hasConcerns === 'Sim' && s.sizeBtnTextOn]}>Sim</Text>
+        </Pressable>
+      </View>
+      {hasConcerns && (
+        <>
+          <Text style={s.hint}>Se sim, o quê?</Text>
+          <TextInput
+            style={[s.input, s.inputMultiline]}
+            multiline
+            placeholder="Descreve as tuas preocupações..."
+            placeholderTextColor={colors.textMuted}
+            value={form.concernsText || ''}
+            onChangeText={(v) => update('concernsText', v)}
+          />
+        </>
+      )}
+    </View>
+  );
+}
+
 function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
     <Pressable style={s.consentRow} onPress={onToggle}>
