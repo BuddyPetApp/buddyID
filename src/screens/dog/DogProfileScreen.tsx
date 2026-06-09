@@ -33,6 +33,9 @@ import {
   computeProgress,
   GENDER_LABELS_PT,
   TEMPERAMENT_LABELS_PT,
+  FOOD_TYPE_LABELS_PT,
+  ACTIVITY_LEVEL_LABELS_PT,
+  HOUSING_LABELS_PT,
   ageFromBirthdate,
   type DogProfile,
   type DogBasicInfo,
@@ -40,6 +43,62 @@ import {
   type DogBehavior,
   type DogHealth,
 } from '../../types/dog';
+
+function isoToShortDisplay(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return iso;
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
+}
+
+function buildBasicSummary(profile: any): string | null {
+  const b = profile?.basicInfo;
+  if (!b) return null;
+  const parts: string[] = [];
+  if (b.breed) parts.push(b.breed);
+  if (typeof b.weightKg === 'number') parts.push(`${b.weightKg} kg`);
+  if (b.gender) parts.push(GENDER_LABELS_PT[b.gender]);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+function buildHabitsSummary(profile: any, t: any): string | null {
+  const h = profile?.habits;
+  if (!h) return null;
+  const parts: string[] = [];
+  if (h.food?.type) parts.push(FOOD_TYPE_LABELS_PT[h.food.type]);
+  if (h.activity?.level) parts.push(t('tutor.dogProfile.activity', { level: ACTIVITY_LEVEL_LABELS_PT[h.activity.level]?.toLowerCase() || h.activity.level }));
+  if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing]);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+function buildBehaviorSummary(profile: any, t: any): string | null {
+  const b = profile?.behavior;
+  if (!b) return null;
+  const parts: string[] = [];
+  if (b.likes?.length) {
+    parts.push(t('tutor.dogProfile.likes', { likes: b.likes.slice(0, 2).join(', ').toLowerCase() }));
+  }
+  if (b.fears?.length) {
+    parts.push(b.fears.length === 1 ? t('tutor.dogProfile.fear') : t('tutor.dogProfile.fears', { count: b.fears.length }));
+  }
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+function buildHealthSummary(profile: any, t: any): string | null {
+  const health = profile?.health;
+  if (!health) return null;
+  const parts: string[] = [];
+  const vaccines = health.vaccines ?? [];
+  if (vaccines.length > 0) {
+    const latest = [...vaccines].sort((a: any, b: any) => b.date.localeCompare(a.date))[0];
+    parts.push(t('tutor.dogProfile.lastVaccine', { date: isoToShortDisplay(latest.date) }));
+  }
+  const allergyCount = (health.allergies?.tags?.length ?? 0) + (health.allergies?.other ? 1 : 0);
+  if (allergyCount > 0) {
+    parts.push(allergyCount === 1 ? t('tutor.dogProfile.allergy') : t('tutor.dogProfile.allergies', { count: allergyCount }));
+  }
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
 
 const HERO_HEIGHT = 150;
 const AVATAR_SIZE = 110;
@@ -136,6 +195,11 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
     .filter(Boolean)
     .join(' · ');
 
+  const basicSummary = useMemo(() => buildBasicSummary(profile), [profile]);
+  const habitsSummary = useMemo(() => buildHabitsSummary(profile, t), [profile, t]);
+  const behaviorSummary = useMemo(() => buildBehaviorSummary(profile, t), [profile, t]);
+  const healthSummary = useMemo(() => buildHealthSummary(profile, t), [profile, t]);
+
   const handleShare = () => {
     const baseWebUrl = Platform.OS === 'web' && typeof window !== 'undefined'
       ? window.location.origin
@@ -226,31 +290,35 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
         {/* Section Links */}
         <Text style={styles.sectionTitle}>Secções do Perfil</Text>
         <View style={styles.linksCard}>
-          <SectionLink
+          <SectionCard
             title={t('tutor.dogProfile.basicInfo')}
+            summary={basicSummary}
             complete={completeness.basic}
             onPress={() => goToEdit('basic')}
             disabled={isReadOnly}
           />
-          <SectionLink
+          <SectionCard
             title={t('tutor.dogProfile.habits')}
+            summary={habitsSummary}
             complete={completeness.habits}
             onPress={() => goToEdit('habits')}
             disabled={isReadOnly}
           />
-          <SectionLink
+          <SectionCard
             title={t('tutor.dogProfile.behavioralProfile')}
+            summary={behaviorSummary}
             complete={completeness.behavior}
             onPress={() => goToEdit('behavior')}
             disabled={isReadOnly}
           />
-          <SectionLink
+          <SectionCard
             title={t('tutor.dogProfile.health')}
+            summary={healthSummary}
             complete={!!profile.health && Object.keys(profile.health).length > 0}
             optional
             onPress={() => goToEdit('health')}
-            disabled={isReadOnly}
             isLast
+            disabled={isReadOnly}
           />
         </View>
 
@@ -292,8 +360,9 @@ function ProgressRow({
   );
 }
 
-function SectionLink({
+function SectionCard({
   title,
+  summary,
   complete,
   optional = false,
   onPress,
@@ -301,6 +370,7 @@ function SectionLink({
   disabled = false,
 }: {
   title: string;
+  summary?: string | null;
   complete: boolean;
   optional?: boolean;
   onPress: () => void;
@@ -319,13 +389,17 @@ function SectionLink({
     >
       <View style={{ flex: 1 }}>
         <Text style={styles.sLinkTitle}>{title}</Text>
-        <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete]}>
-          {complete
-            ? 'Preenchido'
-            : optional
-            ? t('tutor.dogProfile.optionalAdd')
-            : t('tutor.dogProfile.addLower')}
-        </Text>
+        {summary ? (
+          <Text style={styles.sLinkSummary} numberOfLines={2}>{summary}</Text>
+        ) : (
+          <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete]}>
+            {complete
+              ? 'Preenchido'
+              : optional
+              ? t('tutor.dogProfile.optionalAdd')
+              : t('tutor.dogProfile.addLower')}
+          </Text>
+        )}
       </View>
       {!disabled && <ChevronRight />}
     </Pressable>
@@ -422,6 +496,7 @@ const styles = StyleSheet.create({
   sLinkTitle: { fontFamily: font.semiBold, fontSize: fontSize.base, color: colors.text },
   sLinkStatus: { fontFamily: font.medium, fontSize: fontSize.xs, color: colors.accent, marginTop: 2 },
   sLinkStatusComplete: { color: colors.success },
+  sLinkSummary: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   
   shareBtn: {
     marginHorizontal: spacing[4],
