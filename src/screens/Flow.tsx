@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { supabase } from '../lib/supabase';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { ChevronLeftIcon, CheckIcon, CameraIcon } from '../components/Icons';
@@ -46,10 +47,7 @@ import {
 const TOTAL_QUESTIONS = 12;
 const BUDDYID_FORM_KEY = 'buddyid_pending_form';
 
-const STEPS = [
-  'q1','q2','q3','q4','q5','q6','q7b','q8',
-  'qLocation','q12','q13','q14','consent',
-] as const;
+const STEPS = ['q1','q2','q3','q4','q5','q6','q7b','q8','qLocation','q12','q13','q14','q15','consent'] as const;
 type StepKey = typeof STEPS[number];
 
 const ChevronDownIcon = ({ size = 20, color = colors.primary }: { size?: number; color?: string }) => (
@@ -72,16 +70,23 @@ export default function Flow() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function toggleMulti(key: 'leashBehavior' | 'housemates' | 'fears' | 'services' | 'goals', value: string) {
+  function toggleMulti(key: 'leashBehavior' | 'housemates' | 'fears' | 'services' | 'goals' | 'separationAnxiety', value: string) {
     setForm((prev) => {
       const list = prev[key] as string[];
       return { ...prev, [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] };
     });
   }
 
-  function goBack() {
-    if (stepIndex === 0) router.replace('/buddyid' as any);
-    else {
+  async function goBack() {
+    if (stepIndex === 0) {
+      const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
+      const dogs = raw ? JSON.parse(raw) : [];
+      if (dogs.length > 0) {
+        router.replace('/buddyid/loading' as any);
+      } else {
+        router.replace('/buddyid' as any);
+      }
+    } else {
       setStepIndex((s) => s - 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
     }
@@ -102,7 +107,17 @@ export default function Flow() {
     dogs.push(form);
     await AsyncStorage.setItem('buddyid_pending_dogs', JSON.stringify(dogs));
     await AsyncStorage.removeItem(BUDDYID_FORM_KEY);
-    router.replace('/buddyid/second-dog' as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.replace('/buddyid/auth' as any);
+    } else {
+      if (dogs.length >= 2) {
+        router.replace('/buddyid/loading' as any);
+      } else {
+        router.replace('/buddyid/second-dog' as any);
+      }
+    }
   }
 
   async function pickPhoto() {
@@ -170,15 +185,19 @@ export default function Flow() {
       case 'q5': return !form.leashBehavior || form.leashBehavior.length === 0;
       case 'q6': return !form.housing || !form.sleepingPlace || !form.exerciseDuration;
       case 'q7b': return !form.origin;
-      case 'q8': return !form.separationAnxiety;
+      case 'q8': return !form.separationAnxiety || form.separationAnxiety.length === 0;
       case 'qLocation': return form.city.trim().length < 2;
-      case 'q12': return !form.fears || form.fears.length === 0;
+      case 'q12': 
+        if (!form.fears || form.fears.length === 0) return true;
+        if (form.fears.includes('Outro') && (form.customFear || '').trim().length === 0) return true;
+        return false;
       case 'q13': 
         if (!form.services || form.services.length === 0) return true;
         if (form.services.includes('Outro')) return (form.customService || '').trim().length === 0;
         return false;
       case 'q14': return !form.goals || form.goals.length === 0;
-      case 'consent': return !form.consentDataUse;
+      case 'q15': return !form.hasConcerns || (form.hasConcerns === 'Sim' && (form.concernsText || '').trim().length === 0);
+      case 'consent': return !form.consentMarketing || !form.consentDataUse;
       default: return false;
     }
   }
@@ -238,7 +257,7 @@ interface StepProps {
   step: StepKey;
   form: BuddyIDFormData;
   update: <K extends keyof BuddyIDFormData>(key: K, value: BuddyIDFormData[K]) => void;
-  toggleMulti: (key: 'leashBehavior' | 'housemates' | 'fears' | 'services' | 'goals', value: string) => void;
+  toggleMulti: (key: 'leashBehavior' | 'housemates' | 'fears' | 'services' | 'goals' | 'separationAnxiety', value: string) => void;
   pickPhoto: () => void;
 }
 
@@ -251,11 +270,12 @@ function StepContent({ step, form, update, toggleMulti, pickPhoto }: StepProps) 
     case 'q5': return <Q5 form={form} toggleMulti={toggleMulti} />;
     case 'q6': return <Q6 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q7b': return <Q7b form={form} update={update} />;
-    case 'q8': return <Q8 form={form} update={update} />;
+    case 'q8': return <Q8 form={form} toggleMulti={toggleMulti} />;
     case 'qLocation': return <QLocation form={form} update={update} />;
-    case 'q12': return <Q12 form={form} toggleMulti={toggleMulti} />;
+    case 'q12': return <Q12 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q13': return <Q13 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q14': return <Q14 form={form} toggleMulti={toggleMulti} />;
+    case 'q15': return <Q15 form={form} update={update} />;
     case 'consent': return <Consent form={form} update={update} />;
   }
 }
@@ -408,7 +428,7 @@ function Q4({ form, update }: Pick<StepProps, 'form' | 'update'>) {
       <ChoiceRow options={['Amigável', 'Reservado', 'Reativo']} selected={form.withStrangers} onSelect={(v) => update('withStrangers', v as StrangerBehavior)} />
       <View style={s.divider} />
       <SectionLabel>Com pessoas de casa</SectionLabel>
-      <SectionHint>Agressividade dirigida (C-BARQ)</SectionHint>
+      <SectionHint>Agressividade dirigida</SectionHint>
       <ChoiceRow options={['Nunca', 'Raramente', 'Por vezes']} selected={form.withHomePeople} onSelect={(v) => update('withHomePeople', v as HomePeopleBehavior)} />
       <View style={s.divider} />
       <SectionLabel>Obediência</SectionLabel>
@@ -451,7 +471,7 @@ function Q6({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | '
       <View style={s.divider} />
       <SectionLabel>Quem mais vive em casa?</SectionLabel>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso','Ninguém']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
+      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso','Ninguém','Outras pessoas']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
       <View style={s.divider} />
       <SectionLabel>Onde dorme?</SectionLabel>
       <ChoiceRow options={sleepOpts} selected={form.sleepingPlace} onSelect={(v) => update('sleepingPlace', v as SleepingPlace)} columns={2} />
@@ -485,12 +505,13 @@ function Q7b({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   );
 }
 
-function Q8({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function Q8({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
   const options: SeparationAnxiety[] = ['Fica calmo e tranquilo','Ladra ou range um pouco','Fica muito ansioso','Destrói coisas quando fico fora','Nunca o deixo sozinho','Não sei'];
   return (
     <View>
       <Text style={s.question}>Como fica quando ficas fora?</Text>
-      <MultiChoiceList options={options} selected={form.separationAnxiety ? [form.separationAnxiety] : []} onToggle={(v) => update('separationAnxiety', v as SeparationAnxiety)} />
+      <SectionHint>Podes escolher mais de uma.</SectionHint>
+      <MultiChoiceList options={options} selected={form.separationAnxiety || []} onToggle={(v) => toggleMulti('separationAnxiety', v)} />
     </View>
   );
 }
@@ -559,19 +580,32 @@ function QLocation({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   );
 }
 
-function Q12({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
-  const options = ['Trovões e relâmpagos','Fogos de artifício','Outros cães','Pessoas estranhas','Carros e motas','Não tem medos conhecidos'];
+function Q12({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
+  const options = ['Trovões e relâmpagos','Fogos de artifício','Outros cães','Pessoas estranhas','Carros e motas','Não tem medos conhecidos','Outro'];
   return (
     <View>
       <Text style={s.question}>O teu cão tem medos ou fobias?</Text>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
       <MultiChoiceList options={options} selected={form.fears} onToggle={(v) => toggleMulti('fears', v)} />
+      {form.fears.includes('Outro') && (
+        <>
+          <SectionLabel>Qual medo / fobia?</SectionLabel>
+          <TextInput
+            style={s.input}
+            placeholder="Ex: Aspirador, andar de elevador..."
+            placeholderTextColor={colors.textMuted}
+            value={form.customFear || ''}
+            onChangeText={(v) => update('customFear', v)}
+            maxLength={80}
+          />
+        </>
+      )}
     </View>
   );
 }
 
 function Q13({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
-  const options = ['Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Veterinário','Nenhum','Outro'];
+  const options = ['Veterinário','Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Nenhum','Outro'];
   return (
     <View>
       <Text style={s.question}>Que serviços normalmente usas?</Text>

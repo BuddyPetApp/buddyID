@@ -118,6 +118,8 @@ export interface DogHealth {
   allergies?: DogAllergies;
   medication?: string;
   vet?: DogVet;
+  concerns?: 'Sim' | 'Não';
+  concernsText?: string;
 }
 
 export const ALLERGY_OPTIONS_PT: readonly string[] = [

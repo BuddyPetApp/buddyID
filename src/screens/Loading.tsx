@@ -59,8 +59,8 @@ export default function Loading() {
             neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
             adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),
             habitsJson: JSON.stringify({ housing: form.housing, housemates: form.housemates, sleepingPlace: form.sleepingPlace, exerciseDuration: form.exerciseDuration, separationAnxiety: form.separationAnxiety, services: form.services, customService: form.customService, goals: form.goals }),
-            behaviorJson: JSON.stringify({ energy: form.energy, withStrangers: form.withStrangers, withHomePeople: form.withHomePeople, obedience: form.obedience, attachment: form.attachment, touchSensitivity: form.touchSensitivity, newSituations: form.newSituations, leashBehavior: form.leashBehavior, fears: form.fears }),
-            healthJson: JSON.stringify({ traumaHistory: form.traumaHistory }),
+            behaviorJson: JSON.stringify({ energy: form.energy, withStrangers: form.withStrangers, withHomePeople: form.withHomePeople, obedience: form.obedience, attachment: form.attachment, touchSensitivity: form.touchSensitivity, newSituations: form.newSituations, leashBehavior: form.leashBehavior, fears: form.fears, customFear: form.customFear }),
+            healthJson: JSON.stringify({ traumaHistory: form.traumaHistory, concerns: form.hasConcerns, concernsText: form.concernsText }),
             photoUrl: form.photoUri,
           };
           const response = await apiClient.post<{ dogId: string }>('/dogs', command);

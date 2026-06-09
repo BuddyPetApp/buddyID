@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { colors, font, fontSize, radius, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
@@ -40,7 +41,13 @@ export default function LoginRegister() {
       if (isLoginOnly) {
         router.replace('/buddyid' as any);
       } else {
-        router.replace('/buddyid/loading' as any);
+        const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
+        const dogs = raw ? JSON.parse(raw) : [];
+        if (dogs.length >= 2) {
+          router.replace('/buddyid/loading' as any);
+        } else {
+          router.replace('/buddyid/second-dog' as any);
+        }
       }
     } catch (err: any) {
       if (Platform.OS === 'web') window.alert('Erro: ' + (err.message || 'Ocorreu um erro.'));

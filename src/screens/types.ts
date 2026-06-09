@@ -47,14 +47,17 @@ export interface BuddyIDFormData {
   exerciseDuration?: ExerciseDuration;
   origin?: DogOrigin;
   traumaHistory?: string;
-  separationAnxiety?: SeparationAnxiety;
+  separationAnxiety: SeparationAnxiety[];
   email: string;
   phone: string;
   city: string;
   postalCode?: string;
   fears: string[];
+  customFear?: string;
   services: string[];
   customService?: string;
+  hasConcerns?: 'Sim' | 'Não';
+  concernsText?: string;
   goals: string[];
   consentMarketing: boolean;
   consentDataUse: boolean;
@@ -68,6 +71,7 @@ export const INITIAL_FORM_DATA: BuddyIDFormData = {
   housemates: [],
   email: '',
   phone: '',
+  separationAnxiety: [],
   city: '',
   fears: [],
   services: [],

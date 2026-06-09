@@ -44,6 +44,7 @@ type ActiveSheet =
   | 'vet_name'
   | 'vet_clinic'
   | 'vet_phone'
+  | 'concerns_text'
   | null;
 
 function displayToIso(display: string): string | null {
@@ -121,6 +122,8 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
   const [vetName, setVetName] = useState<string | undefined>(undefined);
   const [vetClinic, setVetClinic] = useState<string | undefined>(undefined);
   const [vetPhone, setVetPhone] = useState<string | undefined>(undefined);
+  const [concerns, setConcerns] = useState<'Sim'|'Não'|undefined>(undefined);
+  const [concernsText, setConcernsText] = useState<string | undefined>(undefined);
 
   const [sheet, setSheet] = useState<ActiveSheet>(null);
   const [tempText, setTempText] = useState('');
@@ -148,6 +151,8 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
           setVetName(initial.vet?.name);
           setVetClinic(initial.vet?.clinic);
           setVetPhone(initial.vet?.phone);
+          setConcerns(initial.concerns);
+          setConcernsText(initial.concernsText);
         }
       })
       .catch((err) => {
@@ -212,6 +217,8 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
     if (vetName || vetClinic || vetPhone) {
       next.vet = { name: vetName, clinic: vetClinic, phone: vetPhone };
     }
+    if (concerns) next.concerns = concerns;
+    if (concernsText) next.concernsText = concernsText;
 
     const payload = {
       dogId: id,
@@ -282,6 +289,19 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
             {t('tutor.editHealth.optionalDataInfo', { name: profile.name })}
           </Text>
         </View>
+
+        <FormSection title="Preocupações com o cão">
+          <View style={styles.card}>
+            <RowButton
+              label="Há alguma preocupação?"
+              value={concerns === 'Sim' ? concernsText ?? 'Sim' : concerns === 'Não' ? 'Não' : null}
+              placeholder="Opcional"
+              onPress={() => openSheet('concerns_text', concernsText ?? '')}
+              isLast
+              isReadOnly={isReadOnly}
+            />
+          </View>
+        </FormSection>
 
         <FormSection title={t('tutor.editHealth.identification')}>
           <View style={styles.card}>
@@ -652,6 +672,22 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
         placeholder={t('tutor.editHealth.phone')}
         keyboardType="number-pad"
         maxLength={20}
+      />
+
+      <InputSheet
+        visible={sheet === 'concerns_text'}
+        title="O que te preocupa no teu cão?"
+        initialValue={tempText}
+        onClose={closeSheet}
+        onConfirm={(val) => {
+          const trimmed = val.trim();
+          setConcernsText(trimmed || undefined);
+          setConcerns(trimmed ? 'Sim' : 'Não');
+          closeSheet();
+        }}
+        placeholder="Ex: Tem alergias, coça-se muito, manca..."
+        maxLength={300}
+        multiline
       />
     </DogScreenShell>
   );
