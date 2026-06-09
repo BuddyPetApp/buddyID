@@ -43,7 +43,8 @@ export default function LoginRegister() {
       } else {
         const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
         const dogs = raw ? JSON.parse(raw) : [];
-        if (dogs.length >= 2) {
+        const hasAnotherDog = dogs.length > 0 && dogs[0].housemates?.includes('Outro cão');
+        if (dogs.length >= 2 || !hasAnotherDog) {
           router.replace('/buddyid/loading' as any);
         } else {
           router.replace('/buddyid/second-dog' as any);

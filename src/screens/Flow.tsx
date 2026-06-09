@@ -112,7 +112,8 @@ export default function Flow() {
     if (!session) {
       router.replace('/buddyid/auth' as any);
     } else {
-      if (dogs.length >= 2) {
+      const hasAnotherDog = dogs.length > 0 && dogs[0].housemates?.includes('Outro cão');
+      if (dogs.length >= 2 || !hasAnotherDog) {
         router.replace('/buddyid/loading' as any);
       } else {
         router.replace('/buddyid/second-dog' as any);
