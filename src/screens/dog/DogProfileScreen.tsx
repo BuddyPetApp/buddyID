@@ -174,6 +174,10 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
   const behaviorSummary = useMemo(() => buildBehaviorSummary(profile, t), [profile, t]);
   const healthSummary = useMemo(() => buildHealthSummary(profile, t), [profile, t]);
 
+  const hasHabits = useMemo(() => !!profile && !!profile.habits && Object.keys(profile.habits).length > 0, [profile]);
+  const hasBehavior = useMemo(() => !!profile && !!profile.behavior && Object.keys(profile.behavior).length > 0, [profile]);
+  const hasHealth = useMemo(() => !!profile && !!profile.health && Object.keys(profile.health).length > 0, [profile]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingWrap}>
@@ -307,30 +311,39 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             complete={completeness.basic}
             onPress={() => goToEdit('basic')}
             isReadOnly={isReadOnly}
+            isLast={isReadOnly && !hasHabits && !hasBehavior && !hasHealth}
           />
-          <SectionCard
-            title={t('tutor.dogProfile.habits')}
-            summary={habitsSummary}
-            complete={completeness.habits}
-            onPress={() => goToEdit('habits')}
-            isReadOnly={isReadOnly}
-          />
-          <SectionCard
-            title={t('tutor.dogProfile.behavioralProfile')}
-            summary={behaviorSummary}
-            complete={completeness.behavior}
-            onPress={() => goToEdit('behavior')}
-            isReadOnly={isReadOnly}
-          />
-          <SectionCard
-            title={t('tutor.dogProfile.health')}
-            summary={healthSummary}
-            complete={!!profile.health && Object.keys(profile.health).length > 0}
-            optional
-            onPress={() => goToEdit('health')}
-            isLast
-            isReadOnly={isReadOnly}
-          />
+          {(!isReadOnly || hasHabits) && (
+            <SectionCard
+              title={t('tutor.dogProfile.habits')}
+              summary={habitsSummary}
+              complete={completeness.habits}
+              onPress={() => goToEdit('habits')}
+              isReadOnly={isReadOnly}
+              isLast={isReadOnly && !hasBehavior && !hasHealth}
+            />
+          )}
+          {(!isReadOnly || hasBehavior) && (
+            <SectionCard
+              title={t('tutor.dogProfile.behavioralProfile')}
+              summary={behaviorSummary}
+              complete={completeness.behavior}
+              onPress={() => goToEdit('behavior')}
+              isReadOnly={isReadOnly}
+              isLast={isReadOnly && !hasHealth}
+            />
+          )}
+          {(!isReadOnly || hasHealth) && (
+            <SectionCard
+              title={t('tutor.dogProfile.health')}
+              summary={healthSummary}
+              complete={hasHealth}
+              optional
+              onPress={() => goToEdit('health')}
+              isLast
+              isReadOnly={isReadOnly}
+            />
+          )}
         </View>
 
         {!isReadOnly && (
