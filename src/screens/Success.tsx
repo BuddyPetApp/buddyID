@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
-import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon } from '../components/Icons';
+import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon, EyeIcon } from '../components/Icons';
 
 const BUDDYID_RESULT_KEY = 'buddyid_result';
 interface Result { dogName: string; breed: string; age: string; buddyId: string; completionPercent: number; gender?: string; }
@@ -87,6 +87,11 @@ export default function Success() {
         <TouchableOpacity style={s.ctaPrimary} onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}>
           <CheckIcon size={18} color="#fff" strokeWidth={2.5} />
           <Text style={s.ctaPrimaryText}>Completar Perfil</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={s.ctaSecondary} onPress={() => current?.buddyId && router.push(`/buddyid/public/${current.buddyId}` as any)}>
+          <EyeIcon size={18} color={colors.primary} />
+          <Text style={s.ctaSecondaryText}>Ver BuddyID Público</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={s.ctaSecondary} onPress={handleShare}>
