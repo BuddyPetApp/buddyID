@@ -89,8 +89,8 @@ export default function LoginRegister() {
             <Text style={s.title}>{isLogin ? 'Bem-vindo de volta' : 'Cria a tua conta Buddy'}</Text>
             <Text style={s.sub}>
               {isLogin
-                ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para acederes à tua conta.')
-                : 'Cria uma conta para guardarmos o perfil do teu cão.'}
+                ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para guardares o BuddyID.')
+                : 'Cria uma conta para guardares o BuddyID.'}
             </Text>
 
             {verificationSent && (
