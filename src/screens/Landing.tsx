@@ -217,19 +217,21 @@ export default function Landing() {
               )}
 
               {activeDog && (
-                <Card style={s.dogCard} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
-                  {activeDog.photoUrl
-                    ? <Image source={{ uri: activeDog.photoUrl }} style={s.dogPhoto} resizeMode="cover" />
-                    : <View style={[s.dogPhoto, s.dogPhotoFallback]}><Text style={s.dogPhotoLetter}>{activeDog.name[0].toUpperCase()}</Text></View>
-                  }
-                  <View style={s.dogInfo}>
-                    <Text style={s.dogName}>{activeDog.name}</Text>
-                    <Text style={s.dogMeta}>{[activeDog.breed, activeDog.gender === 'male' ? 'Macho' : 'Fêmea'].filter(Boolean).join(' · ')}</Text>
-                    <View style={s.dogCta}>
-                      <Text style={s.dogCtaText}>Ver BuddyID</Text>
-                      <ChevronRightIcon size={14} color={colors.primary} />
+                <Card style={[s.dogCard, { padding: 0, overflow: 'hidden' }]}>
+                  <TouchableOpacity style={{ flexDirection: 'row', padding: spacing[4], paddingBottom: spacing[2] }} activeOpacity={0.7} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
+                    {activeDog.photoUrl
+                      ? <Image source={{ uri: activeDog.photoUrl }} style={s.dogPhoto} resizeMode="cover" />
+                      : <View style={[s.dogPhoto, s.dogPhotoFallback]}><Text style={s.dogPhotoLetter}>{activeDog.name[0].toUpperCase()}</Text></View>
+                    }
+                    <View style={[s.dogInfo, { flex: 1, justifyContent: 'center' }]}>
+                      <Text style={s.dogName}>{activeDog.name}</Text>
+                      <Text style={s.dogMeta}>{[activeDog.breed, activeDog.gender === 'male' ? 'Macho' : 'Fêmea'].filter(Boolean).join(' · ')}</Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[s.dogCta, { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: spacing[2], marginTop: 0 }]} activeOpacity={0.7} onPress={() => router.push(`/buddyid/public/${activeDog.id}` as any)}>
+                    <Text style={s.dogCtaText}>Ver BuddyID</Text>
+                    <ChevronRightIcon size={14} color={colors.primary} />
+                  </TouchableOpacity>
                 </Card>
               )}
 
