@@ -279,7 +279,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
           <View style={styles.cardSelect}>
             <RowButton
               label={t('tutor.editBehavioralProfile.separationAnxiety')}
-              value={behavior.separationAnxiety ? t(`tutor.editBehavioralProfile.separationAnxietyOptions.${behavior.separationAnxiety}`) : undefined}
+              value={Array.isArray(behavior.separationAnxiety) ? behavior.separationAnxiety.join(', ') : (behavior.separationAnxiety ? (t(`tutor.editBehavioralProfile.separationAnxietyOptions.${behavior.separationAnxiety}`, behavior.separationAnxiety)) : undefined)}
               onPress={() => { if (!isReadOnly) setSeparationSheetOpen(true); }}
               isLast
               isReadOnly={isReadOnly}
@@ -378,7 +378,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
         visible={separationSheetOpen}
         title={t('tutor.editBehavioralProfile.separationAnxiety')}
         options={separationAnxietyOptions}
-        selectedValue={behavior.separationAnxiety}
+        selectedValue={Array.isArray(behavior.separationAnxiety) ? behavior.separationAnxiety[0] : behavior.separationAnxiety}
         onSelect={(v) => {
           updateBehavior({ separationAnxiety: v });
           setSeparationSheetOpen(false);

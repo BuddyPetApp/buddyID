@@ -67,6 +67,7 @@ export interface DogHabits {
   traumaHistory?: string;
   preferredServices?: string[];
   customService?: string;
+  housemates?: string[];
 }
 
 export interface DogSocialization {
@@ -81,8 +82,15 @@ export interface DogBehavior {
   fears?: string[];
   tutorNotes?: string;
   leashBehavior?: string[];
-  separationAnxiety?: string;
+  separationAnxiety?: string | string[];
   goals?: string[];
+  energy?: string;
+  withStrangers?: string;
+  withHomePeople?: string;
+  obedience?: string;
+  attachment?: string;
+  touchSensitivity?: string;
+  newSituations?: string;
 }
 
 export interface DogVaccine {
@@ -150,40 +158,18 @@ export interface SectionCompleteness {
 
 export function isBasicComplete(b: DogBasicInfo | null | undefined): boolean {
   if (!b) return false;
-  return (
-    !!b.name &&
-    !!b.gender &&
-    !!b.breed &&
-    !!b.birthdate &&
-    typeof b.weightKg === 'number' &&
-    !!b.size
-  );
+  return !!b.name && !!b.breed && !!b.size;
 }
 
 export function isHabitsComplete(h: DogHabits | null | undefined): boolean {
   if (!h) return false;
-  return (
-    !!h.food?.type &&
-    !!h.activity?.level &&
-    !!h.lifestyle?.housing &&
-    !!h.lifestyle?.sleepingPlace &&
-    !!h.lifestyle?.exerciseDuration &&
-    !!h.origin
-  );
+  const ls = h.lifestyle;
+  return !!ls?.housing && !!h.preferredServices?.length;
 }
 
 export function isBehaviorComplete(b: DogBehavior | null | undefined): boolean {
   if (!b) return false;
-  const s = b.socialization;
-  const socializationDone =
-    typeof s?.people === 'number' &&
-    typeof s?.dogs === 'number' &&
-    typeof s?.children === 'number';
-  const likesDone = (b.likes?.length ?? 0) >= 1;
-  const fearsDone = Array.isArray(b.fears);
-  const leashDone = Array.isArray(b.leashBehavior) && b.leashBehavior.length > 0;
-  const separationDone = !!b.separationAnxiety;
-  return socializationDone && likesDone && fearsDone && leashDone && separationDone;
+  return !!b.leashBehavior?.length && !!b.separationAnxiety;
 }
 
 export function computeCompleteness(profile: DogProfile): SectionCompleteness {
@@ -195,9 +181,30 @@ export function computeCompleteness(profile: DogProfile): SectionCompleteness {
 }
 
 export function computeProgress(profile: DogProfile): number {
-  const c = computeCompleteness(profile);
-  const done = [c.basic, c.habits, c.behavior].filter(Boolean).length;
-  return Math.round((done / 3) * 100);
+  if (!profile) return 0;
+  let filled = 0;
+  let total = 0;
+
+  const countObj = (obj: any, keys: string[]) => {
+    for (const k of keys) {
+      total++;
+      const v = obj?.[k];
+      if (v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && v.length === 0)) {
+        filled++;
+      }
+    }
+  };
+
+  countObj(profile.basicInfo, ['name', 'breed', 'gender', 'weightKg', 'size', 'birthdate', 'isSterilized']);
+  countObj(profile.habits, ['origin', 'housemates', 'preferredServices', 'customService']);
+  countObj(profile.habits?.lifestyle, ['housing', 'sleepingPlace', 'exerciseDuration']);
+  countObj(profile.habits?.food, ['type', 'brand', 'mealsPerDay']);
+  countObj(profile.habits?.activity, ['level', 'walksPerDay']);
+  countObj(profile.behavior, ['energy', 'withStrangers', 'withHomePeople', 'obedience', 'attachment', 'touchSensitivity', 'newSituations', 'separationAnxiety', 'leashBehavior', 'fears', 'likes', 'goals']);
+  countObj(profile.health, ['chipNumber', 'vaccines', 'deworming', 'allergies', 'medication', 'vet', 'concerns']);
+
+  if (total === 0) return 0;
+  return Math.min(Math.round((filled / total) * 100), 100);
 }
 
 // ─── Listas auxiliares (UI) ─────────────────────────────────────────────────

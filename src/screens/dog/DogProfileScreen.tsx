@@ -149,10 +149,31 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
               photoUrl: data.photoUrl,
             },
             habits: data.habitsJson ? (() => {
-              try { return JSON.parse(data.habitsJson); } catch { return {}; }
+              try { 
+                const raw = JSON.parse(data.habitsJson); 
+                return {
+                  ...raw,
+                  lifestyle: raw.lifestyle || {
+                    housing: raw.housing,
+                    sleepingPlace: raw.sleepingPlace,
+                    exerciseDuration: raw.exerciseDuration,
+                  },
+                  preferredServices: raw.preferredServices || raw.services,
+                  origin: raw.origin || (data.adopted ? "Adotei/Resgatei" : undefined)
+                };
+              } catch { return {}; }
             })() : {},
             behavior: data.behaviorJson ? (() => {
-              try { return JSON.parse(data.behaviorJson); } catch { return {}; }
+              try { 
+                const raw = JSON.parse(data.behaviorJson); 
+                const habits = data.habitsJson ? JSON.parse(data.habitsJson) : {};
+                return {
+                  ...raw,
+                  separationAnxiety: raw.separationAnxiety || habits.separationAnxiety,
+                  goals: raw.goals || habits.goals,
+                  tutorNotes: raw.tutorNotes || (raw.customFear ? `Fobia extra: ${raw.customFear}` : undefined),
+                };
+              } catch { return {}; }
             })() : {},
             health: data.healthJson ? (() => {
               try { return JSON.parse(data.healthJson); } catch { return undefined; }
@@ -347,15 +368,15 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
               isReadOnly={isReadOnly}
               isLast={isReadOnly && !hasBehavior && !hasHealth}
             >
-              <DataRow label="Tipo de Alimentação" value={profile.habits?.food?.type ? FOOD_TYPE_LABELS_PT[profile.habits.food.type] : null} />
+              <DataRow label="Tipo de Alimentação" value={profile.habits?.food?.type ? FOOD_TYPE_LABELS_PT[profile.habits.food.type as FoodType] : null} />
               <DataRow label="Marca de Ração" value={profile.habits?.food?.brand} />
               <DataRow label="Refeições/dia" value={profile.habits?.food?.mealsPerDay} />
-              <DataRow label="Nível de Atividade" value={profile.habits?.activity?.level ? ACTIVITY_LEVEL_LABELS_PT[profile.habits.activity.level] : null} />
+              <DataRow label="Nível de Atividade" value={profile.habits?.activity?.level ? ACTIVITY_LEVEL_LABELS_PT[profile.habits.activity.level as ActivityLevel] : null} />
               <DataRow label="Passeios/dia" value={profile.habits?.activity?.walksPerDay} />
-              <DataRow label="Habitação" value={profile.habits?.lifestyle?.housing ? HOUSING_LABELS_PT[profile.habits.lifestyle.housing] : null} />
+              <DataRow label="Habitação" value={profile.habits?.lifestyle?.housing ? HOUSING_LABELS_PT[profile.habits.lifestyle.housing as HousingType] || profile.habits.lifestyle.housing : null} />
+              <DataTags label="Quem vive em casa" values={profile.habits?.housemates} />
               <DataRow label="Local de Descanso" value={profile.habits?.lifestyle?.sleepingPlace} />
               <DataRow label="Duração Exercício" value={profile.habits?.lifestyle?.exerciseDuration} />
-              <DataRow label="Ansiedade de Separação" value={profile.behavior?.separationAnxiety} />
               <DataTags label="Serviços Preferidos" values={profile.habits?.preferredServices} />
               <DataRow label="Outros Serviços" value={profile.habits?.customService} />
               <DataRow label="Origem" value={profile.habits?.origin} />
@@ -371,12 +392,21 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
               isReadOnly={isReadOnly}
               isLast={isReadOnly && !hasHealth}
             >
+              <DataRow label="Nível de Energia" value={profile.behavior?.energy} />
+              <DataRow label="Com Estranhos" value={profile.behavior?.withStrangers} />
+              <DataRow label="Pessoas de Casa" value={profile.behavior?.withHomePeople} />
+              <DataRow label="Obediência" value={profile.behavior?.obedience} />
+              <DataRow label="Apego" value={profile.behavior?.attachment} />
+              <DataRow label="Sensibilidade ao Toque" value={profile.behavior?.touchSensitivity} />
+              <DataRow label="Situações Novas" value={profile.behavior?.newSituations} />
               <DataRow label="Socialização (Pessoas)" value={profile.behavior?.socialization?.people ? `${profile.behavior.socialization.people}/5` : null} />
               <DataRow label="Socialização (Cães)" value={profile.behavior?.socialization?.dogs ? `${profile.behavior.socialization.dogs}/5` : null} />
               <DataRow label="Socialização (Crianças)" value={profile.behavior?.socialization?.children ? `${profile.behavior.socialization.children}/5` : null} />
+              <DataTags label="Ansiedade de Separação" values={Array.isArray(profile.behavior?.separationAnxiety) ? profile.behavior.separationAnxiety : (profile.behavior?.separationAnxiety ? [profile.behavior.separationAnxiety] : undefined)} />
               <DataTags label="Comportamento à Trela" values={profile.behavior?.leashBehavior} />
               <DataTags label="Do que gosta" values={profile.behavior?.likes} />
               <DataTags label="Medos / Fobias" values={profile.behavior?.fears} />
+              <DataRow label="Nota Adicional" value={profile.behavior?.tutorNotes} />
               <DataTags label="Objetivos" values={profile.behavior?.goals} />
             </AccordionSection>
           )}
