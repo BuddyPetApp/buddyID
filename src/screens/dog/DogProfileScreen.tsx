@@ -72,23 +72,34 @@ function buildHabitsSummary(profile: any, t: any): string | null {
   const h = profile?.habits;
   if (!h) return null;
   const parts: string[] = [];
-  if (h.food?.type) parts.push(FOOD_TYPE_LABELS_PT[h.food.type as FoodType]);
-  if (h.activity?.level) parts.push(t('tutor.dogProfile.activity', { level: ACTIVITY_LEVEL_LABELS_PT[h.activity.level as ActivityLevel]?.toLowerCase() || h.activity.level }));
-  if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing as HousingType]);
-  return parts.length > 0 ? parts.join(' · ') : null;
+  
+  if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing as HousingType] || h.lifestyle.housing);
+  if (h.origin) parts.push(h.origin);
+  if (h.preferredServices?.length) parts.push(`${h.preferredServices.length} serviço${h.preferredServices.length === 1 ? '' : 's'}`);
+  if (h.activity?.level) parts.push(`Atividade ${ACTIVITY_LEVEL_LABELS_PT[h.activity.level as ActivityLevel]?.toLowerCase() || h.activity.level}`);
+  
+  return parts.length > 0 ? parts.slice(0, 3).join(' · ') : null;
 }
 
 function buildBehaviorSummary(profile: any, t: any): string | null {
   const b = profile?.behavior;
   if (!b) return null;
   const parts: string[] = [];
+
+  if (b.separationAnxiety) {
+    parts.push(`Ansiedade: ${b.separationAnxiety.toLowerCase()}`);
+  }
   if (b.likes?.length) {
-    parts.push(t('tutor.dogProfile.likes', { likes: b.likes.slice(0, 2).join(', ').toLowerCase() }));
+    parts.push(`Gosta de ${b.likes.slice(0, 2).join(', ').toLowerCase()}`);
   }
   if (b.fears?.length) {
-    parts.push(b.fears.length === 1 ? t('tutor.dogProfile.fear') : t('tutor.dogProfile.fears', { count: b.fears.length }));
+    parts.push(b.fears.length === 1 ? '1 medo' : `${b.fears.length} medos`);
   }
-  return parts.length > 0 ? parts.join(' · ') : null;
+  if (b.leashBehavior?.length) {
+    parts.push(`Trela: ${b.leashBehavior[0].toLowerCase()}`);
+  }
+
+  return parts.length > 0 ? parts.slice(0, 3).join(' · ') : null;
 }
 
 function buildHealthSummary(profile: any, t: any): string | null {
