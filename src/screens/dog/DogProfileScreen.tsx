@@ -36,6 +36,10 @@ import {
   FOOD_TYPE_LABELS_PT,
   ACTIVITY_LEVEL_LABELS_PT,
   HOUSING_LABELS_PT,
+  type DogGender,
+  type FoodType,
+  type ActivityLevel,
+  type HousingType,
   ageFromBirthdate,
   type DogProfile,
   type DogBasicInfo,
@@ -57,7 +61,7 @@ function buildBasicSummary(profile: any): string | null {
   const parts: string[] = [];
   if (b.breed) parts.push(b.breed);
   if (typeof b.weightKg === 'number') parts.push(`${b.weightKg} kg`);
-  if (b.gender) parts.push(GENDER_LABELS_PT[b.gender]);
+  if (b.gender) parts.push(GENDER_LABELS_PT[b.gender as DogGender]);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 
@@ -65,9 +69,9 @@ function buildHabitsSummary(profile: any, t: any): string | null {
   const h = profile?.habits;
   if (!h) return null;
   const parts: string[] = [];
-  if (h.food?.type) parts.push(FOOD_TYPE_LABELS_PT[h.food.type]);
-  if (h.activity?.level) parts.push(t('tutor.dogProfile.activity', { level: ACTIVITY_LEVEL_LABELS_PT[h.activity.level]?.toLowerCase() || h.activity.level }));
-  if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing]);
+  if (h.food?.type) parts.push(FOOD_TYPE_LABELS_PT[h.food.type as FoodType]);
+  if (h.activity?.level) parts.push(t('tutor.dogProfile.activity', { level: ACTIVITY_LEVEL_LABELS_PT[h.activity.level as ActivityLevel]?.toLowerCase() || h.activity.level }));
+  if (h.lifestyle?.housing) parts.push(HOUSING_LABELS_PT[h.lifestyle.housing as HousingType]);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 
@@ -213,8 +217,11 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
   };
 
   const goToEdit = (section: 'basic' | 'habits' | 'behavior' | 'health') => {
-    if (isReadOnly) return;
-    router.push(`/buddyid/dog/${profile.id}/edit-${section}` as any);
+    if (isReadOnly) {
+      router.push(`/buddyid/public/${profile.id}/${section}` as any);
+    } else {
+      router.push(`/buddyid/dog/${profile.id}/edit-${section}` as any);
+    }
   };
 
   return (
@@ -295,21 +302,21 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             summary={basicSummary}
             complete={completeness.basic}
             onPress={() => goToEdit('basic')}
-            disabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <SectionCard
             title={t('tutor.dogProfile.habits')}
             summary={habitsSummary}
             complete={completeness.habits}
             onPress={() => goToEdit('habits')}
-            disabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <SectionCard
             title={t('tutor.dogProfile.behavioralProfile')}
             summary={behaviorSummary}
             complete={completeness.behavior}
             onPress={() => goToEdit('behavior')}
-            disabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <SectionCard
             title={t('tutor.dogProfile.health')}
@@ -318,7 +325,7 @@ export default function DogProfileScreen({ id, isPublic = false }: { id?: string
             optional
             onPress={() => goToEdit('health')}
             isLast
-            disabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </View>
 
@@ -367,7 +374,7 @@ function SectionCard({
   optional = false,
   onPress,
   isLast = false,
-  disabled = false,
+  isReadOnly = false,
 }: {
   title: string;
   summary?: string | null;
@@ -375,16 +382,16 @@ function SectionCard({
   optional?: boolean;
   onPress: () => void;
   isLast?: boolean;
-  disabled?: boolean;
+  isReadOnly?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <Pressable
-      onPress={disabled ? undefined : onPress}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.sLink,
         !isLast && styles.sLinkDivider,
-        pressed && !disabled && { backgroundColor: 'rgba(0,0,0,0.02)' },
+        pressed && { backgroundColor: 'rgba(0,0,0,0.02)' },
       ]}
     >
       <View style={{ flex: 1 }}>
@@ -392,16 +399,18 @@ function SectionCard({
         {summary ? (
           <Text style={styles.sLinkSummary} numberOfLines={2}>{summary}</Text>
         ) : (
-          <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete]}>
+          <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete, isReadOnly && !complete && { color: colors.textSecondary }]}>
             {complete
               ? 'Preenchido'
+              : isReadOnly
+              ? 'Sem informação'
               : optional
               ? t('tutor.dogProfile.optionalAdd')
               : t('tutor.dogProfile.addLower')}
           </Text>
         )}
       </View>
-      {!disabled && <ChevronRight />}
+      <ChevronRight />
     </Pressable>
   );
 }

@@ -101,7 +101,7 @@ function PlusIcon() {
   );
 }
 
-export default function EditHealthScreen({ id }: { id?: string }) {
+export default function EditHealthScreen({ id, isReadOnly = false }: { id?: string; isReadOnly?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -161,6 +161,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
   }, [id]);
 
   const openSheet = (which: ActiveSheet, seed = '') => {
+    if (isReadOnly) return;
     setTempText(seed);
     setSheet(which);
   };
@@ -170,6 +171,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
   };
 
   const toggleAllergy = (tag: string) => {
+    if (isReadOnly) return;
     setAllergyTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
@@ -257,7 +259,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
   return (
     <DogScreenShell
       title={t('tutor.editHealth.health')}
-      bottomBar={<ConfirmButton label={t('tutor.dogEditShared.save')} onPress={handleSave} disabled={saving} />}
+      bottomBar={!isReadOnly ? <ConfirmButton label={t('tutor.dogEditShared.save')} onPress={handleSave} disabled={saving} /> : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -278,6 +280,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('chip', chipNumber ?? '')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -298,31 +301,35 @@ export default function EditHealthScreen({ id }: { id?: string }) {
                     <Text style={styles.vaccineName}>{v.name}</Text>
                     <Text style={styles.vaccineDate}>{isoToDisplay(v.date)}</Text>
                   </View>
-                  <Pressable
-                    hitSlop={10}
-                    onPress={() => {
-                      const original = vaccines.findIndex(
-                        (x) => x.name === v.name && x.date === v.date,
-                      );
-                      if (original >= 0) removeVaccine(original);
-                    }}
-                    accessibilityLabel={t('tutor.editHealth.removeVaccine', { name: v.name })}
-                  >
-                    <TrashIcon />
-                  </Pressable>
+                  {!isReadOnly && (
+                    <Pressable
+                      hitSlop={10}
+                      onPress={() => {
+                        const original = vaccines.findIndex(
+                          (x) => x.name === v.name && x.date === v.date,
+                        );
+                        if (original >= 0) removeVaccine(original);
+                      }}
+                      accessibilityLabel={t('tutor.editHealth.removeVaccine', { name: v.name })}
+                    >
+                      <TrashIcon />
+                    </Pressable>
+                  )}
                 </View>
               ))
             )}
           </View>
-          <Pressable
-            onPress={startAddVaccine}
-            style={({ pressed }) => [styles.addRow, pressed && { opacity: 0.7 }]}
-          >
-            <View style={{ width: 18, height: 18, marginRight: 8, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', lineHeight: 18 }}>+</Text>
-            </View>
-            <Text style={styles.addLabel}>{t('tutor.editHealth.addVaccine')}</Text>
-          </Pressable>
+          {!isReadOnly && (
+            <Pressable
+              onPress={startAddVaccine}
+              style={({ pressed }) => [styles.addRow, pressed && { opacity: 0.7 }]}
+            >
+              <View style={{ width: 18, height: 18, marginRight: 8, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', lineHeight: 18 }}>+</Text>
+              </View>
+              <Text style={styles.addLabel}>{t('tutor.editHealth.addVaccine')}</Text>
+            </Pressable>
+          )}
         </FormSection>
 
         <FormSection title={t('tutor.editHealth.deworming')}>
@@ -332,18 +339,21 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               value={isoToDisplay(internalDate) || null}
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('deworm_in_date', isoToDisplay(internalDate))}
+              isReadOnly={isReadOnly}
             />
             <RowButton
               label={t('tutor.editHealth.internalProduct')}
               value={internalProduct ?? null}
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('deworm_in_product', internalProduct ?? '')}
+              isReadOnly={isReadOnly}
             />
             <RowButton
               label={t('tutor.editHealth.externalLastDate')}
               value={isoToDisplay(externalDate) || null}
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('deworm_ex_date', isoToDisplay(externalDate))}
+              isReadOnly={isReadOnly}
             />
             <RowButton
               label={t('tutor.editHealth.externalProduct')}
@@ -351,6 +361,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('deworm_ex_product', externalProduct ?? '')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -360,6 +371,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
             options={ALLERGY_OPTIONS_PT}
             selected={allergyTags}
             onToggle={toggleAllergy}
+            disabled={isReadOnly}
           />
           <View style={[styles.card, { marginTop: 12 }]}>
             <RowButton
@@ -368,6 +380,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('allergy_other', allergyOther ?? '')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -380,6 +393,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('medication', medication ?? '')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -391,12 +405,14 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               value={vetName ?? null}
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('vet_name', vetName ?? '')}
+              isReadOnly={isReadOnly}
             />
             <RowButton
               label={t('tutor.editHealth.clinic')}
               value={vetClinic ?? null}
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('vet_clinic', vetClinic ?? '')}
+              isReadOnly={isReadOnly}
             />
             <RowButton
               label={t('tutor.editHealth.contact')}
@@ -404,6 +420,7 @@ export default function EditHealthScreen({ id }: { id?: string }) {
               placeholder={t('tutor.editHealth.optional')}
               onPress={() => openSheet('vet_phone', vetPhone ?? '')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>

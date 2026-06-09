@@ -34,7 +34,7 @@ import {
 
 const MAX_NOTES = 500;
 
-export default function EditBehavioralProfile({ id }: { id?: string }) {
+export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?: string; isReadOnly?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -207,11 +207,13 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
       title={t('tutor.editBehavioralProfile.behavioralProfile')}
       contentBackground={DOG_COLORS.white}
       bottomBar={
-        <ConfirmButton
-          onPress={handleSave}
-          disabled={saving}
-          label={saving ? 'A guardar...' : undefined}
-        />
+        !isReadOnly ? (
+          <ConfirmButton
+            onPress={handleSave}
+            disabled={saving}
+            label={saving ? 'A guardar...' : undefined}
+          />
+        ) : undefined
       }
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -230,17 +232,20 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
             <ScaleBlock
               label={t('tutor.editBehavioralProfile.withPeople')}
               value={behavior.socialization?.people}
-              onChange={(v) => setScale('people', v)}
+              onChange={(v) => { if (!isReadOnly) setScale('people', v); }}
+              disabled={isReadOnly}
             />
             <ScaleBlock
               label={t('tutor.editBehavioralProfile.withOtherDogs')}
               value={behavior.socialization?.dogs}
-              onChange={(v) => setScale('dogs', v)}
+              onChange={(v) => { if (!isReadOnly) setScale('dogs', v); }}
+              disabled={isReadOnly}
             />
             <ScaleBlock
               label={t('tutor.editBehavioralProfile.withChildren')}
               value={behavior.socialization?.children}
-              onChange={(v) => setScale('children', v)}
+              onChange={(v) => { if (!isReadOnly) setScale('children', v); }}
+              disabled={isReadOnly}
             />
           </View>
         </FormSection>
@@ -252,7 +257,8 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
           <ChipsMultiSelect
             options={leashOptions}
             selected={behavior.leashBehavior ?? []}
-            onToggle={toggleLeash}
+            onToggle={(v) => { if (!isReadOnly) toggleLeash(v); }}
+            disabled={isReadOnly}
           />
         </FormSection>
 
@@ -264,8 +270,9 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
             <RowButton
               label={t('tutor.editBehavioralProfile.separationAnxiety')}
               value={behavior.separationAnxiety ? t(`tutor.editBehavioralProfile.separationAnxietyOptions.${behavior.separationAnxiety}`) : undefined}
-              onPress={() => setSeparationSheetOpen(true)}
+              onPress={() => { if (!isReadOnly) setSeparationSheetOpen(true); }}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -277,7 +284,8 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
           <ChipsMultiSelect
             options={LIKES_OPTIONS_PT}
             selected={behavior.likes ?? []}
-            onToggle={toggleLike}
+            onToggle={(v) => { if (!isReadOnly) toggleLike(v); }}
+            disabled={isReadOnly}
           />
         </FormSection>
 
@@ -288,10 +296,11 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
           <ChipsMultiSelect
             options={FEARS_OPTIONS_PT}
             selected={behavior.fears ?? []}
-            onToggle={toggleFear}
+            onToggle={(v) => { if (!isReadOnly) toggleFear(v); }}
             variant="amber"
+            disabled={isReadOnly}
           />
-          {!hasNoFearsMarked && (behavior.fears?.length ?? 0) === 0 ? (
+          {!isReadOnly && !hasNoFearsMarked && (behavior.fears?.length ?? 0) === 0 ? (
             <Text style={styles.noFearsHint} onPress={markNoFears}>
               {t('tutor.editBehavioralProfile.noKnownFears')}
             </Text>
@@ -312,7 +321,8 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
           <ChipsMultiSelect
             options={goalsOptions}
             selected={behavior.goals ?? []}
-            onToggle={toggleGoal}
+            onToggle={(v) => { if (!isReadOnly) toggleGoal(v); }}
+            disabled={isReadOnly}
           />
         </FormSection>
 
@@ -326,10 +336,11 @@ export default function EditBehavioralProfile({ id }: { id?: string }) {
               onChangeText={(t) => setNotesDraft(t.slice(0, MAX_NOTES))}
               onBlur={handleNotesBlur}
               multiline
-              placeholder={t('tutor.editBehavioralProfile.tutorNotesPlaceholder')}
+              placeholder={isReadOnly ? 'Sem notas.' : t('tutor.editBehavioralProfile.tutorNotesPlaceholder')}
               placeholderTextColor={DOG_COLORS.label}
-              style={styles.notesInput}
+              style={[styles.notesInput, isReadOnly && { color: colors.textSecondary }]}
               textAlignVertical="top"
+              editable={!isReadOnly}
             />
             <Text style={styles.notesCount}>
               {notesDraft.length}/{MAX_NOTES}
@@ -372,15 +383,17 @@ function ScaleBlock({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value?: number;
   onChange: (v: number) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={scaleBlockStyles.wrap}>
       <Text style={scaleBlockStyles.label}>{label}</Text>
-      <ScaleSelector value={value} onChange={onChange} />
+      <ScaleSelector value={value} onChange={onChange} disabled={disabled} />
     </View>
   );
 }

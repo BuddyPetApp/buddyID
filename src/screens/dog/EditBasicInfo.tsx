@@ -69,7 +69,7 @@ function displayToIso(display: string): string | null {
   return d.toISOString().slice(0, 10);
 }
 
-export default function EditBasicInfo({ id }: { id?: string }) {
+export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string; isReadOnly?: boolean }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
 
@@ -175,6 +175,7 @@ export default function EditBasicInfo({ id }: { id?: string }) {
       : undefined;
 
   const handlePhoto = async () => {
+    if (isReadOnly) return;
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
@@ -306,6 +307,7 @@ export default function EditBasicInfo({ id }: { id?: string }) {
   };
 
   const openSheet = (key: Exclude<SheetKey, null>) => {
+    if (isReadOnly) return;
     if (key === 'name') setNameDraft(name);
     if (key === 'weight') setWeightDraft(weightKg?.toString() ?? '');
     if (key === 'birthdate') setBirthdayDraft(isoToDisplay(birthdate));
@@ -316,6 +318,7 @@ export default function EditBasicInfo({ id }: { id?: string }) {
   const closeSheet = () => setSheet(null);
 
   const handleToggleTemperament = (label: string) => {
+    if (isReadOnly) return;
     const entries = Object.entries(TEMPERAMENT_LABELS_PT) as [DogTemperament, string][];
     const pair = entries.find(([, l]) => l === label);
     if (!pair) return;
@@ -381,7 +384,9 @@ export default function EditBasicInfo({ id }: { id?: string }) {
       title={t('tutor.editBasicInfo.basicInformation')}
       contentBackground={DOG_COLORS.white}
       bottomBar={
-        <ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} />
+        !isReadOnly ? (
+          <ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} />
+        ) : undefined
       }
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -402,51 +407,55 @@ export default function EditBasicInfo({ id }: { id?: string }) {
         <FormSection title={t('tutor.editBasicInfo.aboutYourDog')}>
           <View style={styles.card}>
             <Pressable
-              style={({ pressed }) => [styles.row, styles.rowDivider, pressed && styles.rowPressed]}
+              style={({ pressed }) => [styles.row, styles.rowDivider, pressed && !isReadOnly && styles.rowPressed]}
               onPress={() => openSheet('name')}
             >
               <View style={styles.rowTexts}>
                 <Text style={styles.rowLabel}>{t('tutor.editBasicInfo.name')}</Text>
                 <Text style={styles.rowValue}>{name}</Text>
               </View>
-              <Text style={styles.pencilIcon}>✏️</Text>
+              {!isReadOnly && <Text style={styles.pencilIcon}>✏️</Text>}
             </Pressable>
 
             <RowButton
               label={t('tutor.editBasicInfo.gender')}
               value={gender ? GENDER_LABELS_PT[gender] : undefined}
               onPress={() => openSheet('gender')}
+              isReadOnly={isReadOnly}
             />
 
             <RowButton
               label={t('tutor.editBasicInfo.breed')}
               value={breed ?? undefined}
               onPress={() => openSheet('breed')}
+              isReadOnly={isReadOnly}
             />
 
             <RowButton
               label={t('tutor.editBasicInfo.sterilization')}
               value={sterilizedDisplay}
               onPress={() => openSheet('sterilized')}
+              isReadOnly={isReadOnly}
             />
 
             <RowButton
               label={t('tutor.editBasicInfo.dateOfBirth')}
               value={birthdateDisplay}
               onPress={() => openSheet('birthdate')}
+              isReadOnly={isReadOnly}
             />
 
             <Pressable
-              style={({ pressed }) => [styles.row, styles.rowDivider, pressed && styles.rowPressed]}
+              style={({ pressed }) => [styles.row, styles.rowDivider, pressed && !isReadOnly && styles.rowPressed]}
               onPress={() => openSheet('weight')}
             >
               <View style={styles.rowTexts}>
                 <Text style={styles.rowLabel}>{t('tutor.editBasicInfo.weight')}</Text>
-                <Text style={[styles.rowValue, !weightKg && styles.rowValueEmpty]}>
-                  {weightKg !== null ? `${weightKg} kg` : 'adicionar'}
+                <Text style={[styles.rowValue, !weightKg && styles.rowValueEmpty, isReadOnly && !weightKg && { color: colors.textSecondary }]}>
+                  {weightKg !== null ? `${weightKg} kg` : (isReadOnly ? 'Não preenchido' : 'adicionar')}
                 </Text>
               </View>
-              <Text style={styles.pencilIcon}>✏️</Text>
+              {!isReadOnly && <Text style={styles.pencilIcon}>✏️</Text>}
             </Pressable>
 
             <RowButton
@@ -454,6 +463,7 @@ export default function EditBasicInfo({ id }: { id?: string }) {
               value={size ? sizeLabels[size] : undefined}
               onPress={() => openSheet('size')}
               isLast
+              isReadOnly={isReadOnly}
             />
           </View>
         </FormSection>
@@ -466,9 +476,10 @@ export default function EditBasicInfo({ id }: { id?: string }) {
             options={Object.values(TEMPERAMENT_LABELS_PT)}
             selected={temperament.map((t) => TEMPERAMENT_LABELS_PT[t])}
             onToggle={handleToggleTemperament}
+            disabled={isReadOnly}
           />
           {!temperamentDisplay ? (
-            <Text style={styles.chipsHint}>{t('tutor.editBasicInfo.optionalComeBackLater')}</Text>
+            <Text style={styles.chipsHint}>{isReadOnly ? 'Não preenchido' : t('tutor.editBasicInfo.optionalComeBackLater')}</Text>
           ) : null}
         </FormSection>
       </ScrollView>

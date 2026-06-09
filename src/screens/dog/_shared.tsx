@@ -254,6 +254,7 @@ export function RowButton({
   onPress,
   isLast = false,
   rightIcon,
+  isReadOnly = false,
 }: {
   label: string;
   value?: string | null;
@@ -261,28 +262,29 @@ export function RowButton({
   onPress: () => void;
   isLast?: boolean;
   rightIcon?: ReactNode;
+  isReadOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const isEmpty = !value;
   return (
     <Pressable
-      onPress={onPress}
+      onPress={isReadOnly ? undefined : onPress}
       style={({ pressed }) => [
         rowStyles.row,
         !isLast && rowStyles.rowDivider,
-        pressed && rowStyles.rowPressed,
+        pressed && !isReadOnly && rowStyles.rowPressed,
       ]}
     >
       <View style={rowStyles.rowTexts}>
         <Text style={rowStyles.rowLabel}>{label}</Text>
         <Text
-          style={[rowStyles.rowValue, isEmpty && rowStyles.rowValueEmpty]}
+          style={[rowStyles.rowValue, isEmpty && rowStyles.rowValueEmpty, isReadOnly && isEmpty && { color: colors.textSecondary }]}
           numberOfLines={2}
         >
-          {isEmpty ? (placeholder ?? t('tutor.dogEditShared.add')) : value}
+          {isEmpty ? (isReadOnly ? 'Não preenchido' : (placeholder ?? t('tutor.dogEditShared.add'))) : value}
         </Text>
       </View>
-      {rightIcon ?? <ChevronRight />}
+      {!isReadOnly && (rightIcon ?? <ChevronRight />)}
     </Pressable>
   );
 }
@@ -703,11 +705,13 @@ export function ChipsMultiSelect({
   selected,
   onToggle,
   variant = 'primary',
+  disabled = false,
 }: {
   options: readonly string[];
   selected: readonly string[];
   onToggle: (value: string) => void;
   variant?: 'primary' | 'amber';
+  disabled?: boolean;
 }) {
   return (
     <View style={chipStyles.wrap}>
@@ -716,11 +720,11 @@ export function ChipsMultiSelect({
         return (
           <Pressable
             key={opt}
-            onPress={() => onToggle(opt)}
+            onPress={disabled ? undefined : () => onToggle(opt)}
             style={({ pressed }) => [
               chipStyles.chip,
               isSelected && (variant === 'primary' ? chipStyles.chipSelectedPrimary : chipStyles.chipSelectedAmber),
-              pressed && chipStyles.chipPressed,
+              pressed && !disabled && chipStyles.chipPressed,
             ]}
           >
             <Text
@@ -784,9 +788,11 @@ const SCALE_LABELS = ['1', '2', '3', '4', '5'];
 export function ScaleSelector({
   value,
   onChange,
+  disabled = false,
 }: {
   value?: number;
   onChange: (v: number) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={scaleStyles.wrap}>
@@ -796,7 +802,7 @@ export function ScaleSelector({
         return (
           <Pressable
             key={n}
-            onPress={() => onChange(n)}
+            onPress={disabled ? undefined : () => onChange(n)}
             style={({ pressed }) => [
               scaleStyles.pill,
               selected && scaleStyles.pillSelected,

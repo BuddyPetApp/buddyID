@@ -40,7 +40,7 @@ import {
 type SubSheet = null | 'food' | 'activity' | 'lifestyle' | 'preferences';
 type FieldSheet = null | 'foodType' | 'mealsPerDay' | 'brand' | 'restrictionsNotes' | 'activityLevel' | 'walksPerDay' | 'avgDuration' | 'housing' | 'sleepingPlace' | 'exerciseDuration' | 'origin' | 'traumaHistory' | 'customService';
 
-export default function EditHabits({ id }: { id?: string }) {
+export default function EditHabits({ id, isReadOnly = false }: { id?: string; isReadOnly?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -166,6 +166,16 @@ export default function EditHabits({ id }: { id?: string }) {
   const closeSubSheet = () => setSubSheet(null);
   const closeFieldSheet = () => setFieldSheet(null);
 
+  const openSubSheet = (sheet: SubSheet) => {
+    // We want them to view sub-sheets in read-only!
+    setSubSheet(sheet);
+  };
+
+  const openFieldSheet = (sheet: FieldSheet) => {
+    if (isReadOnly) return;
+    setFieldSheet(sheet);
+  };
+
   const commitBrand = (val: string) => {
     updateHabits({ food: { brand: val.trim() || undefined } });
     closeFieldSheet();
@@ -227,7 +237,7 @@ export default function EditHabits({ id }: { id?: string }) {
     <DogScreenShell
       title={t('tutor.editHabits.habits')}
       contentBackground={DOG_COLORS.white}
-      bottomBar={<ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} />}
+      bottomBar={!isReadOnly ? <ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} /> : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.intro}>
@@ -241,23 +251,27 @@ export default function EditHabits({ id }: { id?: string }) {
           <RowButton
             label={t('tutor.editHabits.food')}
             value={foodSummary}
-            onPress={() => setSubSheet('food')}
+            onPress={() => openSubSheet('food')}
+            isReadOnly={isReadOnly}
           />
           <RowButton
             label={t('tutor.editHabits.activity')}
             value={activitySummary}
-            onPress={() => setSubSheet('activity')}
+            onPress={() => openSubSheet('activity')}
+            isReadOnly={isReadOnly}
           />
           <RowButton
             label={t('tutor.editHabits.lifestyle')}
             value={lifestyleSummary}
-            onPress={() => setSubSheet('lifestyle')}
+            onPress={() => openSubSheet('lifestyle')}
+            isReadOnly={isReadOnly}
           />
           <RowButton
             label={t('tutor.editHabits.preferences')}
             value={preferencesSummary}
-            onPress={() => setSubSheet('preferences')}
+            onPress={() => openSubSheet('preferences')}
             isLast
+            isReadOnly={isReadOnly}
           />
         </View>
       </ScrollView>
@@ -271,7 +285,8 @@ export default function EditHabits({ id }: { id?: string }) {
         <RowButton
           label={t('tutor.editHabits.type')}
           value={habits.food?.type ? FOOD_TYPE_LABELS_PT[habits.food.type] : undefined}
-          onPress={() => setFieldSheet('foodType')}
+          onPress={() => openFieldSheet('foodType')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.mealsPerDay')}
@@ -280,12 +295,14 @@ export default function EditHabits({ id }: { id?: string }) {
               ? `${habits.food.mealsPerDay}`
               : undefined
           }
-          onPress={() => setFieldSheet('mealsPerDay')}
+          onPress={() => openFieldSheet('mealsPerDay')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.usualBrand')}
           value={habits.food?.brand ?? undefined}
-          onPress={() => setFieldSheet('brand')}
+          onPress={() => openFieldSheet('brand')}
+          isReadOnly={isReadOnly}
         />
         <View style={styles.switchRow}>
           <View style={styles.rowTexts}>
@@ -306,6 +323,7 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         {habits.food?.hasRestrictions ? (
@@ -314,9 +332,10 @@ export default function EditHabits({ id }: { id?: string }) {
             value={habits.food.restrictionsNotes ?? undefined}
             onPress={() => {
               setRestrictionsDraft(habits.food?.restrictionsNotes ?? '');
-              setFieldSheet('restrictionsNotes');
+              openFieldSheet('restrictionsNotes');
             }}
             isLast
+            isReadOnly={isReadOnly}
           />
         ) : null}
       </SubSheet>
@@ -334,7 +353,8 @@ export default function EditHabits({ id }: { id?: string }) {
               ? ACTIVITY_LEVEL_LABELS_PT[habits.activity.level]
               : undefined
           }
-          onPress={() => setFieldSheet('activityLevel')}
+          onPress={() => openFieldSheet('activityLevel')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.walksPerDay')}
@@ -343,7 +363,8 @@ export default function EditHabits({ id }: { id?: string }) {
               ? `${habits.activity.walksPerDay}${habits.activity.walksPerDay === 5 ? '+' : ''}`
               : undefined
           }
-          onPress={() => setFieldSheet('walksPerDay')}
+          onPress={() => openFieldSheet('walksPerDay')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.averageDuration')}
@@ -352,8 +373,9 @@ export default function EditHabits({ id }: { id?: string }) {
               ? `${habits.activity.avgDurationMin} min`
               : undefined
           }
-          onPress={() => setFieldSheet('avgDuration')}
+          onPress={() => openFieldSheet('avgDuration')}
           isLast
+          isReadOnly={isReadOnly}
         />
       </SubSheet>
 
@@ -366,7 +388,8 @@ export default function EditHabits({ id }: { id?: string }) {
         <RowButton
           label={t('tutor.editHabits.housingType')}
           value={habits.lifestyle?.housing ? HOUSING_LABELS_PT[habits.lifestyle.housing] : undefined}
-          onPress={() => setFieldSheet('housing')}
+          onPress={() => openFieldSheet('housing')}
+          isReadOnly={isReadOnly}
         />
         <View style={[styles.switchRow, styles.rowDivider]}>
           <Text style={styles.rowValue}>{t('tutor.editHabits.livesWithOtherDogs')}</Text>
@@ -377,6 +400,7 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         <View style={[styles.switchRow, styles.rowDivider]}>
@@ -388,6 +412,7 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         <View style={[styles.switchRow, styles.rowDivider]}>
@@ -399,6 +424,7 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         <View style={[styles.switchRow, styles.rowDivider]}>
@@ -410,6 +436,7 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         <View style={[styles.switchRow, styles.rowDivider]}>
@@ -421,18 +448,21 @@ export default function EditHabits({ id }: { id?: string }) {
             }
             trackColor={{ true: colors.primary, false: colors.borderSoft }}
             thumbColor={DOG_COLORS.white}
+            disabled={isReadOnly}
           />
         </View>
         <RowButton
           label={t('tutor.editHabits.sleepingPlace')}
           value={habits.lifestyle?.sleepingPlace ? t(`tutor.editHabits.sleepingPlaceOptions.${habits.lifestyle.sleepingPlace}`) : undefined}
-          onPress={() => setFieldSheet('sleepingPlace')}
+          onPress={() => openFieldSheet('sleepingPlace')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.exerciseDuration')}
           value={habits.lifestyle?.exerciseDuration ? t(`tutor.editHabits.exerciseDurationOptions.${habits.lifestyle.exerciseDuration}`) : undefined}
-          onPress={() => setFieldSheet('exerciseDuration')}
+          onPress={() => openFieldSheet('exerciseDuration')}
           isLast
+          isReadOnly={isReadOnly}
         />
       </SubSheet>
 
@@ -445,15 +475,17 @@ export default function EditHabits({ id }: { id?: string }) {
         <RowButton
           label={t('tutor.editHabits.origin')}
           value={habits.origin ? t(`tutor.editHabits.originOptions.${habits.origin}`) : undefined}
-          onPress={() => setFieldSheet('origin')}
+          onPress={() => openFieldSheet('origin')}
+          isReadOnly={isReadOnly}
         />
         <RowButton
           label={t('tutor.editHabits.traumaHistory')}
           value={habits.traumaHistory ?? undefined}
           onPress={() => {
             setTraumaDraft(habits.traumaHistory ?? '');
-            setFieldSheet('traumaHistory');
+            openFieldSheet('traumaHistory');
           }}
+          isReadOnly={isReadOnly}
         />
         <View style={styles.switchRow}>
           <View style={styles.rowTexts}>
@@ -465,12 +497,14 @@ export default function EditHabits({ id }: { id?: string }) {
             options={preferredServicesOptions}
             selected={habits.preferredServices ?? []}
             onToggle={(opt) => {
+              if (isReadOnly) return;
               const current = habits.preferredServices ?? [];
               const next = current.includes(opt)
                 ? current.filter((v) => v !== opt)
                 : [...current, opt];
               updateHabits({ preferredServices: next });
             }}
+            disabled={isReadOnly}
           />
         </View>
         {habits.preferredServices?.includes(t('tutor.editHabits.preferredServicesOptions.other')) ? (
@@ -479,9 +513,10 @@ export default function EditHabits({ id }: { id?: string }) {
             value={habits.customService ?? undefined}
             onPress={() => {
               setCustomServiceDraft(habits.customService ?? '');
-              setFieldSheet('customService');
+              openFieldSheet('customService');
             }}
             isLast
+            isReadOnly={isReadOnly}
           />
         ) : null}
       </SubSheet>
