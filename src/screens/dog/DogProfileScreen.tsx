@@ -644,21 +644,6 @@ function AccordionSection({
       ]}>
         <View style={styles.accordionTitleWrap}>
           <Text style={styles.sLinkTitle}>{title}</Text>
-          {!expanded && (
-             summary ? (
-               <Text style={styles.sLinkSummary} numberOfLines={2}>{summary}</Text>
-             ) : (
-               <Text style={[styles.sLinkStatus, complete && styles.sLinkStatusComplete, isReadOnly && !complete && { color: colors.textSecondary }]}>
-                 {complete
-                   ? 'Preenchido'
-                   : isReadOnly
-                   ? 'Sem informação'
-                   : optional
-                   ? t('tutor.dogProfile.optionalAdd')
-                   : t('tutor.dogProfile.addLower')}
-               </Text>
-             )
-          )}
         </View>
         <View style={[styles.chevronWrap, { transform: [{ rotate: expanded ? '-90deg' : '90deg' }] }]}>
           <ChevronRight />
