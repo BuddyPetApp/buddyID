@@ -248,6 +248,9 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
       Alert.alert(t('tutor.editBasicInfo.nameRequired'), t('tutor.editBasicInfo.dogNeedsName'));
       return;
     }
+    setSaving(true);
+    // ... rest of saving logic
+
 
     setSaving(true);
 
@@ -369,6 +372,14 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     closeSheet();
   };
 
+  const handleBack = () => {
+    if (isReadOnly) {
+      router.replace(`/buddyid/public/${id}` as any);
+    } else {
+      router.back();
+    }
+  };
+
   if (loading) {
     return (
       <DogScreenShell title={t('tutor.editBasicInfo.basicInformation')}>
@@ -383,6 +394,7 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     <DogScreenShell
       title={t('tutor.editBasicInfo.basicInformation')}
       contentBackground={DOG_COLORS.white}
+      onBack={handleBack}
       bottomBar={
         !isReadOnly ? (
           <ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} />
@@ -398,9 +410,11 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
             ) : (
               <View style={[styles.photo, styles.photoEmpty]} />
             )}
-            <View style={styles.photoBadge}>
-              <Text style={styles.photoBadgeText}>📷</Text>
-            </View>
+            {!isReadOnly && (
+              <View style={styles.photoBadge}>
+                <Text style={styles.photoBadgeText}>📷</Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
@@ -445,43 +459,52 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
               isReadOnly={isReadOnly}
             />
 
-            <Pressable
-              style={({ pressed }) => [styles.row, styles.rowDivider, pressed && !isReadOnly && styles.rowPressed]}
-              onPress={() => openSheet('weight')}
-            >
-              <View style={styles.rowTexts}>
-                <Text style={styles.rowLabel}>{t('tutor.editBasicInfo.weight')}</Text>
-                <Text style={[styles.rowValue, !weightKg && styles.rowValueEmpty, isReadOnly && !weightKg && { color: colors.textSecondary }]}>
-                  {weightKg !== null ? `${weightKg} kg` : (isReadOnly ? 'Não preenchido' : 'adicionar')}
-                </Text>
-              </View>
-              {!isReadOnly && <Text style={styles.pencilIcon}>✏️</Text>}
-            </Pressable>
+            {!(isReadOnly && !weightKg) && (
+              <Pressable
+                style={({ pressed }) => [styles.row, styles.rowDivider, pressed && !isReadOnly && styles.rowPressed]}
+                onPress={isReadOnly ? undefined : () => openSheet('weight')}
+              >
+                <View style={styles.rowTexts}>
+                  <Text style={styles.rowLabel}>{t('tutor.editBasicInfo.weight')}</Text>
+                  <Text style={[styles.rowValue, !weightKg && styles.rowValueEmpty, isReadOnly && !weightKg && { color: colors.textSecondary }]}>
+                    {!weightKg ? (isReadOnly ? 'Não preenchido' : t('tutor.editBasicInfo.addWeight')) : `${weightKg} kg`}
+                  </Text>
+                </View>
+                {!isReadOnly && <Text style={styles.pencilIcon}>✏️</Text>}
+              </Pressable>
+            )}
 
-            <RowButton
-              label={t('tutor.editBasicInfo.size')}
-              value={size ? sizeLabels[size] : undefined}
-              onPress={() => openSheet('size')}
-              isLast
-              isReadOnly={isReadOnly}
-            />
+            {!(isReadOnly && !size) && (
+              <RowButton
+                label={t('tutor.editBasicInfo.size')}
+                value={size ? sizeLabels[size] : undefined}
+                onPress={() => openSheet('size')}
+                isLast
+                isReadOnly={isReadOnly}
+              />
+            )}
           </View>
         </FormSection>
 
-        <FormSection
-          title={t('tutor.editBasicInfo.temperament')}
-          description={t('tutor.editBasicInfo.temperamentDescription')}
-        >
-          <ChipsMultiSelect
-            options={Object.values(TEMPERAMENT_LABELS_PT)}
-            selected={temperament.map((t) => TEMPERAMENT_LABELS_PT[t])}
-            onToggle={handleToggleTemperament}
-            disabled={isReadOnly}
-          />
-          {!temperamentDisplay ? (
-            <Text style={styles.chipsHint}>{isReadOnly ? 'Não preenchido' : t('tutor.editBasicInfo.optionalComeBackLater')}</Text>
-          ) : null}
-        </FormSection>
+        {!(isReadOnly && (!temperament || temperament.length === 0)) && (
+          <FormSection
+            title={t('tutor.editBasicInfo.temperament')}
+            description={!isReadOnly ? t('tutor.editBasicInfo.temperamentDescription') : undefined}
+          >
+            <ChipsMultiSelect
+              options={Object.values(TEMPERAMENT_LABELS_PT)}
+              selected={temperament.map((t) => TEMPERAMENT_LABELS_PT[t])}
+              onToggle={handleToggleTemperament}
+              disabled={isReadOnly}
+            />
+            {!temperamentDisplay && !isReadOnly ? (
+              <Text style={styles.chipsHint}>{t('tutor.editBasicInfo.optionalComeBackLater')}</Text>
+            ) : null}
+            {isReadOnly && !temperamentDisplay ? (
+              <Text style={styles.chipsHint}>Não preenchido</Text>
+            ) : null}
+          </FormSection>
+        )}
       </ScrollView>
 
       {/* Sheets */}

@@ -241,6 +241,14 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
       .finally(() => setSaving(false));
   };
 
+  const handleBack = () => {
+    if (isReadOnly) {
+      router.replace(`/buddyid/public/${id}` as any);
+    } else {
+      router.back();
+    }
+  };
+
   const sortedVaccines = useMemo(
     () => [...vaccines].sort((a, b) => b.date.localeCompare(a.date)),
     [vaccines],
@@ -248,7 +256,7 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
 
   if (loading) {
     return (
-      <DogScreenShell title={t('tutor.editHealth.health')}>
+      <DogScreenShell title={t('tutor.editHealthScreen.healthAndVets')} onBack={handleBack}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -258,7 +266,9 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
 
   return (
     <DogScreenShell
-      title={t('tutor.editHealth.health')}
+      title={t('tutor.editHealthScreen.healthAndVets')}
+      contentBackground={DOG_COLORS.white}
+      onBack={handleBack}
       bottomBar={!isReadOnly ? <ConfirmButton label={t('tutor.dogEditShared.save')} onPress={handleSave} disabled={saving} /> : undefined}
     >
       <ScrollView

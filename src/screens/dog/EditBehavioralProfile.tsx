@@ -154,6 +154,14 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
     updateBehavior({ tutorNotes: text || undefined });
   };
 
+  const handleBack = () => {
+    if (isReadOnly) {
+      router.replace(`/buddyid/public/${id}` as any);
+    } else {
+      router.back();
+    }
+  };
+
   const handleSave = async () => {
     const finalNotes = notesDraft.trim();
     setSaving(true);
@@ -194,7 +202,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
   if (loading) {
     return (
-      <DogScreenShell title={t('tutor.editBehavioralProfile.behavioralProfile')}>
+      <DogScreenShell title={t('tutor.editBehavioralProfile.behavioralProfile')} onBack={handleBack}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -206,6 +214,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
     <DogScreenShell
       title={t('tutor.editBehavioralProfile.behavioralProfile')}
       contentBackground={DOG_COLORS.white}
+      onBack={handleBack}
       bottomBar={
         !isReadOnly ? (
           <ConfirmButton
@@ -226,7 +235,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.socialization')}
-          description={t('tutor.editBehavioralProfile.socializationDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.socializationDescription') : undefined}
         >
           <View style={styles.scaleGroup}>
             <ScaleBlock
@@ -252,7 +261,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.leashBehavior')}
-          description={t('tutor.editBehavioralProfile.leashBehaviorDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.leashBehaviorDescription') : undefined}
         >
           <ChipsMultiSelect
             options={leashOptions}
@@ -264,7 +273,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.separationAnxiety')}
-          description={t('tutor.editBehavioralProfile.separationAnxietyDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.separationAnxietyDescription') : undefined}
         >
           <View style={styles.cardSelect}>
             <RowButton
@@ -279,7 +288,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.likes')}
-          description={t('tutor.editBehavioralProfile.chooseAllThatApply')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.chooseAllThatApply') : undefined}
         >
           <ChipsMultiSelect
             options={LIKES_OPTIONS_PT}
@@ -291,7 +300,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.fearsOrTriggers')}
-          description={t('tutor.editBehavioralProfile.situationsUncomfortable')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.situationsUncomfortable') : undefined}
         >
           <ChipsMultiSelect
             options={FEARS_OPTIONS_PT}
@@ -316,7 +325,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.goals')}
-          description={t('tutor.editBehavioralProfile.goalsDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.goalsDescription') : undefined}
         >
           <ChipsMultiSelect
             options={goalsOptions}
@@ -328,7 +337,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.tutorNotes')}
-          description={t('tutor.editBehavioralProfile.tutorNotesDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.tutorNotesDescription') : undefined}
         >
           <View style={styles.notesWrap}>
             <TextInput
@@ -350,7 +359,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
         <FormSection
           title={t('tutor.editBehavioralProfile.providerNotes')}
-          description={t('tutor.editBehavioralProfile.providerNotesDescription')}
+          description={!isReadOnly ? t('tutor.editBehavioralProfile.providerNotesDescription') : undefined}
         >
           <View style={styles.providerCard}>
             <PawSquare size={44} />

@@ -166,6 +166,14 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
   const closeSubSheet = () => setSubSheet(null);
   const closeFieldSheet = () => setFieldSheet(null);
 
+  const handleBack = () => {
+    if (isReadOnly) {
+      router.replace(`/buddyid/public/${id}` as any);
+    } else {
+      router.back();
+    }
+  };
+
   const openSubSheet = (sheet: SubSheet) => {
     // We want them to view sub-sheets in read-only!
     setSubSheet(sheet);
@@ -225,7 +233,7 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
 
   if (loading) {
     return (
-      <DogScreenShell title={t('tutor.editHabits.habits')}>
+      <DogScreenShell title={t('tutor.editHabits.habits')} onBack={handleBack}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -237,14 +245,17 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
     <DogScreenShell
       title={t('tutor.editHabits.habits')}
       contentBackground={DOG_COLORS.white}
+      onBack={handleBack}
       bottomBar={!isReadOnly ? <ConfirmButton onPress={handleSave} disabled={saving} label={saving ? 'A guardar...' : undefined} /> : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.intro}>
           <Text style={styles.introTitle}>{t('tutor.editHabits.routineOf', { name: profile.name })}</Text>
-          <Text style={styles.introCopy}>
-            {t('tutor.editHabits.routineDescription')}
-          </Text>
+          {!isReadOnly && (
+            <Text style={styles.introCopy}>
+              {t('tutor.editHabits.routineDescription')}
+            </Text>
+          )}
         </View>
 
         <View style={styles.card}>
