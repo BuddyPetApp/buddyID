@@ -129,8 +129,8 @@ const VISION = [
 ];
 
 const HOW = [
-  { title: 'O prestador conhece o teu cão por completo', sub: 'Raça, hábitos, saúde e comportamento. Tudo acessível antes de cada serviço.', badge: null, svg: SERVICES_10_SVG, iw: 170, ih: 100, minh: 100 },
-  { title: 'Analisamos os serviços no momento certo', sub: 'Com base no perfil do teu cão, a Buddy recomenda o que ele precisa.', badge: 'Em breve', svg: SERVICES_04_SVG, iw: 150, ih: 100, minh: 100 },
+  { title: 'O prestador conhece o teu cão por completo', sub: 'Raça, hábitos, saúde e comportamento. Tudo acessível antes de cada serviço.', badge: null, svg: SERVICES_10_SVG, iw: 200, ih: 130, minh: 140 },
+  { title: 'Analisamos os serviços no momento certo', sub: 'Com base no perfil do teu cão, a Buddy recomenda o que ele precisa.', badge: 'Em breve', svg: SERVICES_04_SVG, iw: 180, ih: 130, minh: 140 },
 ];
 
 export default function Landing() {
@@ -295,8 +295,8 @@ export default function Landing() {
                     <View style={s.howIllustration} pointerEvents="none">
                       <SvgXml xml={item.svg} width={item.iw} height={item.ih} />
                     </View>
-                    <Text style={s.howCardTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={s.howCardSub} numberOfLines={2}>{item.sub}</Text>
+                    <Text style={s.howCardTitle}>{item.title}</Text>
+                    <Text style={s.howCardSub}>{item.sub}</Text>
                     {item.badge && (
                       <View style={s.howBadge}><Text style={s.howBadgeText}>{item.badge}</Text></View>
                     )}
@@ -538,9 +538,9 @@ const s = StyleSheet.create({
   howCard: {
     backgroundColor: colors.cardDeep,
     borderRadius: radius.xxl,
-    paddingTop: 12,
-    paddingHorizontal: 18,
-    paddingBottom: 12,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     overflow: 'hidden',
     ...shadows.purple,
   },
@@ -548,8 +548,8 @@ const s = StyleSheet.create({
   howCardText: { flex: 1 },
   howIllustration: { position: 'absolute', right: -10, bottom: 0, opacity: 0.55 },
   howCardRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 6 },
-  howCardTitle: { fontFamily: font.semiBold, fontSize: 13, color: '#fff', lineHeight: 18, marginBottom: 2, paddingRight: 65 },
-  howCardSub: { fontFamily: font.regular, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 16, paddingRight: 90 },
+  howCardTitle: { fontFamily: font.semiBold, fontSize: 15, color: '#fff', lineHeight: 21, marginBottom: 6, paddingRight: 70 },
+  howCardSub: { fontFamily: font.regular, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 19, paddingRight: 70 },
   howBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 3 },
   howBadgeText: { fontFamily: font.semiBold, fontSize: 10, color: '#fff' },
 
