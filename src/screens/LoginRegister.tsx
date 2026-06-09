@@ -101,6 +101,14 @@ export default function LoginRegister() {
                 : 'Cria uma conta para guardares o BuddyID.'}
             </Text>
 
+            {!isLogin && !isLoginOnly && (
+              <View style={s.donationBanner}>
+                <Text style={s.donationText}>
+                  Por cada cão registado doamos <Text style={s.donationBold}>1€</Text> no primeiro serviço
+                </Text>
+              </View>
+            )}
+
             {verificationSent && (
               <View style={s.successBanner}>
                 <CheckIcon size={18} color={colors.success} />
@@ -172,6 +180,10 @@ const s = StyleSheet.create({
 
   title:       { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[2] },
   sub:         { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing[5], lineHeight: 20 },
+
+  donationBanner: { backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing[4], marginBottom: spacing[5], ...shadows.purple },
+  donationText: { fontFamily: font.medium, fontSize: fontSize.sm, color: '#fff', lineHeight: 20 },
+  donationBold: { fontFamily: font.bold, fontSize: fontSize.md },
 
   successBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3], backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: radius.lg, padding: spacing[4], marginBottom: spacing[4] },
   successText:  { flex: 1 },
