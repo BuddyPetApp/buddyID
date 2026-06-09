@@ -24,7 +24,7 @@ export default function Success() {
   async function handleShare() {
     const r = results[selectedIndex];
     if (!r) return;
-    const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || 'http://localhost:8081';
+    const baseWebUrl = process.env.EXPO_PUBLIC_FORM_WEB_URL || process.env.EXPO_PUBLIC_WEB_URL || 'https://buddy.pet';
     const link = `${baseWebUrl}/buddyid/public/${r.buddyId}`;
     
     const isFemale = r.gender === 'Fêmea';

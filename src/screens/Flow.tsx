@@ -449,7 +449,7 @@ function Q6({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | '
       <View style={s.divider} />
       <SectionLabel>Quem mais vive em casa?</SectionLabel>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
+      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso','Ninguém']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
       <View style={s.divider} />
       <SectionLabel>Onde dorme?</SectionLabel>
       <ChoiceRow options={sleepOpts} selected={form.sleepingPlace} onSelect={(v) => update('sleepingPlace', v as SleepingPlace)} columns={2} />
@@ -569,7 +569,7 @@ function Q12({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
 }
 
 function Q13({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
-  const options = ['Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Veterinário','Outro'];
+  const options = ['Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Veterinário','Nenhum','Outro'];
   return (
     <View>
       <Text style={s.question}>Que serviços normalmente usas?</Text>
