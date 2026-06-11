@@ -20,12 +20,10 @@ export default function LoginRegister() {
   const [password,          setPassword]          = useState('');
   const [phone,             setPhone]             = useState('');
   const [loading,           setLoading]           = useState(false);
-  const [verificationSent,  setVerificationSent]  = useState(false);
 
   async function handleAuth() {
     if (!email || !password || (!isLogin && !phone)) return;
     setLoading(true);
-    setVerificationSent(false);
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -33,10 +31,16 @@ export default function LoginRegister() {
       } else {
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { phone }, emailRedirectTo: 'https://buddy.pet' },
+          options: { data: { phone } },
         });
         if (error) throw error;
-        if (!data.session) { setVerificationSent(true); setIsLogin(true); return; }
+        if (!data.session) {
+          router.push({
+            pathname: '/buddyid/verify-otp',
+            params: { email, type: 'signup' }
+          } as any);
+          return;
+        }
       }
       if (isLoginOnly) {
         router.replace('/buddyid' as any);
@@ -109,15 +113,7 @@ export default function LoginRegister() {
               </View>
             )}
 
-            {verificationSent && (
-              <View style={s.successBanner}>
-                <CheckIcon size={18} color={colors.success} />
-                <View style={s.successText}>
-                  <Text style={s.successTitle}>Verifica o teu email</Text>
-                  <Text style={s.successBody}>Enviámos um link de verificação para a tua caixa de entrada.</Text>
-                </View>
-              </View>
-            )}
+
 
             <View style={s.form}>
               <View style={s.inputWrap}>
@@ -147,6 +143,15 @@ export default function LoginRegister() {
                   value={password} onChangeText={setPassword} secureTextEntry
                 />
               </View>
+
+              {isLogin && (
+                <TouchableOpacity 
+                  style={s.forgotWrap} 
+                  onPress={() => router.push({ pathname: '/buddyid/forgot-password', params: { email } } as any)}
+                >
+                  <Text style={s.forgotText}>Esqueci-me da palavra-passe</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -194,6 +199,9 @@ const s = StyleSheet.create({
   inputWrap:   { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceMuted, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing[4], height: 52, gap: spacing[3] },
   inputIcon:   { fontFamily: font.bold, fontSize: fontSize.md, color: colors.textMuted, width: 18, textAlign: 'center' },
   input:       { flex: 1, fontFamily: font.regular, fontSize: fontSize.base, color: colors.text },
+
+  forgotWrap:  { alignSelf: 'flex-end', marginTop: -2 },
+  forgotText:  { fontFamily: font.medium, fontSize: fontSize.sm, color: colors.primary },
 
   footer:      { padding: spacing[5], backgroundColor: colors.canvas },
   cta:         { backgroundColor: colors.primary, borderRadius: radius.lg, height: 52, alignItems: 'center', justifyContent: 'center', ...shadows.purple },

@@ -12,6 +12,9 @@ export default function BuddyIDLayout() {
       <Stack.Screen name="associations" />
       <Stack.Screen name="about-us" />
       <Stack.Screen name="contact" />
+      <Stack.Screen name="forgot-password" />
+      <Stack.Screen name="verify-otp" />
+      <Stack.Screen name="reset-password" />
       <Stack.Screen name="dog/[id]/index" />
       <Stack.Screen name="dog/[id]/edit-basic" />
       <Stack.Screen name="dog/[id]/edit-habits" />
