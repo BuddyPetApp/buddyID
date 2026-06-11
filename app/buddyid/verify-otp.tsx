@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   KeyboardAvoidingView, Platform, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View, Alert,
@@ -18,6 +18,39 @@ export default function VerifyOtp() {
   
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(60);
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const interval = setInterval(() => setResendTimer(t => t - 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [resendTimer]);
+
+  async function handleResend() {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    try {
+      let error;
+      if (type === 'signup') {
+        const res = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+        error = res.error;
+      } else {
+        const res = await supabase.auth.resetPasswordForEmail(email.trim());
+        error = res.error;
+      }
+      if (error) throw error;
+      
+      setResendTimer(60);
+      if (Platform.OS === 'web') window.alert('Sucesso: Código reenviado com sucesso!');
+      else Alert.alert('Sucesso', 'Código reenviado com sucesso!');
+    } catch (err: any) {
+      if (Platform.OS === 'web') window.alert('Erro: ' + (err.message || 'Erro ao reenviar.'));
+      else Alert.alert('Erro', err.message || 'Erro ao reenviar.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const disabled = code.length < 6;
 
@@ -89,6 +122,15 @@ export default function VerifyOtp() {
                 />
               </View>
             </View>
+
+            <View style={s.resendWrap}>
+              <Text style={s.resendText}>Não recebeste o código?</Text>
+              <TouchableOpacity onPress={handleResend} disabled={resendTimer > 0 || loading}>
+                <Text style={[s.resendBtnText, (resendTimer > 0 || loading) && s.resendBtnDisabled]}>
+                  {resendTimer > 0 ? `Reenviar (${resendTimer}s)` : 'Reenviar código'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
 
@@ -119,6 +161,11 @@ const s = StyleSheet.create({
   form:        { gap: spacing[3] },
   inputWrap:   { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceMuted, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing[4], height: 52, gap: spacing[3] },
   input:       { flex: 1, fontFamily: font.regular, fontSize: fontSize.xl, color: colors.text, letterSpacing: 4 },
+
+  resendWrap:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: spacing[6], gap: spacing[2] },
+  resendText:  { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textSecondary },
+  resendBtnText: { fontFamily: font.semiBold, fontSize: fontSize.sm, color: colors.primary },
+  resendBtnDisabled: { opacity: 0.5 },
 
   footer:      { padding: spacing[5], backgroundColor: colors.canvas },
   cta:         { backgroundColor: colors.primary, borderRadius: radius.lg, height: 52, alignItems: 'center', justifyContent: 'center', ...shadows.purple },

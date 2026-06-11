@@ -198,7 +198,7 @@ export default function Flow() {
         return false;
       case 'q14': return !form.goals || form.goals.length === 0;
       case 'q15': return !form.hasConcerns || (form.hasConcerns === 'Sim' && (form.concernsText || '').trim().length === 0);
-      case 'consent': return !form.consentMarketing || !form.consentDataUse;
+      case 'consent': return !form.consentDataUse;
       default: return false;
     }
   }
@@ -642,8 +642,8 @@ function Consent({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
       <Text style={s.question}>Antes de terminar.</Text>
-      <Text style={s.consentSub}>Duas confirmações simples.</Text>
-      <ConsentRow checked={form.consentMarketing} onToggle={() => update('consentMarketing', !form.consentMarketing)} label="Aceito receber comunicações da Buddy sobre o lançamento." />
+      <Text style={s.consentSub}>Para terminar o teu perfil.</Text>
+      <ConsentRow checked={form.consentMarketing} onToggle={() => update('consentMarketing', !form.consentMarketing)} label="Aceito receber comunicações da Buddy sobre o lançamento. (Opcional)" />
       <ConsentRow checked={form.consentDataUse} onToggle={() => update('consentDataUse', !form.consentDataUse)} label="Aceito que a Buddy use estes dados de forma anónima para melhorar os serviços." />
     </View>
   );
