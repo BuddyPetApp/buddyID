@@ -374,7 +374,7 @@ export default function Landing() {
 const s = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: colors.canvas },
   scroll:  { flex: 1 },
-  content: { paddingBottom: spacing[12] },
+  content: { paddingBottom: 140 },
 
   // Header
   header: {
