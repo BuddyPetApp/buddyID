@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { apiClient } from '../api/client';
 import { Logomark } from '../components/Logo';
 import { PROVIDER_FORM_KEY } from './ProviderFlow';
 
@@ -40,9 +41,17 @@ export default function ProviderLoading() {
     Animated.parallel([dotAnim(dot1, 0), dotAnim(dot2, 200), dotAnim(dot3, 400)]).start();
 
     AsyncStorage.getItem(PROVIDER_FORM_KEY).then(async (raw) => {
-      await new Promise((r) => setTimeout(r, 2800));
-      await AsyncStorage.setItem(PROVIDER_RESULT_KEY, raw ?? '{}');
-      router.replace('/buddyid/provider-success' as any);
+      try {
+        if (raw) {
+          const form = JSON.parse(raw);
+          await apiClient.post('/partner-applications', form);
+          await AsyncStorage.removeItem(PROVIDER_FORM_KEY);
+        }
+        router.replace('/buddyid/provider-success' as any);
+      } catch (err) {
+        console.error('Failed to submit partner application:', err);
+        setTimeout(() => router.back(), 2000);
+      }
     });
   }, []);
 
