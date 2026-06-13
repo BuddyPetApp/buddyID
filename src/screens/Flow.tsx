@@ -177,7 +177,7 @@ export default function Flow() {
   function isContinueDisabled(): boolean {
     switch (currentStep) {
       case 'q1': return form.name.trim().length < 1;
-      case 'q2': return !DOG_BREEDS_PT.includes(form.breed) || !form.size;
+      case 'q2': return form.breed.trim().length < 1 || !form.size;
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
       case 'q4': 
         return !form.energy || !form.withStrangers || !form.withHomePeople || 
@@ -337,11 +337,7 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   function handleChangeText(text: string) {
     setSearch(text);
     const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
-    if (exactMatch) {
-      update('breed', exactMatch);
-    } else {
-      update('breed', '');
-    }
+    update('breed', exactMatch ?? text.trim());
     setShowSuggestions(true);
   }
 
