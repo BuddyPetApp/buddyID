@@ -131,21 +131,30 @@ export default function Flow() {
   }
 
   async function handleSubmit() {
-    const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
-    const dogs = raw ? JSON.parse(raw) : [];
-    dogs.push(form);
-    await AsyncStorage.setItem('buddyid_pending_dogs', JSON.stringify(dogs));
-    await AsyncStorage.removeItem(BUDDYID_FORM_KEY);
+    try {
+      const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
+      const dogs = raw ? JSON.parse(raw) : [];
+      dogs.push(form);
+      await AsyncStorage.setItem('buddyid_pending_dogs', JSON.stringify(dogs));
+      await AsyncStorage.removeItem(BUDDYID_FORM_KEY);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.replace('/buddyid/auth' as any);
-    } else {
-      const hasAnotherDog = dogs.length > 0 && dogs[0].housemates?.includes('Outro cão');
-      if (dogs.length >= 2 || !hasAnotherDog) {
-        router.replace('/buddyid/loading' as any);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/buddyid/auth' as any);
       } else {
-        router.replace('/buddyid/second-dog' as any);
+        const hasAnotherDog = dogs.length > 0 && dogs[0].housemates?.includes('Outro cão');
+        if (dogs.length >= 2 || !hasAnotherDog) {
+          router.replace('/buddyid/loading' as any);
+        } else {
+          router.replace('/buddyid/second-dog' as any);
+        }
+      }
+    } catch (err: any) {
+      console.error('Submit error:', err);
+      if (Platform.OS === 'web') {
+        window.alert('Ocorreu um erro ao guardar os dados. A foto poderá ser demasiado grande. Tenta continuar sem foto ou com uma foto mais pequena.');
+      } else {
+        Alert.alert('Erro', 'Ocorreu um erro ao guardar os dados. A foto poderá ser demasiado grande.');
       }
     }
   }
