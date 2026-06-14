@@ -390,10 +390,10 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
       </View>
       {form.breed === 'other' && (
         <>
-          <SectionLabel>Qual é a raça?</SectionLabel>
+          <SectionLabel>Escreve</SectionLabel>
           <TextInput
             style={s.input}
-            placeholder="Ex: Misto, Sem raça definida..."
+            placeholder="Ex: Dobberman, Pastor Belga Malinois..."
             placeholderTextColor={colors.textMuted}
             value={form.breedOther || ''}
             onChangeText={(v) => update('breedOther', v)}
