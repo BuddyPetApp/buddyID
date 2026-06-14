@@ -167,11 +167,19 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
   const closeSubSheet = () => setSubSheet(null);
   const closeFieldSheet = () => setFieldSheet(null);
 
+  const goBackOrRedirect = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(`/buddyid/dog/${id}` as any);
+    }
+  };
+
   const handleBack = () => {
     if (isReadOnly) {
       router.replace(`/buddyid/public/${id}` as any);
     } else {
-      router.back();
+      goBackOrRedirect();
     }
   };
 
@@ -223,7 +231,7 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        router.back();
+        goBackOrRedirect();
       })
       .catch((err) => {
         console.error('Error saving habits:', err);

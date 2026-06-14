@@ -155,11 +155,19 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
     updateBehavior({ tutorNotes: text || undefined });
   };
 
+  const goBackOrRedirect = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(`/buddyid/dog/${id}` as any);
+    }
+  };
+
   const handleBack = () => {
     if (isReadOnly) {
       router.replace(`/buddyid/public/${id}` as any);
     } else {
-      router.back();
+      goBackOrRedirect();
     }
   };
 
@@ -189,7 +197,7 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        router.back();
+        goBackOrRedirect();
       })
       .catch((err) => {
         console.error('Error saving behavior:', err);

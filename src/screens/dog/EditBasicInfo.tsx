@@ -301,7 +301,7 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        router.back();
+        goBackOrRedirect();
       })
       .catch((err) => {
         console.error('Error updating basic info:', err);
@@ -373,11 +373,19 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     closeSheet();
   };
 
+  const goBackOrRedirect = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(`/buddyid/dog/${id}` as any);
+    }
+  };
+
   const handleBack = () => {
     if (isReadOnly) {
       router.replace(`/buddyid/public/${id}` as any);
     } else {
-      router.back();
+      goBackOrRedirect();
     }
   };
 

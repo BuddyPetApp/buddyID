@@ -243,9 +243,17 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
       healthJson: JSON.stringify(next),
     };
 
+    const goBackOrRedirect = () => {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace(`/buddyid/dog/${id}` as any);
+      }
+    };
+
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        router.back();
+        goBackOrRedirect();
       })
       .catch((err) => {
         console.error('Error saving health profile:', err);
@@ -258,7 +266,11 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
     if (isReadOnly) {
       router.replace(`/buddyid/public/${id}` as any);
     } else {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace(`/buddyid/dog/${id}` as any);
+      }
     }
   };
 
