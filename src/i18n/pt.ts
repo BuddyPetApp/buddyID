@@ -145,6 +145,7 @@ export default {
         year: 'ano',
         years: 'anos',
         dateFormat: 'DD/MM/AAAA',
+        addWeight: 'Adicionar peso',
       },
       editBehavioralProfile: {
         behavioralProfile: 'Perfil comportamental',
