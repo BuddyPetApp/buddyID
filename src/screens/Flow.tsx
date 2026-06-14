@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { supabase } from '../lib/supabase';
@@ -55,6 +56,31 @@ const ChevronDownIcon = ({ size = 20, color = colors.primary }: { size?: number;
     <Polyline points="6 9 12 15 18 9" />
   </Svg>
 );
+
+async function compressImageIfNeeded(asset: ImagePicker.ImagePickerAsset): Promise<string> {
+  let isTooLarge = false;
+
+  if (asset.fileSize && asset.fileSize > 1500000) {
+    isTooLarge = true;
+  } else if (Platform.OS === 'web' && asset.uri.length > 2000000) {
+    isTooLarge = true;
+  } else if (asset.width > 1200 || asset.height > 1200) {
+    isTooLarge = true;
+  }
+
+  if (!isTooLarge) {
+    return asset.uri;
+  }
+
+  const actions = asset.width > 800 || asset.height > 800 ? [{ resize: { width: 800 } }] : [];
+  const manipResult = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    actions,
+    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+  );
+
+  return manipResult.uri;
+}
 
 export default function Flow() {
   const { t, i18n } = useTranslation();
@@ -167,7 +193,10 @@ export default function Flow() {
         aspect: [1, 1],
         quality: 0.8,
       });
-      if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        const optimizedUri = await compressImageIfNeeded(result.assets[0]);
+        update('photoUri', optimizedUri);
+      }
       return;
     }
 
@@ -189,7 +218,10 @@ export default function Flow() {
               aspect: [1, 1],
               quality: 0.8,
             });
-            if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+            if (!result.canceled && result.assets[0]) {
+              const optimizedUri = await compressImageIfNeeded(result.assets[0]);
+              update('photoUri', optimizedUri);
+            }
           },
         },
         {
@@ -201,7 +233,10 @@ export default function Flow() {
               aspect: [1, 1],
               quality: 0.8,
             });
-            if (!result.canceled && result.assets[0]) update('photoUri', result.assets[0].uri);
+            if (!result.canceled && result.assets[0]) {
+              const optimizedUri = await compressImageIfNeeded(result.assets[0]);
+              update('photoUri', optimizedUri);
+            }
           },
         },
         {
