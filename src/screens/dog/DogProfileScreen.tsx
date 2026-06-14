@@ -370,9 +370,9 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   const goToEdit = (section: 'basic' | 'habits' | 'behavior' | 'health') => {
     if (isReadOnly) {
-      router.push(`/buddyid/public/${profile.id}/${section}` as any);
+      router.navigate(`/buddyid/public/${profile.id}/${section}` as any);
     } else {
-      router.push(`/buddyid/dog/${profile.id}/edit-${section}` as any);
+      router.navigate(`/buddyid/dog/${profile.id}/edit-${section}` as any);
     }
   };
 

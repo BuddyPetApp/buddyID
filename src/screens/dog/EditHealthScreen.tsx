@@ -198,9 +198,10 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
     
     setSaving(true);
 
-    const next: DogHealth = {};
-    if (chipNumber) next.chipNumber = chipNumber;
-    if (vaccines.length > 0) next.vaccines = vaccines;
+    const initial: DogHealth = profile.healthJson ? JSON.parse(profile.healthJson) : {};
+    const next: DogHealth = { ...initial };
+    if (chipNumber) next.chipNumber = chipNumber; else delete next.chipNumber;
+    if (vaccines.length > 0) next.vaccines = vaccines; else delete next.vaccines;
     if (internalDate || externalDate) {
       next.deworming = {};
       if (internalDate) {
@@ -209,16 +210,20 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
       if (externalDate) {
         next.deworming.external = { lastDate: externalDate, product: externalProduct };
       }
-    }
+    } else delete next.deworming;
+    
     if (allergyTags.length > 0 || allergyOther) {
       next.allergies = { tags: allergyTags, other: allergyOther };
-    }
-    if (medication) next.medication = medication;
+    } else delete next.allergies;
+    
+    if (medication) next.medication = medication; else delete next.medication;
+    
     if (vetName || vetClinic || vetPhone) {
       next.vet = { name: vetName, clinic: vetClinic, phone: vetPhone };
-    }
-    if (concerns) next.concerns = concerns;
-    if (concernsText) next.concernsText = concernsText;
+    } else delete next.vet;
+    
+    if (concerns) next.concerns = concerns; else delete next.concerns;
+    if (concernsText) next.concernsText = concernsText; else delete next.concernsText;
 
     const payload = {
       dogId: id,
