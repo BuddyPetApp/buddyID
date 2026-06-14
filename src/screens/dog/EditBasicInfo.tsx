@@ -301,7 +301,8 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        goBackOrRedirect();
+        Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
+        fetchProfile();
       })
       .catch((err) => {
         console.error('Error updating basic info:', err);

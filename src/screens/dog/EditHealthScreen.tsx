@@ -243,17 +243,10 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
       healthJson: JSON.stringify(next),
     };
 
-    const goBackOrRedirect = () => {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace(`/buddyid/dog/${id}` as any);
-      }
-    };
-
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        goBackOrRedirect();
+        Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
+        fetchProfile();
       })
       .catch((err) => {
         console.error('Error saving health profile:', err);

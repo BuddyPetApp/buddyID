@@ -231,7 +231,8 @@ export default function EditHabits({ id, isReadOnly = false }: { id?: string; is
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        goBackOrRedirect();
+        Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
+        fetchProfile();
       })
       .catch((err) => {
         console.error('Error saving habits:', err);

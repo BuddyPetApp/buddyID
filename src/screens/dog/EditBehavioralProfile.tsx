@@ -197,7 +197,8 @@ export default function EditBehavioralProfile({ id, isReadOnly = false }: { id?:
 
     apiClient.put(`/dogs/${id}`, payload)
       .then(() => {
-        goBackOrRedirect();
+        Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
+        fetchProfile();
       })
       .catch((err) => {
         console.error('Error saving behavior:', err);
