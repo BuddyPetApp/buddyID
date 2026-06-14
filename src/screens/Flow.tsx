@@ -92,7 +92,36 @@ export default function Flow() {
     }
   }
 
+  function getValidationMessage(): string {
+    switch (currentStep) {
+      case 'q1': return 'Por favor, preenche o nome do cão.';
+      case 'q2': return 'Por favor, seleciona a raça e o tamanho do cão.';
+      case 'q3': return 'Por favor, preenche a idade, género e se está castrado/esterilizado.';
+      case 'q4': return 'Por favor, responde a todas as perguntas de comportamento.';
+      case 'q5': return 'Por favor, seleciona pelo menos uma opção sobre o comportamento na trela.';
+      case 'q6': return 'Por favor, responde a todas as perguntas sobre a vossa casa e rotina.';
+      case 'q7b': return 'Por favor, indica como se encontraram.';
+      case 'q8': return 'Por favor, indica o comportamento quando fica sozinho.';
+      case 'qLocation': return 'Por favor, indica a cidade onde moram.';
+      case 'q12': return 'Por favor, indica se tem medos e preenche o campo "Outro" se selecionado.';
+      case 'q13': return 'Por favor, indica que serviços procuras e preenche o campo "Outro" se selecionado.';
+      case 'q14': return 'Por favor, seleciona pelo menos um objetivo.';
+      case 'q15': return 'Por favor, indica se tens alguma preocupação.';
+      case 'consent': return 'Por favor, aceita o uso de dados anónimo para poderes continuar.';
+      default: return 'Por favor, preenche todos os campos obrigatórios.';
+    }
+  }
+
   function goNext() {
+    if (isContinueDisabled()) {
+      if (Platform.OS === 'web') {
+        window.alert(getValidationMessage());
+      } else {
+        Alert.alert('Atenção', getValidationMessage());
+      }
+      return;
+    }
+
     if (stepIndex < STEPS.length - 1) {
       setStepIndex((s) => s + 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -248,7 +277,6 @@ export default function Flow() {
           <TouchableOpacity
             style={[s.continueBtn, isContinueDisabled() && s.continueBtnDisabled]}
             onPress={goNext}
-            disabled={isContinueDisabled()}
           >
             <Text style={s.continueBtnText}>{continueLabel}</Text>
           </TouchableOpacity>
