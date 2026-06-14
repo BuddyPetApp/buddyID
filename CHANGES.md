@@ -1,68 +1,80 @@
-# Bug Fix: Free-text breed input unlocks continue button
+# Change Log
 
-**File:** `src/screens/Flow.tsx`
+---
+
+## [2] feat: "Outra" breed option with breed_other field
+
+**Date:** 2026-06-14
+**Files:** `src/screens/types.ts`, `src/screens/Flow.tsx`, `src/screens/Loading.tsx`
 **Step affected:** `q2` (breed + size question)
 
+### Context
+
+The database `dogs` table has two separate columns for breed:
+- `breed text` — stores the canonical breed name from the list, or the literal value `'other'`
+- `breed_other text` — stores the free-text description when `breed = 'other'`
+
+This change replaces the previous free-text fix (see entry [1] below, which has been reverted) with a proper UX pattern: the user selects "Outra" from the suggestion list and is then shown a text input to describe the breed freely.
+
+### Changes
+
+**`src/screens/types.ts`**
+- Added `breedOther?: string` to `BuddyIDFormData` interface
+- Added `breedOther: ''` to `INITIAL_FORM_DATA`
+
+**`src/screens/Flow.tsx` — Q2 component**
+- `suggestions` list now always appends `'Outra'` as the last item
+- `handleSelect` — when `'Outra'` is selected: sets `form.breed = 'other'`, clears `form.breedOther`, sets search display to `'Outra'`, closes dropdown
+- When `form.breed === 'other'`: a `TextInput` appears below the dropdown for the user to type the breed freely (maps to `breedOther`)
+- `isContinueDisabled` for `q2`:
+  ```ts
+  if (!form.size) return true;
+  if (form.breed === 'other') return (form.breedOther ?? '').trim().length < 1;
+  return !DOG_BREEDS_PT.includes(form.breed);
+  ```
+
+**`src/screens/Loading.tsx`**
+- Added `breedOther` to the API command payload:
+  ```ts
+  breed: form.breed,
+  breedOther: form.breed === 'other' ? form.breedOther : undefined,
+  ```
+  `breedOther` is only sent when `breed === 'other'`; otherwise it is `undefined` and omitted from the request.
+
+### Behaviour
+
+| Scenario | breed (DB) | breed_other (DB) |
+|---|---|---|
+| User picks from list (e.g. "Labrador") | `"Labrador"` | `null` |
+| User picks "Outra" + types "Misto" | `"other"` | `"Misto"` |
+| User picks "Outra" but leaves input empty | Button locked — cannot continue | — |
+| Size not selected | Button locked — cannot continue | — |
+
+### Reverted
+
+The free-text typing fix from entry [1] has been reverted. `handleChangeText` is back to its original behaviour: clears `form.breed` if no exact match is found in `DOG_BREEDS_PT`.
+
 ---
 
-## Problem
+## [1] fix: free-text breed input unlocks continue button *(reverted)*
 
-When the user typed a breed freely (e.g. "Misto", "Sem raça definida", or any value not in `DOG_BREEDS_PT`), the Continue button remained permanently disabled.
+**Date:** 2026-06-14
+**Files:** `src/screens/Flow.tsx`
 
-**Root cause — two places:**
+> This fix was superseded by entry [2] and has been reverted. Documented here for historical reference.
 
-1. `handleChangeText` (Q2 component, ~line 337):  
-   If the typed text had no exact match in `DOG_BREEDS_PT`, it set `form.breed` to `''`, discarding the user's input.
+### Problem
 
-2. `isContinueDisabled` (~line 180):  
-   The `q2` case checked `!DOG_BREEDS_PT.includes(form.breed)`, which always returned `true` for any free-text value, keeping the button locked.
+When the user typed a breed freely (e.g. "Misto"), the Continue button remained permanently disabled because `handleChangeText` reset `form.breed` to `''` on no match, and `isContinueDisabled` checked `!DOG_BREEDS_PT.includes(form.breed)`.
 
----
-
-## Fix
-
-**`handleChangeText`** — store the raw typed text when no list match is found:
+### What was changed (now reverted)
 
 ```ts
-// Before
-const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
-if (exactMatch) {
-  update('breed', exactMatch);
-} else {
-  update('breed', '');  // ← was discarding free input
-}
-
-// After
-const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
+// handleChangeText — was changed to:
 update('breed', exactMatch ?? text.trim());
-```
 
-**`isContinueDisabled` for `q2`** — validate by length, not by list membership:
-
-```ts
-// Before
-case 'q2': return !DOG_BREEDS_PT.includes(form.breed) || !form.size;
-
-// After
+// isContinueDisabled q2 — was changed to:
 case 'q2': return form.breed.trim().length < 1 || !form.size;
 ```
 
----
-
-## Behaviour after fix
-
-| Scenario | Before | After |
-|---|---|---|
-| User selects from suggestion list | Works | Works (unchanged) |
-| User types free text (not in list) | Button locked | Button enabled |
-| User clears the input field | Button locked | Button locked (correct) |
-| Size not selected | Button locked | Button locked (correct) |
-
----
-
-## No side effects
-
-- The suggestion dropdown continues to work as before.
-- Selecting a suggestion still resolves to the canonical breed name from `DOG_BREEDS_PT`.
-- The `size` requirement is unchanged.
-- No other steps or form fields are affected.
+Both lines have been restored to their original values as part of entry [2].

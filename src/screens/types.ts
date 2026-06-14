@@ -29,6 +29,7 @@ export interface BuddyIDFormData {
   name: string;
   photoUri?: string;
   breed: string;
+  breedOther?: string;
   size?: DogSize;
   age: string;
   gender?: Gender;
@@ -66,6 +67,7 @@ export interface BuddyIDFormData {
 export const INITIAL_FORM_DATA: BuddyIDFormData = {
   name: '',
   breed: '',
+  breedOther: '',
   age: '',
   leashBehavior: [],
   housemates: [],

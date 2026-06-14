@@ -77,7 +77,7 @@ export default function Loading() {
           }
 
           const command = {
-            name: form.name, breed: form.breed,
+            name: form.name, breed: form.breed, breedOther: form.breed === 'other' ? form.breedOther : undefined,
             size: form.size === 'XS' ? 'xs' :
                   form.size === 'S' ? 'sm' :
                   form.size === 'M' ? 'md' :

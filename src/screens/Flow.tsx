@@ -177,7 +177,11 @@ export default function Flow() {
   function isContinueDisabled(): boolean {
     switch (currentStep) {
       case 'q1': return form.name.trim().length < 1;
-      case 'q2': return form.breed.trim().length < 1 || !form.size;
+      case 'q2': {
+        if (!form.size) return true;
+        if (form.breed === 'other') return (form.breedOther ?? '').trim().length < 1;
+        return !DOG_BREEDS_PT.includes(form.breed);
+      }
       case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
       case 'q4': 
         return !form.energy || !form.withStrangers || !form.withHomePeople || 
@@ -324,20 +328,33 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
 
   const suggestions = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query || query === form.breed.toLowerCase()) return DOG_BREEDS_PT;
-    return DOG_BREEDS_PT.filter(b => b.toLowerCase().includes(query));
+    const filtered = (!query || query === form.breed.toLowerCase())
+      ? DOG_BREEDS_PT
+      : DOG_BREEDS_PT.filter(b => b.toLowerCase().includes(query));
+    return [...filtered, 'Outra'];
   }, [search, form.breed]);
 
   function handleSelect(breedName: string) {
-    update('breed', breedName);
-    setSearch(breedName);
+    if (breedName === 'Outra') {
+      update('breed', 'other');
+      update('breedOther', '');
+      setSearch('Outra');
+    } else {
+      update('breed', breedName);
+      update('breedOther', '');
+      setSearch(breedName);
+    }
     setShowSuggestions(false);
   }
 
   function handleChangeText(text: string) {
     setSearch(text);
     const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
-    update('breed', exactMatch ?? text.trim());
+    if (exactMatch) {
+      update('breed', exactMatch);
+    } else {
+      update('breed', '');
+    }
     setShowSuggestions(true);
   }
 
@@ -371,6 +388,19 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
           </View>
         )}
       </View>
+      {form.breed === 'other' && (
+        <>
+          <SectionLabel>Qual é a raça?</SectionLabel>
+          <TextInput
+            style={s.input}
+            placeholder="Ex: Misto, Sem raça definida..."
+            placeholderTextColor={colors.textMuted}
+            value={form.breedOther || ''}
+            onChangeText={(v) => update('breedOther', v)}
+            autoFocus
+          />
+        </>
+      )}
       <SectionLabel>Tamanho</SectionLabel>
       <View style={s.sizeCol}>
         {sizes.map((item) => (
