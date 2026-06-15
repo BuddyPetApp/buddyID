@@ -23,7 +23,8 @@
       "package": "com.buddyapp.buddyid"
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "themeColor": "#FFFFFF"
     },
     "scheme": "buddyid",
     "plugins": [
