@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -28,6 +31,7 @@ import {
   PickerSheet,
   RowButton,
   type PickerOption,
+  CheckCircleFilled,
 } from './_shared';
 import {
   DOG_BREEDS_PT,
@@ -80,15 +84,16 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
   const [name, setName] = useState('');
   const [gender, setGender] = useState<DogGender | null>(null);
   const [breed, setBreed] = useState<string | null>(null);
+  const [breedOther, setBreedOther] = useState<string | null>(null);
   const [isSterilized, setIsSterilized] = useState<boolean | null>(null);
   const [birthdate, setBirthdate] = useState<string | null>(null);
   const [weightKg, setWeightKg] = useState<number | null>(null);
   const [size, setSize] = useState<DogSize | null>(null);
   const [temperament, setTemperament] = useState<DogTemperament[]>([]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [tempPhotoUri, setTempPhotoUri] = useState<string | null>(null);
 
   const [sheet, setSheet] = useState<SheetKey>(null);
-  const [breedSearch, setBreedSearch] = useState('');
   const [nameDraft, setNameDraft] = useState('');
   const [weightDraft, setWeightDraft] = useState('');
   const [birthdayDraft, setBirthdayDraft] = useState('');
@@ -104,10 +109,12 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
           setName(data.name || '');
           setGender(data.gender || null);
           setBreed(data.breed || null);
+          setBreedOther(data.breedOther || null);
           setBirthdate(data.birthdate || null);
           setWeightKg(data.weightKg || null);
           setSize(data.size || null);
           setPhotoUrl(data.photoUrl || null);
+          setTempPhotoUri(null);
 
           if (data.neutered === 'yes') setIsSterilized(true);
           else if (data.neutered === 'no') setIsSterilized(false);
@@ -137,11 +144,6 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     { value: 'male', label: GENDER_LABELS_PT.male },
     { value: 'female', label: GENDER_LABELS_PT.female },
   ];
-
-  const breedOptions: PickerOption<string>[] = useMemo(
-    () => DOG_BREEDS_PT.map((b) => ({ value: b, label: b })),
-    [],
-  );
 
   const sterilizedOptions: PickerOption<string>[] = [
     { value: 'yes', label: t('tutor.editBasicInfo.yes') },
@@ -175,6 +177,8 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
       ? temperament.map((t) => TEMPERAMENT_LABELS_PT[t]).join(', ')
       : undefined;
 
+  const displayPhoto = tempPhotoUri || photoUrl;
+
   const handlePhoto = async () => {
     if (isReadOnly) return;
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -185,7 +189,7 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     }
 
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -195,53 +199,7 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
       return;
     }
 
-    const uri = pickerResult.assets[0].uri;
-
-    setSaving(true);
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      let fileExt = 'jpg';
-      if (uri.startsWith('data:')) {
-        const mime = uri.split(';')[0].split(':')[1];
-        fileExt = mime.split('/')[1] || 'jpg';
-      } else {
-        const parts = uri.split('.');
-        const lastPart = parts[parts.length - 1];
-        fileExt = lastPart.split('?')[0] || 'jpg';
-      }
-
-      fileExt = fileExt.toLowerCase();
-      if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-        fileExt = 'jpg';
-      }
-
-      const fileName = `${id}_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('dogs')
-        .upload(filePath, blob, {
-          contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
-          upsert: true,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('dogs')
-        .getPublicUrl(filePath);
-
-      setPhotoUrl(publicUrl);
-    } catch (error: any) {
-      console.error('Error uploading photo:', error);
-      Alert.alert('Erro', 'Não foi possível carregar a imagem.');
-    } finally {
-      setSaving(false);
-    }
+    setTempPhotoUri(pickerResult.assets[0].uri);
   };
 
   const handleSave = async () => {
@@ -250,65 +208,107 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
       return;
     }
     setSaving(true);
-    // ... rest of saving logic
 
-
-    setSaving(true);
-
-    let neutered: string | null = null;
-    if (isSterilized === true) neutered = 'yes';
-    else if (isSterilized === false) neutered = 'no';
-    else neutered = 'unknown';
-
-    let ageRange: string = 'unknown';
-    if (birthdate) {
-      const ageY = ageFromBirthdate(birthdate);
-      if (ageY !== null) {
-        if (ageY < 1) ageRange = 'puppy';
-        else if (ageY >= 1 && ageY <= 3) ageRange = '1_to_3';
-        else if (ageY >= 4 && ageY <= 7) ageRange = '4_to_7';
-        else if (ageY >= 8) ageRange = 'over_8';
-      }
-    }
-
-    // Merge temperament into habitsJson so we preserve it
-    let finalHabitsJson = profile.habitsJson;
     try {
-      const habits = profile.habitsJson ? JSON.parse(profile.habitsJson) : {};
-      habits.temperament = temperament;
-      finalHabitsJson = JSON.stringify(habits);
-    } catch {
-      finalHabitsJson = JSON.stringify({ temperament });
+      let finalPhotoUrl = photoUrl;
+
+      if (tempPhotoUri) {
+        const response = await fetch(tempPhotoUri);
+        const blob = await response.blob();
+
+        let fileExt = 'jpg';
+        if (tempPhotoUri.startsWith('data:')) {
+          const mime = tempPhotoUri.split(';')[0].split(':')[1];
+          fileExt = mime.split('/')[1] || 'jpg';
+        } else {
+          const parts = tempPhotoUri.split('.');
+          const lastPart = parts[parts.length - 1];
+          fileExt = lastPart.split('?')[0] || 'jpg';
+        }
+
+        fileExt = fileExt.toLowerCase();
+        if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+          fileExt = 'jpg';
+        }
+
+        const fileName = `${id}_${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error } = await supabase.storage
+          .from('dogs')
+          .upload(filePath, blob, {
+            contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
+            upsert: true,
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('dogs')
+          .getPublicUrl(filePath);
+
+        finalPhotoUrl = publicUrl;
+      }
+
+      let neutered: string | null = null;
+      if (isSterilized === true) neutered = 'yes';
+      else if (isSterilized === false) neutered = 'no';
+      else neutered = 'unknown';
+
+      let ageRange: string = 'unknown';
+      if (birthdate) {
+        const ageY = ageFromBirthdate(birthdate);
+        if (ageY !== null) {
+          if (ageY < 1) ageRange = 'puppy';
+          else if (ageY >= 1 && ageY <= 3) ageRange = '1_to_3';
+          else if (ageY >= 4 && ageY <= 7) ageRange = '4_to_7';
+          else if (ageY >= 8) ageRange = 'over_8';
+        }
+      }
+
+      // Merge temperament into habitsJson so we preserve it
+      let finalHabitsJson = profile.habitsJson;
+      try {
+        const habits = profile.habitsJson ? JSON.parse(profile.habitsJson) : {};
+        habits.temperament = temperament;
+        finalHabitsJson = JSON.stringify(habits);
+      } catch {
+        finalHabitsJson = JSON.stringify({ temperament });
+      }
+
+      const payload = {
+        dogId: id,
+        name: name,
+        gender: gender || null,
+        birthdate: birthdate || null,
+        weightKg: weightKg || null,
+        size: size || null,
+        breed: breed || null,
+        breedOther: breed === 'other' ? breedOther : null,
+        ageRange: ageRange,
+        neutered: neutered,
+        adopted: profile.adopted,
+        photoUrl: finalPhotoUrl || null,
+        habitsJson: finalHabitsJson,
+        behaviorJson: profile.behaviorJson,
+        healthJson: profile.healthJson,
+      };
+
+      await apiClient.put(`/dogs/${id}`, payload);
+      
+      setPhotoUrl(finalPhotoUrl);
+      setTempPhotoUri(null);
+
+      Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
+      fetchProfile();
+    } catch (err) {
+      console.error('Error updating basic info:', err);
+      Alert.alert('Erro', 'Não foi possível guardar as alterações.');
+    } finally {
+      setSaving(false);
     }
-
-    const payload = {
-      dogId: id,
-      name: name,
-      gender: gender || null,
-      birthdate: birthdate || null,
-      weightKg: weightKg || null,
-      size: size || null,
-      breed: breed || null,
-      breedOther: null,
-      ageRange: ageRange,
-      neutered: neutered,
-      adopted: profile.adopted,
-      photoUrl: photoUrl || null,
-      habitsJson: finalHabitsJson,
-      behaviorJson: profile.behaviorJson,
-      healthJson: profile.healthJson,
-    };
-
-    apiClient.put(`/dogs/${id}`, payload)
-      .then(() => {
-        Alert.alert('Sucesso', 'Alterações guardadas com sucesso!');
-        fetchProfile();
-      })
-      .catch((err) => {
-        console.error('Error updating basic info:', err);
-        Alert.alert('Erro', 'Não foi possível guardar as alterações.');
-      })
-      .finally(() => setSaving(false));
   };
 
   const openSheet = (key: Exclude<SheetKey, null>) => {
@@ -316,7 +316,6 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
     if (key === 'name') setNameDraft(name);
     if (key === 'weight') setWeightDraft(weightKg?.toString() ?? '');
     if (key === 'birthdate') setBirthdayDraft(isoToDisplay(birthdate));
-    if (key === 'breed') setBreedSearch('');
     setSheet(key);
   };
 
@@ -415,8 +414,8 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
         {/* Photo Picker */}
         <View style={styles.photoWrap}>
           <Pressable onPress={handlePhoto} style={styles.photoHit}>
-            {photoUrl ? (
-              <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
+            {displayPhoto ? (
+              <Image source={{ uri: displayPhoto }} style={styles.photo} resizeMode="cover" />
             ) : (
               <View style={[styles.photo, styles.photoEmpty]} />
             )}
@@ -450,7 +449,7 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
 
             <RowButton
               label={t('tutor.editBasicInfo.breed')}
-              value={breed ?? undefined}
+              value={breed === 'other' ? (breedOther ?? 'Outra') : (breed ?? undefined)}
               onPress={() => openSheet('breed')}
               isReadOnly={isReadOnly}
             />
@@ -530,19 +529,16 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
         onClose={closeSheet}
       />
 
-      <PickerSheet<string>
+      <BreedPickerSheet
         visible={sheet === 'breed'}
-        title={t('tutor.editBasicInfo.breed')}
-        options={breedOptions}
-        selectedValue={breed || undefined}
-        onSelect={(v) => {
-          setBreed(v);
+        initialBreed={breed}
+        initialBreedOther={breedOther}
+        onClose={closeSheet}
+        onConfirm={(b, bo) => {
+          setBreed(b);
+          setBreedOther(bo);
           closeSheet();
         }}
-        onClose={closeSheet}
-        searchable
-        search={breedSearch}
-        onSearchChange={setBreedSearch}
       />
 
       <PickerSheet<string>
@@ -613,6 +609,184 @@ export default function EditBasicInfo({ id, isReadOnly = false }: { id?: string;
   );
 }
 
+function BreedPickerSheet({
+  visible,
+  onClose,
+  initialBreed,
+  initialBreedOther,
+  onConfirm,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  initialBreed: string | null;
+  initialBreedOther: string | null;
+  onConfirm: (breed: string | null, breedOther: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [search, setSearch] = useState('');
+  const [selectedBreed, setSelectedBreed] = useState<string | null>(null);
+  const [customBreed, setCustomBreed] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
+  const translateY = useRef(new Animated.Value(600)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: visible ? 0 : 600,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+
+    if (visible) {
+      setSelectedBreed(initialBreed);
+      setCustomBreed(initialBreedOther || '');
+      setSearch(initialBreed === 'other' ? 'Outra' : (initialBreed || ''));
+      setShowSuggestions(false);
+    }
+  }, [visible, translateY, initialBreed, initialBreedOther]);
+
+  const suggestions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filtered = (!query || query === (selectedBreed === 'other' ? 'outra' : selectedBreed?.toLowerCase()))
+      ? DOG_BREEDS_PT
+      : DOG_BREEDS_PT.filter(b => b.toLowerCase().includes(query));
+    return [...filtered, 'Outra'];
+  }, [search, selectedBreed]);
+
+  const handleSelect = (breedName: string) => {
+    if (breedName === 'Outra') {
+      setSelectedBreed('other');
+      setSearch('Outra');
+    } else {
+      setSelectedBreed(breedName);
+      setSearch(breedName);
+      setCustomBreed('');
+    }
+    setShowSuggestions(false);
+  };
+
+  const handleChangeText = (text: string) => {
+    setSearch(text);
+    const exactMatch = DOG_BREEDS_PT.find(b => b.toLowerCase() === text.trim().toLowerCase());
+    if (exactMatch) {
+      setSelectedBreed(exactMatch);
+    } else if (text.trim().toLowerCase() === 'outra') {
+      setSelectedBreed('other');
+    } else {
+      setSelectedBreed(null);
+    }
+    setShowSuggestions(true);
+  };
+
+  const handleSave = () => {
+    if (selectedBreed === 'other' && !customBreed.trim()) {
+      Alert.alert('Erro', 'Por favor, escreve o nome da raça.');
+      return;
+    }
+    if (!selectedBreed) {
+      Alert.alert('Erro', 'Por favor, seleciona uma raça da lista ou escolhe "Outra".');
+      return;
+    }
+    onConfirm(selectedBreed, selectedBreed === 'other' ? customBreed.trim() : null);
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <Pressable style={styles.backdrop} onPress={onClose}>
+        <Animated.View
+          style={[styles.sheet, { transform: [{ translateY }], maxHeight: '85%' }]}
+          onStartShouldSetResponder={() => true}
+        >
+          <View style={styles.grabber} />
+          <Text style={styles.title}>{t('tutor.editBasicInfo.breed')}</Text>
+
+          <View style={styles.search}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Ex: Border Collie, Labrador..."
+              placeholderTextColor={DOG_COLORS.label}
+              value={search}
+              onChangeText={handleChangeText}
+              onFocus={() => setShowSuggestions(true)}
+              autoCorrect={false}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={{ flex: 1, minHeight: 150 }}>
+            {showSuggestions && suggestions.length > 0 ? (
+              <ScrollView
+                style={[styles.list, { maxHeight: 220 }]}
+                contentContainerStyle={{ paddingBottom: 16 }}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+              >
+                {suggestions.map((item, idx) => {
+                  const isSelected =
+                    (item === 'Outra' && selectedBreed === 'other') ||
+                    (item !== 'Outra' && selectedBreed === item);
+
+                  return (
+                    <Pressable
+                      key={item + idx}
+                      onPress={() => handleSelect(item)}
+                      style={({ pressed }) => [
+                        styles.option,
+                        idx !== suggestions.length - 1 && styles.optionDivider,
+                        pressed && styles.optionPressed,
+                      ]}
+                    >
+                      <Text style={[styles.optionLabel, isSelected && styles.optionSelected]}>
+                        {item}
+                      </Text>
+                      {isSelected && <CheckCircleFilled size={22} />}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+
+            {selectedBreed === 'other' && (
+              <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
+                <Text style={[DOG_FONT.rowLabel, { marginBottom: 8 }]}>Escreve a raça</Text>
+                <View style={styles.fieldRow}>
+                  <TextInput
+                    style={styles.inputField}
+                    placeholder="Ex: Dobberman, Pastor Belga Malinois..."
+                    placeholderTextColor={DOG_COLORS.label}
+                    value={customBreed}
+                    onChangeText={setCustomBreed}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+
+          <View style={[styles.actions, { marginBottom: 24 }]}>
+            <Pressable
+              onPress={handleSave}
+              style={({ pressed }) => [
+                styles.confirm,
+                pressed && styles.confirmPressed,
+              ]}
+            >
+              <Text style={styles.confirmText}>{t('tutor.dogEditShared.save')}</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingBottom: spacing[6] },
@@ -639,4 +813,102 @@ const styles = StyleSheet.create({
   rowValueEmpty: { color: colors.accent, fontFamily: font.semiBold },
   pencilIcon: { fontSize: 16, color: colors.textSecondary },
   chipsHint: { fontFamily: font.regular, fontSize: fontSize.xs, color: colors.textMuted, marginTop: 12 },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: DOG_COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 8,
+    paddingHorizontal: 0,
+    maxHeight: '75%',
+    minHeight: 260,
+  },
+  grabber: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: DOG_COLORS.divider,
+    marginBottom: 12,
+  },
+  title: {
+    fontFamily: font.semiBold,
+    fontSize: fontSize.md,
+    color: DOG_COLORS.text,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  search: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  searchInput: {
+    height: 44,
+    borderRadius: DOG_RADIUS.input,
+    backgroundColor: DOG_COLORS.surfaceWarm,
+    paddingHorizontal: 14,
+    fontFamily: font.medium,
+    fontSize: fontSize.base,
+    color: DOG_COLORS.text,
+  },
+  list: { flexGrow: 0 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  optionDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: DOG_COLORS.divider,
+  },
+  optionPressed: { backgroundColor: 'rgba(0,0,0,0.03)' },
+  optionLabel: {
+    fontFamily: font.medium,
+    fontSize: fontSize.base,
+    color: DOG_COLORS.text,
+  },
+  optionSelected: {
+    fontFamily: font.semiBold,
+    color: DOG_COLORS.primary,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DOG_COLORS.divider,
+    borderRadius: DOG_RADIUS.input,
+    paddingHorizontal: 14,
+    marginTop: 4,
+  },
+  inputField: {
+    flex: 1,
+    height: 52,
+    fontFamily: font.medium,
+    fontSize: fontSize.base,
+    color: DOG_COLORS.text,
+  },
+  actions: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  confirm: {
+    height: 52,
+    borderRadius: DOG_RADIUS.pill,
+    backgroundColor: DOG_COLORS.black,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmPressed: { opacity: 0.85 },
+  confirmText: {
+    fontFamily: font.semiBold,
+    fontSize: fontSize.base,
+    color: DOG_COLORS.white,
+  },
 });
+
