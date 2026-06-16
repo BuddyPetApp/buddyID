@@ -20,9 +20,11 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
-import { ChevronLeftIcon } from '../../components/Icons';
+import { ChevronLeftIcon, CameraIcon } from '../../components/Icons';
 import Svg, { Path } from 'react-native-svg';
 import { apiClient } from '../../api/client';
+import { supabase } from '../../lib/supabase';
+import * as ImagePicker from 'expo-image-picker';
 
 function ShareIcon({ size = 20, color = colors.primary }: { size?: number; color?: string }) {
   return (
@@ -227,6 +229,119 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   const isReadOnly = isPublic;
 
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handleUploadPhoto = async () => {
+    if (isReadOnly) return;
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert('Erro', 'É necessária permissão de acesso à galeria.');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (pickerResult.canceled || !pickerResult.assets?.[0]) {
+      return;
+    }
+
+    const tempUri = pickerResult.assets[0].uri;
+    setUploadingPhoto(true);
+
+    try {
+      const response = await fetch(tempUri);
+      const blob = await response.blob();
+
+      let fileExt = 'jpg';
+      if (tempUri.startsWith('data:')) {
+        const mime = tempUri.split(';')[0].split(':')[1];
+        fileExt = mime.split('/')[1] || 'jpg';
+      } else {
+        const parts = tempUri.split('.');
+        const lastPart = parts[parts.length - 1];
+        fileExt = lastPart.split('?')[0] || 'jpg';
+      }
+
+      fileExt = fileExt.toLowerCase();
+      if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+        fileExt = 'jpg';
+      }
+
+      const fileName = `${profile!.id}_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from('dogs')
+        .upload(filePath, blob, {
+          contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('dogs')
+        .getPublicUrl(filePath);
+
+      const fullDog = await apiClient.get<any>(`/dogs/${profile!.id}`);
+      if (!fullDog) {
+        throw new Error('Could not fetch full dog profile');
+      }
+
+      let neutered: string = 'unknown';
+      if (fullDog.neutered === true || fullDog.neutered === 'yes') neutered = 'yes';
+      else if (fullDog.neutered === false || fullDog.neutered === 'no') neutered = 'no';
+
+      let ageRange: string = 'unknown';
+      if (fullDog.birthdate) {
+        const ageY = ageFromBirthdate(fullDog.birthdate);
+        if (ageY !== null) {
+          if (ageY < 1) ageRange = 'puppy';
+          else if (ageY >= 1 && ageY <= 3) ageRange = '1_to_3';
+          else if (ageY >= 4 && ageY <= 7) ageRange = '4_to_7';
+          else if (ageY >= 8) ageRange = 'over_8';
+        }
+      }
+
+      const payload = {
+        dogId: profile!.id,
+        name: fullDog.name,
+        gender: fullDog.gender || null,
+        birthdate: fullDog.birthdate || null,
+        weightKg: fullDog.weightKg || null,
+        size: fullDog.size || null,
+        breed: fullDog.breed || null,
+        breedOther: fullDog.breedOther || null,
+        ageRange: ageRange,
+        neutered: neutered,
+        adopted: fullDog.adopted,
+        photoUrl: publicUrl,
+        habitsJson: fullDog.habitsJson,
+        behaviorJson: fullDog.behaviorJson,
+        healthJson: fullDog.healthJson,
+      };
+
+      await apiClient.put(`/dogs/${profile!.id}`, payload);
+
+      Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
+      fetchProfile();
+    } catch (err) {
+      console.error('Error uploading dog photo from profile screen:', err);
+      Alert.alert('Erro', 'Não foi possível guardar a foto.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const fetchProfile = () => {
     if (!id) return;
     setLoading(true);
@@ -397,7 +512,14 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
         {/* Purple Hero Section */}
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>
-            <View style={styles.avatarRing}>
+            <Pressable 
+              onPress={handleUploadPhoto} 
+              disabled={isReadOnly || uploadingPhoto}
+              style={({ pressed }) => [
+                styles.avatarRing, 
+                !isReadOnly && pressed && { opacity: 0.85 }
+              ]}
+            >
               {basic.photoUrl ? (
                 <Image source={{ uri: basic.photoUrl }} style={styles.avatar} resizeMode="cover" />
               ) : (
@@ -405,7 +527,19 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
                   <Text style={styles.avatarFallbackText}>{basic.name.charAt(0).toUpperCase()}</Text>
                 </View>
               )}
-            </View>
+              
+              {!isReadOnly && (
+                uploadingPhoto ? (
+                  <View style={styles.avatarLoader}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                ) : (
+                  <View style={styles.avatarCameraBadge}>
+                    <CameraIcon size={14} color="#fff" />
+                  </View>
+                )
+              )}
+            </Pressable>
           </View>
         </View>
 
@@ -826,4 +960,31 @@ const styles = StyleSheet.create({
   sheetOptLabelSelected: { color: colors.primary, fontFamily: font.semiBold },
   sheetBtn: { backgroundColor: colors.text || '#000', borderRadius: 28, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20 },
   sheetBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
+
+  // Avatar upload badge & loader
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    ...DOG_SHADOW,
+  },
+  avatarLoader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

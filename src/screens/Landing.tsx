@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,12 +21,14 @@ import {
   ShieldCheckIcon, HeartIcon, StoreIcon, ZapIcon,
   WalkIcon, HomeHeartIcon, AwardIcon, ScissorsIcon,
   TruckIcon, MapPinIcon, TrendingUpIcon, ChevronRightIcon,
-  HomeIcon, PawIcon,
+  HomeIcon, PawIcon, CameraIcon,
 } from '../components/Icons';
 import { SvgXml } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../lib/supabase';
 import { apiClient } from '../api/client';
+import * as ImagePicker from 'expo-image-picker';
+import { ageFromBirthdate } from '../types/dog';
 
 
 const DOG_FILLED_SVG = `<svg width="2101" height="3000" viewBox="0 0 2101 3000" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -146,6 +149,140 @@ export default function Landing() {
   const fade  = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(20)).current;
 
+  const [uploadingDogId, setUploadingDogId] = useState<string | null>(null);
+
+  const fetchProfile = async () => {
+    try {
+      const data = await apiClient.get<any>('/tutors/me');
+      if (data) {
+        setTutorName(data.firstName || data.email?.split('@')[0] || '');
+        if (data.dogs?.length > 0) {
+          setDogs(data.dogs);
+          setActiveDogId(prev => {
+            if (prev && data.dogs.some((d: any) => d.id === prev)) {
+              return prev;
+            }
+            return data.dogs[0].id;
+          });
+        } else {
+          setDogs([]);
+          setActiveDogId(null);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  };
+
+  const handleUploadPhoto = async (dog: any) => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert('Erro', 'É necessária permissão de acesso à galeria.');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (pickerResult.canceled || !pickerResult.assets?.[0]) {
+      return;
+    }
+
+    const tempUri = pickerResult.assets[0].uri;
+    setUploadingDogId(dog.id);
+
+    try {
+      const response = await fetch(tempUri);
+      const blob = await response.blob();
+
+      let fileExt = 'jpg';
+      if (tempUri.startsWith('data:')) {
+        const mime = tempUri.split(';')[0].split(':')[1];
+        fileExt = mime.split('/')[1] || 'jpg';
+      } else {
+        const parts = tempUri.split('.');
+        const lastPart = parts[parts.length - 1];
+        fileExt = lastPart.split('?')[0] || 'jpg';
+      }
+
+      fileExt = fileExt.toLowerCase();
+      if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+        fileExt = 'jpg';
+      }
+
+      const fileName = `${dog.id}_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from('dogs')
+        .upload(filePath, blob, {
+          contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('dogs')
+        .getPublicUrl(filePath);
+
+      const fullDog = await apiClient.get<any>(`/dogs/${dog.id}`);
+      if (!fullDog) {
+        throw new Error('Could not fetch full dog profile');
+      }
+
+      let neutered: string = 'unknown';
+      if (fullDog.neutered === true || fullDog.neutered === 'yes') neutered = 'yes';
+      else if (fullDog.neutered === false || fullDog.neutered === 'no') neutered = 'no';
+
+      let ageRange: string = 'unknown';
+      if (fullDog.birthdate) {
+        const ageY = ageFromBirthdate(fullDog.birthdate);
+        if (ageY !== null) {
+          if (ageY < 1) ageRange = 'puppy';
+          else if (ageY >= 1 && ageY <= 3) ageRange = '1_to_3';
+          else if (ageY >= 4 && ageY <= 7) ageRange = '4_to_7';
+          else if (ageY >= 8) ageRange = 'over_8';
+        }
+      }
+
+      const payload = {
+        dogId: dog.id,
+        name: fullDog.name,
+        gender: fullDog.gender || null,
+        birthdate: fullDog.birthdate || null,
+        weightKg: fullDog.weightKg || null,
+        size: fullDog.size || null,
+        breed: fullDog.breed || null,
+        breedOther: fullDog.breedOther || null,
+        ageRange: ageRange,
+        neutered: neutered,
+        adopted: fullDog.adopted,
+        photoUrl: publicUrl,
+        habitsJson: fullDog.habitsJson,
+        behaviorJson: fullDog.behaviorJson,
+        healthJson: fullDog.healthJson,
+      };
+
+      await apiClient.put(`/dogs/${dog.id}`, payload);
+
+      Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
+      await fetchProfile();
+    } catch (err) {
+      console.error('Error uploading dog photo from landing:', err);
+      Alert.alert('Erro', 'Não foi possível guardar a foto.');
+    } finally {
+      setUploadingDogId(null);
+    }
+  };
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade,  { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -161,18 +298,7 @@ export default function Landing() {
         }
 
         setHasSession(true);
-        apiClient.get<any>('/tutors/me')
-          .then((data) => {
-            if (data) {
-              setTutorName(data.firstName || data.email?.split('@')[0] || '');
-              if (data.dogs?.length > 0) {
-                setDogs(data.dogs);
-                setActiveDogId(data.dogs[0].id);
-              }
-            }
-          })
-          .catch(console.error)
-          .finally(() => setSessionLoading(false));
+        fetchProfile().finally(() => setSessionLoading(false));
       } else {
         setHasSession(false);
         setSessionLoading(false);
@@ -246,11 +372,33 @@ export default function Landing() {
 
               {activeDog && (
                 <Card style={[s.dogCard, { padding: 0, overflow: 'hidden' }]}>
+                  <View style={{ position: 'relative' }}>
+                    <TouchableOpacity 
+                      activeOpacity={0.85} 
+                      onPress={() => handleUploadPhoto(activeDog)}
+                      disabled={uploadingDogId === activeDog.id}
+                    >
+                      {activeDog.photoUrl
+                        ? <Image source={{ uri: activeDog.photoUrl }} style={s.dogPhoto} resizeMode="cover" />
+                        : <View style={[s.dogPhoto, s.dogPhotoFallback]}><Text style={s.dogPhotoLetter}>{activeDog.name[0].toUpperCase()}</Text></View>
+                      }
+                      {uploadingDogId === activeDog.id ? (
+                        <View style={s.photoLoader}>
+                          <ActivityIndicator size="small" color={colors.primary} />
+                        </View>
+                      ) : (
+                        <View style={[
+                          s.photoUploadBtn,
+                          activeDog.photoUrl ? s.photoUploadBtnWithPhoto : s.photoUploadBtnNoPhoto
+                        ]}>
+                          <CameraIcon size={16} color={activeDog.photoUrl ? colors.primary : '#fff'} />
+                          {!activeDog.photoUrl && <Text style={s.photoUploadText}>Adicionar foto</Text>}
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
                   <TouchableOpacity activeOpacity={0.7} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
-                    {activeDog.photoUrl
-                      ? <Image source={{ uri: activeDog.photoUrl }} style={s.dogPhoto} resizeMode="cover" />
-                      : <View style={[s.dogPhoto, s.dogPhotoFallback]}><Text style={s.dogPhotoLetter}>{activeDog.name[0].toUpperCase()}</Text></View>
-                    }
                     <View style={s.dogInfo}>
                       <Text style={s.dogName}>{activeDog.name}</Text>
                       <Text style={s.dogMeta}>{[activeDog.breed, activeDog.gender === 'male' ? 'Macho' : 'Fêmea'].filter(Boolean).join(' · ')}</Text>
@@ -598,4 +746,47 @@ const s = StyleSheet.create({
   },
   providerTitle: { fontFamily: font.bold, fontSize: fontSize.lg, color: '#fff', lineHeight: 26, marginBottom: spacing[2] },
   providerSub:   { fontFamily: font.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.80)', lineHeight: 20, marginBottom: spacing[4] },
+  
+  // Photo upload overlays
+  photoLoader: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
+  },
+  photoUploadBtn: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
+  },
+  photoUploadBtnWithPhoto: {
+    backgroundColor: '#fff',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  photoUploadBtnNoPhoto: {
+    backgroundColor: colors.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    gap: 6,
+  },
+  photoUploadText: {
+    color: '#fff',
+    fontFamily: font.semiBold,
+    fontSize: fontSize.xs,
+  },
 });

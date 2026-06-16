@@ -44,7 +44,25 @@ export default function ProviderLoading() {
       try {
         if (raw) {
           const form = JSON.parse(raw);
-          await apiClient.post('/partner-applications', form);
+          
+          const payload = {
+            Branch: form.branch === 'negocio' ? 'business' : 'individual',
+            City: form.city,
+            PostalCode: form.postalCode,
+            Phone: form.phone,
+            Email: form.email,
+            OwnerName: form.branch === 'negocio' ? form.ownerName : null,
+            BusinessName: form.branch === 'negocio' ? form.businessName : null,
+            Services: form.branch === 'negocio' ? form.services : null,
+            BizExperience: form.branch === 'negocio' ? form.bizExperience : null,
+            Website: form.branch === 'negocio' ? form.website : null,
+            ProviderName: form.branch === 'freelancer' ? form.freelancerName : null,
+            ProviderService: form.branch === 'freelancer' ? form.freelancerService : null,
+            Availability: form.branch === 'freelancer' ? form.availability : null,
+            DogExperience: form.branch === 'freelancer' ? form.dogExperience : null,
+          };
+
+          await apiClient.post('/partner-applications', payload);
           await AsyncStorage.removeItem(PROVIDER_FORM_KEY);
         }
         router.replace('/buddyid/provider-success' as any);
