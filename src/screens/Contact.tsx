@@ -123,13 +123,13 @@ export default function Contact() {
           <TouchableOpacity
             style={styles.contactCard}
             activeOpacity={0.75}
-            onPress={() => Linking.openURL('https://instagram.com/buddypetapp')}
+            onPress={() => Linking.openURL('https://instagram.com/buddy.pet_pt')}
           >
             <View style={styles.contactIconWrap}>
               <SvgXml xml={ICON_INSTAGRAM} width={24} height={24} />
             </View>
             <Text style={styles.contactLabel}>Instagram</Text>
-            <Text style={styles.contactValue}>@buddypetapp</Text>
+            <Text style={styles.contactValue}>@buddy.pet_pt</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
