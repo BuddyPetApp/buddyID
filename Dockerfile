@@ -35,8 +35,13 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy the custom Nginx server block configuration for routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy the custom entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Inform Docker that the container listens on port 8080 at runtime
 EXPOSE 8080
 
+ENTRYPOINT ["/entrypoint.sh"]
 # Command to run Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
