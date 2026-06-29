@@ -17,7 +17,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -118,6 +118,7 @@ export default function Flow() {
 
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
+  const insets = useSafeAreaInsets();
 
   const currentStep = STEPS[stepIndex];
   const questionNumber = stepIndex < TOTAL_QUESTIONS ? stepIndex + 1 : null;
@@ -372,7 +373,7 @@ export default function Flow() {
         <StepContent step={currentStep} form={form} update={update} toggleMulti={toggleMulti} pickPhoto={pickPhoto} />
       </ScrollView>
 
-      <View style={s.footer}>
+      <View style={[s.footer, { paddingBottom: spacing[4] + insets.bottom }]}>
         <TouchableOpacity
           style={[s.continueBtn, isContinueDisabled() && s.continueBtnDisabled]}
           onPress={goNext}
@@ -411,10 +412,9 @@ export default function Flow() {
   // Mobile / native: stacked card anchored to the bottom over the watermark
   return (
     <View style={s.outerBg}>
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      {/* Background photo per question */}
-      <QuestionBackground step={currentStep} />
-
+    {/* Full-bleed background photo per question (extends under safe-area insets) */}
+    <QuestionBackground step={currentStep} />
+    <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
         {backButton}
         <Logo variant="light" size="sm" />
@@ -1053,7 +1053,7 @@ function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: 
 
 const s = StyleSheet.create({
   outerBg: { flex: 1, backgroundColor: colors.primaryDeep },
-  safe: { flex: 1, backgroundColor: colors.primaryDeep, maxWidth: 430, width: '100%', alignSelf: 'center' },
+  safe: { flex: 1, backgroundColor: 'transparent', maxWidth: 430, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
 
   // ─── Desktop split-screen layout (web, wide viewport) ───

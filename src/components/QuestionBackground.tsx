@@ -34,10 +34,11 @@ export function QuestionBackground({ step }: { step: string }) {
   return (
     <View style={styles.container} pointerEvents="none">
       <Image source={image} style={styles.image} resizeMode="cover" />
-      {/* Vignette scrim: darker at top/bottom so white header & progress stay legible */}
+      {/* Subtle neutral scrim: faint darkening at top/bottom only so the white
+          header & progress stay legible — no colour tint over the photo */}
       <LinearGradient
-        colors={['rgba(46,31,94,0.6)', 'rgba(46,31,94,0.15)', 'rgba(46,31,94,0.5)']}
-        locations={[0, 0.45, 1]}
+        colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.35)']}
+        locations={[0, 0.4, 1]}
         style={StyleSheet.absoluteFill}
       />
     </View>
