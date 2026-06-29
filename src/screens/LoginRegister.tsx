@@ -98,11 +98,11 @@ export default function LoginRegister() {
               </View>
             )}
 
-            <Text style={s.title}>{isLogin ? 'Bem-vindo de volta' : 'Cria a tua conta Buddy'}</Text>
+            <Text style={s.title}>{isLogin ? 'Bem-vindo de volta' : 'Cria a tua conta Buddy para guardares o BuddyID'}</Text>
             <Text style={s.sub}>
               {isLogin
                 ? (isLoginOnly ? 'Faz login para acederes ao teu dashboard.' : 'Faz login para guardares o BuddyID.')
-                : 'Cria uma conta para guardares o BuddyID.'}
+                : 'Quando lançarmos neste verão, já terás a tua conta.'}
             </Text>
 
             {!isLogin && !isLoginOnly && (

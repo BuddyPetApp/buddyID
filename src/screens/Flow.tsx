@@ -30,7 +30,7 @@ import Svg, { Polyline } from 'react-native-svg';
 import { DOG_BREEDS_PT } from '../types/dog';
 import { ChoiceRow, MultiChoiceList, RadioChoiceList, SectionHint, SectionLabel } from './shared';
 import { ScaleSelector } from './dog/_shared';
-import { WatermarkBackground } from '../components/Watermarks';
+import { QuestionBackground } from '../components/QuestionBackground';
 import {
   type BuddyIDFormData,
   type DogSize,
@@ -64,7 +64,6 @@ const STEPS = [
   'q1',
   'q2',
   'q3',
-  'qConcern',
   'q4',
   'qOwner',
   'q5',
@@ -75,6 +74,7 @@ const STEPS = [
   'q12',
   'q13',
   'q14',
+  'qConcern',
   'consent'
 ] as const;
 type StepKey = typeof STEPS[number];
@@ -388,7 +388,7 @@ export default function Flow() {
     return (
       <View style={s.desktopRoot}>
         <View style={s.desktopLeft}>
-          <WatermarkBackground step={currentStep} />
+          <QuestionBackground step={currentStep} />
           <View style={s.desktopLeftInner}>
             <View style={s.desktopLeftTop}>
               {backButton}
@@ -412,8 +412,8 @@ export default function Flow() {
   return (
     <View style={s.outerBg}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      {/* Background Watermark */}
-      <WatermarkBackground step={currentStep} />
+      {/* Background photo per question */}
+      <QuestionBackground step={currentStep} />
 
       <View style={s.header}>
         {backButton}
@@ -955,7 +955,7 @@ function QLocation({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
       <Text style={s.question}>Onde moras?</Text>
-      <SectionLabel>Código postal (Lisboa e arredores)</SectionLabel>
+      <SectionLabel>Código postal</SectionLabel>
       <SectionHint>Formato: XXXX-XXX</SectionHint>
       <TextInput
         style={s.input}
@@ -996,7 +996,7 @@ function Q12({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 
 }
 
 function Q13({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
-  const options = ['Passeio', 'Pet Sitting', 'Creche', 'Hotel', 'Treino', 'Banho', 'Corte', 'Outro'];
+  const options = ['Veterinário', 'Passeio', 'Pet Sitting', 'Creche', 'Hotel', 'Treino', 'Banho', 'Corte', 'Outro'];
   return (
     <View>
       <Text style={s.question}>Que serviços normalmente procuras?</Text>
