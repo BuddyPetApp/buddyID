@@ -48,6 +48,26 @@ export function MultiChoiceList({ options, selected, onToggle }: {
   );
 }
 
+export function RadioChoiceList({ options, selected, onSelect }: {
+  options: string[]; selected: string | undefined; onSelect: (v: string) => void;
+}) {
+  return (
+    <View>
+      {options.map((opt) => {
+        const on = selected === opt;
+        return (
+          <Pressable key={opt} onPress={() => onSelect(opt)} style={[s.multiRow, on && s.multiRowOn]}>
+            <Text style={[s.multiRowText, on && s.multiRowTextOn]}>{opt}</Text>
+            <View style={[s.radioCircle, on && s.radioCircleOn]}>
+              {on && <View style={s.radioDot} />}
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function Divider({ style }: { style?: ViewStyle }) {
   return <View style={[s.divider, style]} />;
 }
@@ -82,6 +102,13 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  radioCircle: {
+    width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
+    borderColor: '#D1D5DB', marginLeft: spacing[3],
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  radioCircleOn: { borderColor: colors.primary },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
   multiRowText: { fontFamily: font.medium, fontSize: fontSize.base, color: colors.textSecondary, flex: 1 },
   multiRowTextOn: { color: colors.primary, fontFamily: font.semiBold },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing[5] },

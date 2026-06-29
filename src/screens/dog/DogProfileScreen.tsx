@@ -457,6 +457,8 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   const basic = profile.basicInfo;
   const age = ageFromBirthdate(basic.birthdate);
+  const habitsAny = (profile.habits || {}) as any;
+  const behaviorAny = (profile.behavior || {}) as any;
 
   const tagline = [
     basic.breed,
@@ -632,6 +634,8 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
               <DataTags label="Serviços Preferidos" values={profile.habits?.preferredServices} />
               <DataRow label="Outros Serviços" value={profile.habits?.customService} />
               <DataRow label="Origem" value={profile.habits?.origin} />
+              <DataRow label="Código Postal" value={habitsAny.lifestyle?.postalCode} />
+              <DataRow label="Cor do pelo" value={habitsAny.lifestyle?.coatColor === 'Outra' ? habitsAny.lifestyle.coatColorOther : habitsAny.lifestyle?.coatColor} />
             </AccordionSection>
           )}
 
@@ -644,13 +648,29 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
               isReadOnly={isReadOnly}
               isLast={isReadOnly && !hasHealth}
             >
-              <DataRow label="Nível de Energia" value={profile.behavior?.energy} />
-              <DataRow label="Com Estranhos" value={profile.behavior?.withStrangers} />
-              <DataRow label="Pessoas de Casa" value={profile.behavior?.withHomePeople} />
-              <DataRow label="Obediência" value={profile.behavior?.obedience} />
-              <DataRow label="Apego" value={profile.behavior?.attachment} />
-              <DataRow label="Sensibilidade ao Toque" value={profile.behavior?.touchSensitivity} />
-              <DataRow label="Situações Novas" value={profile.behavior?.newSituations} />
+              {behaviorAny.behavior?.constructs ? (
+                <>
+                  <DataRow label="Medo de Estranhos" value={behaviorAny.behavior.constructs.fearStrangers?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.fearStrangers.priorTutor}/4` : null} />
+                  <DataRow label="Medo de Cães" value={behaviorAny.behavior.constructs.fearDogs?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.fearDogs.priorTutor}/4` : null} />
+                  <DataRow label="Medo Não-Social" value={behaviorAny.behavior.constructs.fearNonsocial?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.fearNonsocial.priorTutor}/4` : null} />
+                  <DataRow label="Sensibilidade ao Toque (0-4)" value={behaviorAny.behavior.constructs.touchSensitivity?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.touchSensitivity.priorTutor}/4` : null} />
+                  <DataRow label="Sinais de Agressão" value={behaviorAny.behavior.constructs.aggression?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.aggression.priorTutor}/4` : null} />
+                  <DataTags label="Alvos de Agressão" values={behaviorAny.behavior.aggrTargets} />
+                  <DataRow label="Ansiedade de Separação (0-4)" value={behaviorAny.behavior.constructs.separation?.priorTutor !== undefined ? `${behaviorAny.behavior.constructs.separation.priorTutor}/4` : null} />
+                  <DataRow label="Proteção do Tutor" value={behaviorAny.behavior.ownerProtect !== undefined ? `${behaviorAny.behavior.ownerProtect}/4` : null} />
+                  <DataRow label="Preocupação do Tutor" value={behaviorAny.behavior.ownerWorry !== undefined ? `${behaviorAny.behavior.ownerWorry}/4` : null} />
+                </>
+              ) : (
+                <>
+                  <DataRow label="Nível de Energia" value={profile.behavior?.energy} />
+                  <DataRow label="Com Estranhos" value={profile.behavior?.withStrangers} />
+                  <DataRow label="Pessoas de Casa" value={profile.behavior?.withHomePeople} />
+                  <DataRow label="Obediência" value={profile.behavior?.obedience} />
+                  <DataRow label="Apego" value={profile.behavior?.attachment} />
+                  <DataRow label="Sensibilidade ao Toque" value={profile.behavior?.touchSensitivity} />
+                  <DataRow label="Situações Novas" value={profile.behavior?.newSituations} />
+                </>
+              )}
               <DataRow label="Socialização (Pessoas)" value={profile.behavior?.socialization?.people ? `${profile.behavior.socialization.people}/5` : null} />
               <DataRow label="Socialização (Cães)" value={profile.behavior?.socialization?.dogs ? `${profile.behavior.socialization.dogs}/5` : null} />
               <DataRow label="Socialização (Crianças)" value={profile.behavior?.socialization?.children ? `${profile.behavior.socialization.children}/5` : null} />

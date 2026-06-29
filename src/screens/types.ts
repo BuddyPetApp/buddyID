@@ -31,7 +31,8 @@ export interface BuddyIDFormData {
   breed: string;
   breedOther?: string;
   size?: DogSize;
-  age: string;
+  ageValue?: string;
+  ageUnit?: 'anos' | 'meses';
   gender?: Gender;
   neutered?: NeuteredStatus;
   energy?: EnergyLevel;
@@ -39,7 +40,7 @@ export interface BuddyIDFormData {
   withHomePeople?: HomePeopleBehavior;
   obedience?: Obedience;
   attachment?: Attachment;
-  touchSensitivity?: TouchSensitivity;
+  touchSensitivity?: number;
   newSituations?: NewSituations;
   leashBehavior: string[];
   housing?: Housing;
@@ -62,22 +63,43 @@ export interface BuddyIDFormData {
   goals: string[];
   consentMarketing: boolean;
   consentDataUse: boolean;
+  
+  // Novos campos estruturados
+  fearStrangers?: number;
+  fearDogs?: number;
+  fearNonsocial?: number;
+  aggression?: number;
+  aggrTargets: string[];
+  separation?: number;
+  ownerProtect?: number;
+  ownerWorry?: number;
+  coatColor?: string;
+  coatColorOther?: string;
+  concern?: boolean;
+  concernNote?: string;
+  foodType?: 'Ração seca' | 'Ração húmida' | 'Mista' | 'Caseira';
+  mealsPerDay?: number;
 }
 
 export const INITIAL_FORM_DATA: BuddyIDFormData = {
   name: '',
   breed: '',
   breedOther: '',
-  age: '',
+  ageValue: '',
+  ageUnit: 'anos',
   leashBehavior: [],
   housemates: [],
   email: '',
   phone: '',
   separationAnxiety: [],
   city: '',
+  postalCode: '',
   fears: [],
   services: [],
   goals: [],
   consentMarketing: false,
   consentDataUse: false,
+  aggrTargets: [],
+  concern: false,
+  concernNote: '',
 };

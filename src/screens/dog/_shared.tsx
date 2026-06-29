@@ -784,46 +784,81 @@ const chipStyles = StyleSheet.create({
   },
 });
 
-// ─── ScaleSelector (1–5 com emojis) ────────────────
-
-const SCALE_LABELS = ['1', '2', '3', '4', '5'];
+// ─── ScaleSelector (escala customizável com âncoras opcionais) ────────────────
 
 export function ScaleSelector({
   value,
   onChange,
+  min = 1,
+  max = 5,
+  anchors,
   disabled = false,
 }: {
   value?: number;
   onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  anchors?: string[];
   disabled?: boolean;
 }) {
+  const range = useMemo(() => {
+    const list = [];
+    for (let i = min; i <= max; i++) {
+      list.push(i);
+    }
+    return list;
+  }, [min, max]);
+
   return (
-    <View style={scaleStyles.wrap}>
-      {SCALE_LABELS.map((label, idx) => {
-        const n = idx + 1;
-        const selected = value === n;
-        return (
-          <Pressable
-            key={n}
-            onPress={disabled ? undefined : () => onChange(n)}
-            style={({ pressed }) => [
-              scaleStyles.pill,
-              selected && scaleStyles.pillSelected,
-              pressed && { opacity: 0.8 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Nível ${n} de 5`}
-            accessibilityState={{ selected }}
-          >
-            <Text style={[scaleStyles.number, selected && scaleStyles.numberSelected]}>{label}</Text>
-          </Pressable>
-        );
-      })}
+    <View style={scaleStyles.container}>
+      <View style={scaleStyles.wrap}>
+        {range.map((n) => {
+          const selected = value === n;
+          return (
+            <Pressable
+              key={n}
+              onPress={disabled ? undefined : () => onChange(n)}
+              style={({ pressed }) => [
+                scaleStyles.pill,
+                selected && scaleStyles.pillSelected,
+                pressed && { opacity: 0.8 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Nível ${n}`}
+              accessibilityState={{ selected }}
+            >
+              <Text style={[scaleStyles.number, selected && scaleStyles.numberSelected]}>{n}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {anchors && anchors.length > 0 && (
+        <View style={scaleStyles.anchorsRow}>
+          {anchors.length === range.length ? (
+            anchors.map((anchor, idx) => (
+              <Text key={idx} style={[scaleStyles.anchorText, { textAlign: 'center', flex: 1 }]}>
+                {anchor}
+              </Text>
+            ))
+          ) : (
+            <>
+              <Text style={[scaleStyles.anchorText, { textAlign: 'left' }]}>{anchors[0]}</Text>
+              {anchors.length > 1 && (
+                <Text style={[scaleStyles.anchorText, { textAlign: 'right' }]}>{anchors[anchors.length - 1]}</Text>
+              )}
+            </>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
 const scaleStyles = StyleSheet.create({
+  container: {
+    width: '100%',
+    gap: 4,
+  },
   wrap: { flexDirection: 'row', gap: 8 },
   pill: {
     flex: 1,
@@ -847,6 +882,17 @@ const scaleStyles = StyleSheet.create({
     color: DOG_COLORS.label,
   },
   numberSelected: { color: DOG_COLORS.primary },
+  anchorsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  anchorText: {
+    fontFamily: font.regular,
+    fontSize: fontSize.xs - 1,
+    color: DOG_COLORS.muted,
+  },
 });
 
 // ─── Secção com título ────────────────

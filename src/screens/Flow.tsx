@@ -2,8 +2,10 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
+  Dimensions,
   Image,
   KeyboardAvoidingView,
+  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +13,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  UIManager,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +28,9 @@ import { Logo } from '../components/Logo';
 import { ChevronLeftIcon, CheckIcon, CameraIcon } from '../components/Icons';
 import Svg, { Polyline } from 'react-native-svg';
 import { DOG_BREEDS_PT } from '../types/dog';
-import { ChoiceRow, MultiChoiceList, SectionHint, SectionLabel } from './shared';
+import { ChoiceRow, MultiChoiceList, RadioChoiceList, SectionHint, SectionLabel } from './shared';
+import { ScaleSelector } from './dog/_shared';
+import { WatermarkBackground } from '../components/Watermarks';
 import {
   type BuddyIDFormData,
   type DogSize,
@@ -45,10 +51,32 @@ import {
   INITIAL_FORM_DATA,
 } from './types';
 
-const TOTAL_QUESTIONS = 12;
-const BUDDYID_FORM_KEY = 'buddyid_pending_form';
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-const STEPS = ['q1','q2','q3','q4','q5','q6','q7b','q8','qLocation','q12','q13','q14','q15','consent'] as const;
+const TOTAL_QUESTIONS = 14;
+const BUDDYID_FORM_KEY = 'buddyid_pending_form';
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
+
+const STEPS = [
+  'q1',
+  'q2',
+  'q3',
+  'qConcern',
+  'q4',
+  'qOwner',
+  'q5',
+  'q6',
+  'q7b',
+  'q8',
+  'qLocation',
+  'q12',
+  'q13',
+  'q14',
+  'consent'
+] as const;
 type StepKey = typeof STEPS[number];
 
 const ChevronDownIcon = ({ size = 20, color = colors.primary }: { size?: number; color?: string }) => (
@@ -88,6 +116,9 @@ export default function Flow() {
   const [form, setForm] = useState<BuddyIDFormData>(INITIAL_FORM_DATA);
   const scrollRef = useRef<ScrollView>(null);
 
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 900;
+
   const currentStep = STEPS[stepIndex];
   const questionNumber = stepIndex < TOTAL_QUESTIONS ? stepIndex + 1 : null;
   const progress = (stepIndex + 1) / STEPS.length;
@@ -113,6 +144,10 @@ export default function Flow() {
         router.replace('/buddyid' as any);
       }
     } else {
+      LayoutAnimation.configureNext({
+        duration: 350,
+        update: { type: LayoutAnimation.Types.easeInEaseOut },
+      });
       setStepIndex((s) => s - 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
     }
@@ -121,18 +156,19 @@ export default function Flow() {
   function getValidationMessage(): string {
     switch (currentStep) {
       case 'q1': return 'Por favor, preenche o nome do cão.';
-      case 'q2': return 'Por favor, seleciona a raça e o tamanho do cão.';
-      case 'q3': return 'Por favor, preenche a idade, género e se está castrado/esterilizado.';
-      case 'q4': return 'Por favor, responde a todas as perguntas de comportamento.';
+      case 'q2': return 'Por favor, seleciona a raça, o tamanho e a cor do pelo.';
+      case 'q3': return 'Por favor, indica a idade e o género.';
+      case 'qConcern': return 'Por favor, descreve as tuas preocupações.';
+      case 'q4': return '';
+      case 'qOwner': return '';
       case 'q5': return 'Por favor, seleciona pelo menos uma opção sobre o comportamento na trela.';
-      case 'q6': return 'Por favor, responde a todas as perguntas sobre a vossa casa e rotina.';
-      case 'q7b': return 'Por favor, indica como se encontraram.';
-      case 'q8': return 'Por favor, indica o comportamento quando fica sozinho.';
-      case 'qLocation': return 'Por favor, indica a cidade onde moram.';
+      case 'q6': return 'Por favor, seleciona a habitação.';
+      case 'q7b': return 'Por favor, seleciona quem vive em casa.';
+      case 'q8': return 'Por favor, preenche o local de descanso, exercício e origem.';
+      case 'qLocation': return 'Por favor, insere um código postal válido no formato XXXX-XXX.';
       case 'q12': return 'Por favor, indica se tem medos e preenche o campo "Outro" se selecionado.';
       case 'q13': return 'Por favor, indica que serviços procuras e preenche o campo "Outro" se selecionado.';
       case 'q14': return 'Por favor, seleciona pelo menos um objetivo.';
-      case 'q15': return 'Por favor, indica se tens alguma preocupação.';
       case 'consent': return 'Por favor, aceita o uso de dados anónimo para poderes continuar.';
       default: return 'Por favor, preenche todos os campos obrigatórios.';
     }
@@ -149,6 +185,10 @@ export default function Flow() {
     }
 
     if (stepIndex < STEPS.length - 1) {
+      LayoutAnimation.configureNext({
+        duration: 350,
+        update: { type: LayoutAnimation.Types.easeInEaseOut },
+      });
       setStepIndex((s) => s + 1);
       scrollRef.current?.scrollTo({ y: 0, animated: false });
     } else {
@@ -252,29 +292,30 @@ export default function Flow() {
       case 'q1': return form.name.trim().length < 1;
       case 'q2': {
         if (!form.size) return true;
-        if (form.breed === 'other') return (form.breedOther ?? '').trim().length < 1;
-        return !DOG_BREEDS_PT.includes(form.breed);
+        if (form.breed === 'other' && (form.breedOther ?? '').trim().length < 1) return true;
+        if (!form.breed) return true;
+        if (!form.coatColor) return true;
+        if (form.coatColor === 'Outra' && (form.coatColorOther ?? '').trim().length < 1) return true;
+        return false;
       }
-      case 'q3': return form.age.trim().length < 1 || !form.gender || !form.neutered;
-      case 'q4': 
-        return !form.energy || !form.withStrangers || !form.withHomePeople || 
-               !form.obedience || !form.attachment || !form.touchSensitivity || 
-               !form.newSituations;
+      case 'q3': return !form.ageValue || form.ageValue.trim().length === 0 || !form.gender;
+      case 'qConcern': return form.concern === true && (form.concernNote || '').trim().length < 3;
+      case 'q4': return false;
+      case 'qOwner': return false;
       case 'q5': return !form.leashBehavior || form.leashBehavior.length === 0;
-      case 'q6': return !form.housing || !form.sleepingPlace || !form.exerciseDuration;
-      case 'q7b': return !form.origin;
-      case 'q8': return !form.separationAnxiety || form.separationAnxiety.length === 0;
-      case 'qLocation': return form.city.trim().length < 2;
+      case 'q6': return !form.housing;
+      case 'q7b': return !form.housemates || form.housemates.length === 0;
+      case 'q8': return !form.sleepingPlace || !form.exerciseDuration || !form.origin;
+      case 'qLocation': return !form.postalCode || !/^\d{4}-\d{3}$/.test(form.postalCode);
       case 'q12': 
         if (!form.fears || form.fears.length === 0) return true;
         if (form.fears.includes('Outro') && (form.customFear || '').trim().length === 0) return true;
         return false;
       case 'q13': 
         if (!form.services || form.services.length === 0) return true;
-        if (form.services.includes('Outro')) return (form.customService || '').trim().length === 0;
+        if (form.services.includes('Outro') && (form.customService || '').trim().length === 0) return true;
         return false;
       case 'q14': return !form.goals || form.goals.length === 0;
-      case 'q15': return !form.hasConcerns || (form.hasConcerns === 'Sim' && (form.concernsText || '').trim().length === 0);
       case 'consent': return !form.consentDataUse;
       default: return false;
     }
@@ -290,43 +331,108 @@ export default function Flow() {
         : t('buddyId.flow.ctaCreateDefaultMale')
     : t('buddyId.flow.continue');
 
-  return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
-          <ChevronLeftIcon size={24} color={colors.primary} strokeWidth={2} />
-        </TouchableOpacity>
-        <Logo variant="dark" size="sm" />
-        {questionNumber != null
-          ? <Text style={s.counter}>{questionNumber} de {TOTAL_QUESTIONS}</Text>
-          : <View style={{ width: 60 }} />}
-      </View>
+  const backButton = (
+    <TouchableOpacity onPress={goBack} hitSlop={12} style={s.backBtn}>
+      <ChevronLeftIcon size={24} color="#ffffff" strokeWidth={2} />
+    </TouchableOpacity>
+  );
 
-      <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: `${progress * 100}%` as any }]} />
-      </View>
+  const counter = questionNumber != null
+    ? <Text style={s.counter}>{questionNumber} de {TOTAL_QUESTIONS}</Text>
+    : null;
 
-      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          ref={scrollRef}
-          style={s.flex}
-          contentContainerStyle={s.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+  // Segmented Progress Bar (Instagram-story style)
+  const progressBar = (
+    <View style={s.progressRow}>
+      {STEPS.map((step, idx) => {
+        const isCompleted = idx <= stepIndex;
+        return (
+          <View
+            key={step}
+            style={[
+              s.progressSegment,
+              isCompleted ? s.progressSegmentActive : s.progressSegmentInactive
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+
+  // Scrollable question content + continue button — shared by both layouts
+  const cardInner = (
+    <>
+      <ScrollView
+        ref={scrollRef}
+        style={{ flexShrink: 1 }}
+        contentContainerStyle={s.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <StepContent step={currentStep} form={form} update={update} toggleMulti={toggleMulti} pickPhoto={pickPhoto} />
+      </ScrollView>
+
+      <View style={s.footer}>
+        <TouchableOpacity
+          style={[s.continueBtn, isContinueDisabled() && s.continueBtnDisabled]}
+          onPress={goNext}
         >
-          <StepContent step={currentStep} form={form} update={update} toggleMulti={toggleMulti} pickPhoto={pickPhoto} />
-        </ScrollView>
+          <Text style={s.continueBtnText}>{continueLabel}</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
 
-        <View style={s.footer}>
-          <TouchableOpacity
-            style={[s.continueBtn, isContinueDisabled() && s.continueBtnDisabled]}
-            onPress={goNext}
-          >
-            <Text style={s.continueBtnText}>{continueLabel}</Text>
-          </TouchableOpacity>
+  // Desktop (web, wide viewport): split-screen — brand panel left, form right
+  if (isDesktop) {
+    return (
+      <View style={s.desktopRoot}>
+        <View style={s.desktopLeft}>
+          <WatermarkBackground step={currentStep} />
+          <View style={s.desktopLeftInner}>
+            <View style={s.desktopLeftTop}>
+              {backButton}
+              {counter}
+            </View>
+            <View style={s.desktopLeftCenter}>
+              <Logo variant="light" size="lg" />
+            </View>
+            {progressBar}
+          </View>
         </View>
+
+        <View style={s.desktopRight}>
+          <View style={s.desktopCard}>{cardInner}</View>
+        </View>
+      </View>
+    );
+  }
+
+  // Mobile / native: stacked card anchored to the bottom over the watermark
+  return (
+    <View style={s.outerBg}>
+    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+      {/* Background Watermark */}
+      <WatermarkBackground step={currentStep} />
+
+      <View style={s.header}>
+        {backButton}
+        <Logo variant="light" size="sm" />
+        {counter ?? <View style={{ width: 60 }} />}
+      </View>
+
+      {progressBar}
+
+      {/* KeyboardAvoidingView keeps card visible when keyboard opens */}
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
+        {/* Flexible spacer pushes card to the bottom (Zeely-style) */}
+        <View style={s.flex} />
+
+        {/* Card — wraps content, height adapts per step */}
+        <View style={s.card}>{cardInner}</View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </View>
   );
 }
 
@@ -343,16 +449,17 @@ function StepContent({ step, form, update, toggleMulti, pickPhoto }: StepProps) 
     case 'q1': return <Q1 form={form} update={update} pickPhoto={pickPhoto} />;
     case 'q2': return <Q2 form={form} update={update} />;
     case 'q3': return <Q3 form={form} update={update} />;
+    case 'qConcern': return <QConcern form={form} update={update} />;
     case 'q4': return <Q4 form={form} update={update} />;
+    case 'qOwner': return <QOwner form={form} update={update} />;
     case 'q5': return <Q5 form={form} toggleMulti={toggleMulti} />;
-    case 'q6': return <Q6 form={form} update={update} toggleMulti={toggleMulti} />;
-    case 'q7b': return <Q7b form={form} update={update} />;
-    case 'q8': return <Q8 form={form} toggleMulti={toggleMulti} />;
+    case 'q6': return <Q6 form={form} update={update} />;
+    case 'q7b': return <Q7b form={form} toggleMulti={toggleMulti} />;
+    case 'q8': return <Q8 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'qLocation': return <QLocation form={form} update={update} />;
     case 'q12': return <Q12 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q13': return <Q13 form={form} update={update} toggleMulti={toggleMulti} />;
     case 'q14': return <Q14 form={form} toggleMulti={toggleMulti} />;
-    case 'q15': return <Q15 form={form} update={update} />;
     case 'consent': return <Consent form={form} update={update} />;
   }
 }
@@ -465,7 +572,7 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
           <SectionLabel>Escreve</SectionLabel>
           <TextInput
             style={s.input}
-            placeholder="Ex: Dobberman, Pastor Belga Malinois..."
+            placeholder="Ex: Doberman, Pastor Belga Malinois..."
             placeholderTextColor={colors.textMuted}
             value={form.breedOther || ''}
             onChangeText={(v) => update('breedOther', v)}
@@ -487,6 +594,62 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
           </TouchableOpacity>
         ))}
       </View>
+      <View style={s.divider} />
+      <SectionLabel>Cor do pelo</SectionLabel>
+      <CoatColorDropdown
+        value={form.coatColor || ''}
+        onSelect={(v) => {
+          update('coatColor', v);
+          if (v !== 'Outra') update('coatColorOther', '');
+        }}
+      />
+      {form.coatColor === 'Outra' && (
+        <TextInput
+          style={s.input}
+          placeholder="Descreve a cor (Ex: Azul merle, Arlequim...)"
+          placeholderTextColor={colors.textMuted}
+          value={form.coatColorOther || ''}
+          onChangeText={(v) => update('coatColorOther', v)}
+          autoFocus
+        />
+      )}
+    </View>
+  );
+}
+
+const COAT_COLORS = ['Preto', 'Branco', 'Castanho', 'Cinzento', 'Dourado', 'Bicolor', 'Tricolor', 'Outra'] as const;
+
+function CoatColorDropdown({ value, onSelect }: { value: string; onSelect: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ zIndex: 15 }}>
+      <TouchableOpacity
+        style={[s.inputContainer, { flexDirection: 'row', alignItems: 'center' }]}
+        onPress={() => setOpen(!open)}
+        activeOpacity={0.7}
+      >
+        <Text style={[s.inputInside, { flex: 1, color: value ? colors.text : colors.textMuted }]}>
+          {value || 'Seleciona a cor do pelo...'}
+        </Text>
+        <View style={s.dropdownArrow}>
+          <ChevronDownIcon size={20} color={colors.textMuted} />
+        </View>
+      </TouchableOpacity>
+      {open && (
+        <View style={[s.suggestionsContainer, { position: 'absolute', top: 52, left: 0, right: 0, zIndex: 100 }]}>
+          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {COAT_COLORS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[s.suggestionItem, value === color && { backgroundColor: colors.surfaceMuted }]}
+                onPress={() => { onSelect(color); setOpen(false); }}
+              >
+                <Text style={[s.suggestionItemText, value === color && { color: colors.primary, fontFamily: font.semiBold }]}>{color}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -494,57 +657,188 @@ function Q2({ form, update }: Pick<StepProps, 'form' | 'update'>) {
 function Q3({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   return (
     <View>
-      <Text style={s.question}>Idade, género e condição</Text>
+      <Text style={s.question}>Idade e género</Text>
       <SectionLabel>Idade</SectionLabel>
-      <TextInput
-        style={s.input}
-        placeholder="Ex: 3 anos ou 6 meses"
-        placeholderTextColor={colors.textMuted}
-        value={form.age}
-        onChangeText={(v) => update('age', v)}
-      />
+      <View style={s.ageRow}>
+        <TextInput
+          style={[s.input, { flex: 1, marginBottom: 0, marginTop: 0 }]}
+          placeholder="Ex: 3"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="numeric"
+          value={form.ageValue}
+          onChangeText={(v) => update('ageValue', v.replace(/[^0-9]/g, ''))}
+        />
+        <View style={s.unitToggleRow}>
+          <Pressable
+            style={[s.unitBtn, form.ageUnit === 'anos' && s.unitBtnOn]}
+            onPress={() => update('ageUnit', 'anos')}
+          >
+            <Text style={[s.unitBtnText, form.ageUnit === 'anos' && s.unitBtnTextOn]}>Anos</Text>
+          </Pressable>
+          <Pressable
+            style={[s.unitBtn, form.ageUnit === 'meses' && s.unitBtnOn]}
+            onPress={() => update('ageUnit', 'meses')}
+          >
+            <Text style={[s.unitBtnText, form.ageUnit === 'meses' && s.unitBtnTextOn]}>Meses</Text>
+          </Pressable>
+        </View>
+      </View>
       <View style={s.divider} />
       <SectionLabel>Género</SectionLabel>
       <ChoiceRow options={['Macho', 'Fêmea']} selected={form.gender} onSelect={(v) => update('gender', v as Gender)} columns={2} />
-      <View style={s.divider} />
-      <SectionLabel>Castrado / Esterilizado</SectionLabel>
-      <ChoiceRow options={['Sim', 'Não', 'Não sei']} selected={form.neutered} onSelect={(v) => update('neutered', v as NeuteredStatus)} />
+    </View>
+  );
+}
+
+function QConcern({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  return (
+    <View>
+      <Text style={s.question}>Há alguma coisa que te preocupe no teu cão?</Text>
+      <SectionHint>Comportamento, medos, saúde, etc.</SectionHint>
+      <View style={s.sizeCol}>
+        <Pressable
+          style={[s.sizeBtnCol, form.concern === false && s.sizeBtnOn]}
+          onPress={() => { update('concern', false); update('concernNote', ''); }}
+        >
+          <Text style={[s.sizeBtnTextCol, form.concern === false && s.sizeBtnTextOn]}>Não</Text>
+        </Pressable>
+        <Pressable
+          style={[s.sizeBtnCol, form.concern === true && s.sizeBtnOn]}
+          onPress={() => update('concern', true)}
+        >
+          <Text style={[s.sizeBtnTextCol, form.concern === true && s.sizeBtnTextOn]}>Sim</Text>
+        </Pressable>
+      </View>
+      {form.concern === true && (
+        <>
+          <SectionLabel>O que te preocupa?</SectionLabel>
+          <TextInput
+            style={[s.input, s.inputMultiline]}
+            multiline
+            placeholder="Ex: Puxa muito a trela, ladra a estranhos, tem medo de barulhos fortes..."
+            placeholderTextColor={colors.textMuted}
+            value={form.concernNote || ''}
+            onChangeText={(v) => update('concernNote', v)}
+            autoFocus
+          />
+        </>
+      )}
     </View>
   );
 }
 
 function Q4({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  const aggressionTargets = ['Cães', 'Pessoas Estranhas', 'Membros da Família', 'Outros Animais'];
+  
   return (
     <View>
-      <Text style={s.question}>Como se comporta o teu cão?</Text>
-      <SectionHint>Uma opção por linha.</SectionHint>
-      <SectionLabel>Energia</SectionLabel>
-      <SectionHint>Excitabilidade geral</SectionHint>
-      <ChoiceRow options={['Calmo', 'Moderado', 'Muito ativo']} selected={form.energy} onSelect={(v) => update('energy', v as EnergyLevel)} />
+      <Text style={s.question}>Comportamento do cão</Text>
+      <SectionHint>Avalia o teu cão em cada escala (0 a 4). Sliders são opcionais.</SectionHint>
+      
+      <SectionLabel>Medo de pessoas estranhas</SectionLabel>
+      <ScaleSelector
+        value={form.fearStrangers}
+        onChange={(v) => update('fearStrangers', v)}
+        min={0}
+        max={4}
+        anchors={['Amigável', 'Muito Medo']}
+      />
       <View style={s.divider} />
-      <SectionLabel>Com estranhos</SectionLabel>
-      <SectionHint>Sociabilidade / reatividade</SectionHint>
-      <ChoiceRow options={['Amigável', 'Reservado', 'Reativo']} selected={form.withStrangers} onSelect={(v) => update('withStrangers', v as StrangerBehavior)} />
+
+      <SectionLabel>Medo de outros cães</SectionLabel>
+      <ScaleSelector
+        value={form.fearDogs}
+        onChange={(v) => update('fearDogs', v)}
+        min={0}
+        max={4}
+        anchors={['Sociável', 'Muito Medo']}
+      />
       <View style={s.divider} />
-      <SectionLabel>Com pessoas de casa</SectionLabel>
-      <SectionHint>Agressividade dirigida</SectionHint>
-      <ChoiceRow options={['Nunca', 'Raramente', 'Por vezes']} selected={form.withHomePeople} onSelect={(v) => update('withHomePeople', v as HomePeopleBehavior)} />
+
+      <SectionLabel>Medo de barulhos/situações novas (Não-social)</SectionLabel>
+      <ScaleSelector
+        value={form.fearNonsocial}
+        onChange={(v) => update('fearNonsocial', v)}
+        min={0}
+        max={4}
+        anchors={['Tranquilo', 'Muito Medo']}
+      />
       <View style={s.divider} />
-      <SectionLabel>Obediência</SectionLabel>
-      <SectionHint>Treino e atenção</SectionHint>
-      <ChoiceRow options={['Aprende rápido', 'Seletivo', 'Difícil']} selected={form.obedience} onSelect={(v) => update('obedience', v as Obedience)} />
+
+      <SectionLabel>Sensibilidade ao toque / manipulação</SectionLabel>
+      <ScaleSelector
+        value={form.touchSensitivity}
+        onChange={(v) => update('touchSensitivity', v)}
+        min={0}
+        max={4}
+        anchors={['Tranquilo', 'Muito Sensível']}
+      />
       <View style={s.divider} />
-      <SectionLabel>Apego</SectionLabel>
-      <SectionHint>Dependência do tutor</SectionHint>
-      <ChoiceRow options={['Independente', 'Equilibrado', 'Colado']} selected={form.attachment} onSelect={(v) => update('attachment', v as Attachment)} />
+
+      <SectionLabel>Sinais de agressão (rosnar, morder, etc.)</SectionLabel>
+      <ScaleSelector
+        value={form.aggression}
+        onChange={(v) => update('aggression', v)}
+        min={0}
+        max={4}
+        anchors={['Inexistente', 'Muito Frequente']}
+      />
+      
+      {form.aggression !== undefined && form.aggression > 0 && (
+        <View style={{ marginTop: spacing[4] }}>
+          <SectionLabel>Dirigida a quem?</SectionLabel>
+          <SectionHint>Seleciona todos os que se aplicam.</SectionHint>
+          <MultiChoiceList
+            options={aggressionTargets}
+            selected={form.aggrTargets || []}
+            onToggle={(v) => {
+              const list = form.aggrTargets || [];
+              const nextList = list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
+              update('aggrTargets', nextList);
+            }}
+          />
+        </View>
+      )}
       <View style={s.divider} />
-      <SectionLabel>Ao toque</SectionLabel>
-      <SectionHint>Sensibilidade / manipulação</SectionHint>
-      <ChoiceRow options={['Tranquilo', 'Tolerante', 'Sensível']} selected={form.touchSensitivity} onSelect={(v) => update('touchSensitivity', v as TouchSensitivity)} />
+
+      <SectionLabel>Comportamento quando fica sozinho</SectionLabel>
+      <ScaleSelector
+        value={form.separation}
+        onChange={(v) => update('separation', v)}
+        min={0}
+        max={4}
+        anchors={['Tranquilo', 'Muito Ansioso']}
+      />
+    </View>
+  );
+}
+
+function QOwner({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  return (
+    <View>
+      <Text style={s.question}>Autoavaliação do Tutor</Text>
+      <SectionHint>Responde opcionalmente sobre a tua própria percepção (0 a 4).</SectionHint>
+
+      <SectionLabel>Desejo de proteger o teu cão</SectionLabel>
+      <SectionHint>Ex: Evitar situações difíceis, defendê-lo de outros cães, etc.</SectionHint>
+      <ScaleSelector
+        value={form.ownerProtect}
+        onChange={(v) => update('ownerProtect', v)}
+        min={0}
+        max={4}
+        anchors={['Inexistente', 'Muito Forte']}
+      />
       <View style={s.divider} />
-      <SectionLabel>Situações novas</SectionLabel>
-      <SectionHint>Medo / curiosidade</SectionHint>
-      <ChoiceRow options={['Curioso', 'Cauteloso', 'Assustado']} selected={form.newSituations} onSelect={(v) => update('newSituations', v as NewSituations)} />
+
+      <SectionLabel>Preocupação com o comportamento / bem-estar dele</SectionLabel>
+      <SectionHint>Ex: Sentir ansiedade no passeio, receio de problemas, etc.</SectionHint>
+      <ScaleSelector
+        value={form.ownerWorry}
+        onChange={(v) => update('ownerWorry', v)}
+        min={0}
+        max={4}
+        anchors={['Inexistente', 'Constante']}
+      />
     </View>
   );
 }
@@ -559,35 +853,75 @@ function Q5({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
   );
 }
 
-function Q6({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
+function Q6({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   const housingOpts: Housing[] = ['Apartamento', 'Casa sem jardim', 'Casa com jardim', 'Quinta / rural'];
-  const sleepOpts: SleepingPlace[] = ['Na cama', 'No sofá', 'Cama própria', 'No exterior'];
-  const exerciseOpts: ExerciseDuration[] = ['< 30 min', '30–60 min', '> 60 min'];
+  const foodTypeOpts = ['Ração seca', 'Ração húmida', 'Mista', 'Caseira'];
   return (
     <View>
-      <Text style={s.question}>Onde vivem juntos?</Text>
+      <Text style={s.question}>Habitação e Alimentação</Text>
+      
+      <SectionLabel>Habitação</SectionLabel>
       <ChoiceRow options={housingOpts} selected={form.housing} onSelect={(v) => update('housing', v as Housing)} columns={2} />
       <View style={s.divider} />
-      <SectionLabel>Quem mais vive em casa?</SectionLabel>
-      <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso','Ninguém','Outras pessoas']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
+
+      <SectionLabel>Tipo de alimentação (Opcional)</SectionLabel>
+      <ChoiceRow
+        options={foodTypeOpts}
+        selected={form.foodType}
+        onSelect={(v) => update('foodType', v as any)}
+        columns={2}
+      />
       <View style={s.divider} />
-      <SectionLabel>Onde dorme?</SectionLabel>
-      <ChoiceRow options={sleepOpts} selected={form.sleepingPlace} onSelect={(v) => update('sleepingPlace', v as SleepingPlace)} columns={2} />
-      <View style={s.divider} />
-      <SectionLabel>Exercício diário</SectionLabel>
-      <ChoiceRow options={exerciseOpts} selected={form.exerciseDuration} onSelect={(v) => update('exerciseDuration', v as ExerciseDuration)} />
+
+      <SectionLabel>Refeições por dia (Opcional)</SectionLabel>
+      <TextInput
+        style={s.input}
+        placeholder="Ex: 2"
+        placeholderTextColor={colors.textMuted}
+        keyboardType="numeric"
+        value={form.mealsPerDay ? String(form.mealsPerDay) : ''}
+        onChangeText={(v) => {
+          const num = parseInt(v.replace(/[^0-9]/g, ''), 10);
+          update('mealsPerDay', isNaN(num) ? undefined : num);
+        }}
+      />
     </View>
   );
 }
 
-function Q7b({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+function Q7b({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
+  return (
+    <View>
+      <Text style={s.question}>Quem mais vive em casa?</Text>
+      <SectionHint>Podes escolher mais de uma.</SectionHint>
+      <MultiChoiceList options={['Outro cão','Gato(s)','Criança','Adolescente','Idoso','Ninguém','Outras pessoas']} selected={form.housemates} onToggle={(v) => toggleMulti('housemates', v)} />
+    </View>
+  );
+}
+
+function Q8({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
+  const sleepOpts: SleepingPlace[] = ['Na cama', 'No sofá', 'Cama própria', 'No exterior'];
+  const exerciseOpts: ExerciseDuration[] = ['< 30 min', '30–60 min', '> 60 min'];
   const origins: DogOrigin[] = ['Adotei de um canil ou associação','Comprei de um criador','Resgatei da rua','Recebi de alguém','Outra forma'];
   return (
     <View>
-      <Text style={s.question}>Como se encontraram?</Text>
-      <MultiChoiceList options={origins} selected={form.origin ? [form.origin] : []} onToggle={(v) => update('origin', v as DogOrigin)} />
+      <Text style={s.question}>Rotina e Origem</Text>
+
+      <SectionLabel>Onde dorme?</SectionLabel>
+      <ChoiceRow options={sleepOpts} selected={form.sleepingPlace} onSelect={(v) => update('sleepingPlace', v as SleepingPlace)} columns={2} />
       <View style={s.divider} />
+
+      <SectionLabel>Exercício diário</SectionLabel>
+      <ChoiceRow options={exerciseOpts} selected={form.exerciseDuration} onSelect={(v) => update('exerciseDuration', v as ExerciseDuration)} />
+      <View style={s.divider} />
+
+      <RadioChoiceList
+        options={origins}
+        selected={form.origin}
+        onSelect={(v) => update('origin', v as DogOrigin)}
+      />
+      <View style={s.divider} />
+
       <SectionLabel>Alguma história traumática?</SectionLabel>
       <SectionHint>Opcional — ajuda-nos a ser mais cuidadosos.</SectionHint>
       <TextInput
@@ -604,77 +938,35 @@ function Q7b({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   );
 }
 
-function Q8({ form, toggleMulti }: Pick<StepProps, 'form' | 'toggleMulti'>) {
-  const options: SeparationAnxiety[] = ['Fica calmo e tranquilo','Ladra ou range um pouco','Fica muito ansioso','Destrói coisas quando fico fora','Nunca o deixo sozinho','Não sei'];
-  return (
-    <View>
-      <Text style={s.question}>Como fica quando ficas fora?</Text>
-      <SectionHint>Podes escolher mais de uma.</SectionHint>
-      <MultiChoiceList options={options} selected={form.separationAnxiety || []} onToggle={(v) => toggleMulti('separationAnxiety', v)} />
-    </View>
-  );
-}
-
-function QEmail({ form, update }: Pick<StepProps, 'form' | 'update'>) {
-  return (
-    <View>
-      <Text style={s.question}>Qual é o teu email?</Text>
-      <TextInput
-        style={[s.input, { marginTop: spacing[8] }]}
-        placeholder="email@exemplo.com"
-        placeholderTextColor={colors.textMuted}
-        value={form.email}
-        onChangeText={(v) => update('email', v)}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <Text style={s.hint}>Os teus dados são privados e nunca partilhados.</Text>
-    </View>
-  );
-}
-
-function QPhone({ form, update }: Pick<StepProps, 'form' | 'update'>) {
-  return (
-    <View>
-      <Text style={s.question}>Qual é o teu telemóvel?</Text>
-      <TextInput
-        style={[s.input, { marginTop: spacing[8] }]}
-        placeholder="+351 912 345 678"
-        placeholderTextColor={colors.textMuted}
-        value={form.phone}
-        onChangeText={(v) => update('phone', v)}
-        keyboardType="phone-pad"
-      />
-      <Text style={s.hint}>Só para confirmação de reservas.</Text>
-    </View>
-  );
-}
-
 function QLocation({ form, update }: Pick<StepProps, 'form' | 'update'>) {
+  function handlePostalCodeChange(text: string) {
+    let cleaned = text.replace(/[^0-9-]/g, '');
+    if (cleaned.length === 4 && !cleaned.includes('-')) {
+      cleaned = cleaned + '-';
+    } else if (cleaned.length > 4 && cleaned.charAt(4) !== '-') {
+      cleaned = cleaned.slice(0, 4) + '-' + cleaned.slice(4).replace('-', '');
+    }
+    if (cleaned.length > 8) {
+      cleaned = cleaned.slice(0, 8);
+    }
+    update('postalCode', cleaned);
+  }
+
   return (
     <View>
       <Text style={s.question}>Onde moras?</Text>
-      <SectionLabel>Cidade</SectionLabel>
+      <SectionLabel>Código postal (Lisboa e arredores)</SectionLabel>
+      <SectionHint>Formato: XXXX-XXX</SectionHint>
       <TextInput
         style={s.input}
-        placeholder="ex: Lisboa, Porto, Braga..."
-        placeholderTextColor={colors.textMuted}
-        value={form.city}
-        onChangeText={(v) => update('city', v)}
-      />
-      <View style={s.optionalRow}>
-        <SectionLabel>Código postal</SectionLabel>
-        <Text style={s.optional}>opcional</Text>
-      </View>
-      <TextInput
-        style={s.input}
-        placeholder="ex: 1050-012"
+        placeholder="Ex: 1050-012"
         placeholderTextColor={colors.textMuted}
         value={form.postalCode || ''}
-        onChangeText={(v) => update('postalCode', v)}
-        keyboardType="numbers-and-punctuation"
+        onChangeText={handlePostalCodeChange}
+        keyboardType="numeric"
+        maxLength={8}
       />
-      <Text style={s.hint}>Usamos a tua localização para encontrar prestadores perto de ti.</Text>
+      <Text style={s.hint}>A Buddy está disponível na área metropolitana de Lisboa.</Text>
     </View>
   );
 }
@@ -704,21 +996,22 @@ function Q12({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 
 }
 
 function Q13({ form, update, toggleMulti }: Pick<StepProps, 'form' | 'update' | 'toggleMulti'>) {
-  const options = ['Veterinário','Passeios','Treino','Creche','Hospedagem em casa','Pet sitting','Transporte','Grooming','Nenhum','Outro'];
+  const options = ['Passeio', 'Pet Sitting', 'Creche', 'Hotel', 'Treino', 'Banho', 'Corte', 'Outro'];
   return (
     <View>
-      <Text style={s.question}>Que serviços normalmente usas?</Text>
+      <Text style={s.question}>Que serviços normalmente procuras?</Text>
       <SectionHint>Podes escolher mais de uma.</SectionHint>
       <MultiChoiceList options={options} selected={form.services} onToggle={(v) => toggleMulti('services', v)} />
       {form.services.includes('Outro') && (
         <>
-          <SectionLabel>Qual serviço?</SectionLabel>
+          <SectionLabel>Qual outro serviço?</SectionLabel>
           <TextInput
             style={s.input}
             placeholder="Descreve o serviço que procuras..."
             placeholderTextColor={colors.textMuted}
             value={form.customService || ''}
             onChangeText={(v) => update('customService', v)}
+            autoFocus
           />
         </>
       )}
@@ -747,42 +1040,6 @@ function Consent({ form, update }: Pick<StepProps, 'form' | 'update'>) {
   );
 }
 
-function Q15({ form, update }: Pick<StepProps, 'form' | 'update'>) {
-  const hasConcerns = form.hasConcerns === 'Sim';
-  return (
-    <View>
-      <Text style={s.question}>Há alguma coisa que te preocupe no teu cão?</Text>
-      <View style={s.sizeCol}>
-        <Pressable
-          style={[s.sizeBtnCol, form.hasConcerns === 'Não' && s.sizeBtnOn]}
-          onPress={() => { update('hasConcerns', 'Não'); update('concernsText', ''); }}
-        >
-          <Text style={[s.sizeBtnTextCol, form.hasConcerns === 'Não' && s.sizeBtnTextOn]}>Não</Text>
-        </Pressable>
-        <Pressable
-          style={[s.sizeBtnCol, form.hasConcerns === 'Sim' && s.sizeBtnOn]}
-          onPress={() => update('hasConcerns', 'Sim')}
-        >
-          <Text style={[s.sizeBtnTextCol, form.hasConcerns === 'Sim' && s.sizeBtnTextOn]}>Sim</Text>
-        </Pressable>
-      </View>
-      {hasConcerns && (
-        <>
-          <Text style={s.hint}>Se sim, o quê?</Text>
-          <TextInput
-            style={[s.input, s.inputMultiline]}
-            multiline
-            placeholder="Descreve as tuas preocupações..."
-            placeholderTextColor={colors.textMuted}
-            value={form.concernsText || ''}
-            onChangeText={(v) => update('concernsText', v)}
-          />
-        </>
-      )}
-    </View>
-  );
-}
-
 function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
     <Pressable style={s.consentRow} onPress={onToggle}>
@@ -795,20 +1052,82 @@ function ConsentRow({ checked, onToggle, label }: { checked: boolean; onToggle: 
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.canvas },
+  outerBg: { flex: 1, backgroundColor: colors.primaryDeep },
+  safe: { flex: 1, backgroundColor: colors.primaryDeep, maxWidth: 430, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
+
+  // ─── Desktop split-screen layout (web, wide viewport) ───
+  desktopRoot: { flex: 1, flexDirection: 'row', backgroundColor: '#ffffff' },
+  desktopLeft: {
+    width: '42%',
+    maxWidth: 560,
+    backgroundColor: colors.primaryDeep,
+    overflow: 'hidden',
+  },
+  desktopLeftInner: {
+    flex: 1,
+    padding: spacing[10],
+    justifyContent: 'space-between',
+    zIndex: 1,
+  },
+  desktopLeftTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  desktopLeftCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  desktopRight: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing[8],
+  },
+  desktopCard: {
+    width: '100%',
+    maxWidth: 520,
+    maxHeight: '92%',
+    backgroundColor: '#ffffff',
+  },
+
+  card: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    maxHeight: CARD_MAX_HEIGHT,
+    overflow: 'hidden',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
+    backgroundColor: 'transparent',
     paddingHorizontal: spacing[6],
     height: 68,
   },
   backBtn: { width: 32 },
-  counter: { fontFamily: font.regular, fontSize: fontSize.base, color: colors.textSecondary, width: 60, textAlign: 'right' },
-  progressTrack: { height: 3, backgroundColor: colors.borderSoft },
-  progressFill: { height: 3, backgroundColor: colors.primary },
+  counter: { fontFamily: font.regular, fontSize: fontSize.base, color: '#ffffff', width: 60, textAlign: 'right', opacity: 0.8 },
+  progressRow: {
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: spacing[6],
+    marginTop: spacing[2],
+    marginBottom: spacing[4],
+  },
+  progressSegment: {
+    flex: 1,
+    height: 3,
+    borderRadius: 1.5,
+  },
+  progressSegmentActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  progressSegmentInactive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
   scrollContent: { padding: spacing[6], paddingBottom: spacing[10] },
   question: { fontFamily: font.bold, fontSize: fontSize.xl, color: colors.text, marginBottom: spacing[4], lineHeight: 34 },
   photoContainer: { alignSelf: 'center', marginTop: spacing[4] },
@@ -894,7 +1213,7 @@ const s = StyleSheet.create({
   hint: { fontFamily: font.regular, fontSize: fontSize.sm, color: colors.textMuted, marginTop: spacing[1], marginBottom: spacing[3] },
   optionalRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing[2], marginTop: spacing[3] },
   optional: { fontFamily: font.regular, fontSize: fontSize.xs, color: colors.textMuted },
-  footer: { padding: spacing[4], backgroundColor: colors.canvas },
+  footer: { padding: spacing[4], backgroundColor: '#ffffff' },
   continueBtn: { backgroundColor: colors.primary, borderRadius: 14, paddingVertical: spacing[4], alignItems: 'center' },
   continueBtnDisabled: { opacity: 0.45 },
   continueBtnText: { fontFamily: font.semiBold, fontSize: fontSize.base, color: '#fff' },
@@ -913,4 +1232,40 @@ const s = StyleSheet.create({
   checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderSoft, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
   checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   consentLabel: { flex: 1, fontFamily: font.regular, fontSize: fontSize.sm, color: colors.text, lineHeight: 20 },
+  
+  // Age structured layout styles
+  ageRow: {
+    flexDirection: 'row',
+    gap: spacing[3],
+    marginTop: spacing[2],
+    alignItems: 'center',
+  },
+  unitToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 12,
+    padding: 3,
+  },
+  unitBtn: {
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[4],
+    borderRadius: 10,
+  },
+  unitBtnOn: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  unitBtnText: {
+    fontFamily: font.medium,
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  unitBtnTextOn: {
+    color: colors.primary,
+    fontFamily: font.semiBold,
+  },
 });

@@ -76,6 +76,21 @@ export default function Loading() {
             }
           }
 
+          const now = new Date();
+          let birthDate = new Date();
+          const val = parseInt(form.ageValue || '0', 10);
+          if (form.ageUnit === 'meses') {
+            birthDate.setMonth(now.getMonth() - val);
+          } else {
+            birthDate.setFullYear(now.getFullYear() - val);
+          }
+          const birthdateStr = birthDate.toISOString().split('T')[0];
+
+          const mappedFoodType = form.foodType === 'Ração seca' ? 'dry' :
+                                 form.foodType === 'Ração húmida' ? 'wet' :
+                                 form.foodType === 'Mista' ? 'mixed' :
+                                 form.foodType === 'Caseira' ? 'homemade' : undefined;
+
           const command = {
             name: form.name, breed: form.breed, breedOther: form.breed === 'other' ? form.breedOther : undefined,
             size: form.size === 'XS' ? 'xs' :
@@ -84,18 +99,72 @@ export default function Loading() {
                   form.size === 'L' ? 'lg' :
                   form.size === 'XL' ? 'xl' :
                   undefined,
-            ageRange: null, birthdate: null,
+            ageRange: null,
+            birthdate: birthdateStr,
             gender: form.gender === 'Macho' ? 'male' : form.gender === 'Fêmea' ? 'female' : null,
-            neutered: form.neutered === 'Sim' ? 'yes' : form.neutered === 'Não' ? 'no' : 'unknown',
+            neutered: null, // não recolhido no signup
             adopted: form.origin?.includes('Adotei') || form.origin?.includes('Resgatei'),
-            habitsJson: JSON.stringify({ origin: form.origin, traumaHistory: form.traumaHistory, housemates: form.housemates, preferredServices: form.services, customService: form.customService, lifestyle: { housing: form.housing, sleepingPlace: form.sleepingPlace, exerciseDuration: form.exerciseDuration } }),
-            behaviorJson: JSON.stringify({ energy: form.energy, withStrangers: form.withStrangers, withHomePeople: form.withHomePeople, obedience: form.obedience, attachment: form.attachment, touchSensitivity: form.touchSensitivity, newSituations: form.newSituations, separationAnxiety: form.separationAnxiety, goals: form.goals, leashBehavior: form.leashBehavior, fears: form.customFear ? [...(form.fears || []), form.customFear] : form.fears }),
-            healthJson: JSON.stringify({ concerns: form.hasConcerns, concernsText: form.concernsText }),
+            habitsJson: JSON.stringify({
+              origin: form.origin,
+              traumaHistory: form.traumaHistory,
+              housemates: form.housemates,
+              preferredServices: form.services,
+              customService: form.customService,
+              lifestyle: {
+                housing: form.housing,
+                sleepingPlace: form.sleepingPlace,
+                exerciseDuration: form.exerciseDuration,
+                postalCode: form.postalCode,
+                city: form.city,
+                ageValue: form.ageValue,
+                ageUnit: form.ageUnit,
+                coatColor: form.coatColor,
+                coatColorOther: form.coatColorOther,
+              },
+              food: {
+                type: mappedFoodType,
+                mealsPerDay: form.mealsPerDay,
+              }
+            }),
+            behaviorJson: JSON.stringify({
+              behavior: {
+                constructs: {
+                  fearStrangers: form.fearStrangers !== undefined ? { priorTutor: form.fearStrangers } : null,
+                  fearDogs: form.fearDogs !== undefined ? { priorTutor: form.fearDogs } : null,
+                  fearNonsocial: form.fearNonsocial !== undefined ? { priorTutor: form.fearNonsocial } : null,
+                  touchSensitivity: form.touchSensitivity !== undefined ? { priorTutor: form.touchSensitivity } : null,
+                  aggression: form.aggression !== undefined ? { priorTutor: form.aggression } : null,
+                  separation: form.separation !== undefined ? { priorTutor: form.separation } : null,
+                },
+                aggrTargets: form.aggrTargets,
+                concern: form.concern,
+                concernNote: form.concernNote,
+                ownerProtect: form.ownerProtect,
+                ownerWorry: form.ownerWorry,
+              },
+              separationAnxiety: form.separationAnxiety,
+              goals: form.goals,
+              leashBehavior: form.leashBehavior,
+              fears: form.customFear ? [...(form.fears || []), form.customFear] : form.fears
+            }),
+            healthJson: JSON.stringify({
+              concerns: form.concern ? 'Sim' : 'Não',
+              concernsText: form.concernNote
+            }),
             photoUrl: finalPhotoUrl,
           };
           const response = await apiClient.post<{ dogId: string }>('/dogs', command);
           const pct = Math.min(Math.round((Object.values(form).filter(v => v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)).length / 20) * 100), 95);
-          results.push({ dogName: form.name || 'Cão', breed: form.breed || '', age: form.age || '', size: form.size, buddyId: response.dogId, completionPercent: pct, photoUri: form.photoUri, gender: form.gender });
+          results.push({
+            dogName: form.name || 'Cão',
+            breed: form.breed || '',
+            age: form.ageValue ? `${form.ageValue} ${form.ageUnit || 'anos'}` : '',
+            size: form.size,
+            buddyId: response.dogId,
+            completionPercent: pct,
+            photoUri: form.photoUri,
+            gender: form.gender
+          });
         }
         await AsyncStorage.setItem(BUDDYID_RESULT_KEY, JSON.stringify(results));
         await AsyncStorage.removeItem(BUDDYID_PENDING_DOGS);

@@ -39,7 +39,12 @@ export default function PublicBehaviorScreen({ id }: { id?: string }) {
     );
   }
 
-  const { socialization, leashBehavior, separationAnxiety, likes, fears, tutorNotes, providerNotes } = behavior;
+  const { socialization, leashBehavior, separationAnxiety, likes, fears, tutorNotes, providerNotes, behavior: nestedBehavior } = behavior;
+
+  const constructs = nestedBehavior?.constructs;
+  const aggrTargets = nestedBehavior?.aggrTargets;
+  const ownerProtect = nestedBehavior?.ownerProtect;
+  const ownerWorry = nestedBehavior?.ownerWorry;
 
   const hasSocialization = socialization && (socialization.people || socialization.dogs || socialization.children);
   const hasLeash = leashBehavior && leashBehavior.length > 0;
@@ -65,7 +70,29 @@ export default function PublicBehaviorScreen({ id }: { id?: string }) {
     >
       <ScrollView contentContainerStyle={styles.scroll}>
 
-        {hasSocialization && (
+        {constructs && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('tutor.editBehavioralProfile.behavioralProfile') || 'Perfil Comportamental'}</Text>
+            <View style={styles.cardContent}>
+              <InfoRow label="Medo de Estranhos" value={constructs.fearStrangers?.priorTutor !== undefined ? `${constructs.fearStrangers.priorTutor} / 4` : null} />
+              <InfoRow label="Medo de Cães" value={constructs.fearDogs?.priorTutor !== undefined ? `${constructs.fearDogs.priorTutor} / 4` : null} />
+              <InfoRow label="Medo Não-Social" value={constructs.fearNonsocial?.priorTutor !== undefined ? `${constructs.fearNonsocial.priorTutor} / 4` : null} />
+              <InfoRow label="Sensibilidade ao Toque" value={constructs.touchSensitivity?.priorTutor !== undefined ? `${constructs.touchSensitivity.priorTutor} / 4` : null} />
+              <InfoRow label="Sinais de Agressão" value={constructs.aggression?.priorTutor !== undefined ? `${constructs.aggression.priorTutor} / 4` : null} />
+              {aggrTargets && aggrTargets.length > 0 && (
+                <View style={{ marginTop: spacing[2], marginBottom: spacing[2] }}>
+                  <Text style={styles.subLabel}>Alvos de Agressão:</Text>
+                  <InfoTags tags={aggrTargets} />
+                </View>
+              )}
+              <InfoRow label="Ansiedade de Separação" value={constructs.separation?.priorTutor !== undefined ? `${constructs.separation.priorTutor} / 4` : null} />
+              <InfoRow label="Proteção do Tutor" value={ownerProtect !== undefined ? `${ownerProtect} / 4` : null} />
+              <InfoRow label="Preocupação do Tutor" value={ownerWorry !== undefined ? `${ownerWorry} / 4` : null} />
+            </View>
+          </View>
+        )}
+
+        {hasSocialization && !constructs && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>{t('tutor.editBehavioralProfile.socialization')}</Text>
             <View style={styles.cardContent}>
@@ -237,5 +264,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  subLabel: {
+    fontFamily: font.medium,
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing[2],
   },
 });
