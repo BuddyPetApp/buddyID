@@ -71,7 +71,7 @@ export default function BuddyFund() {
           </Text>
           <TouchableOpacity
             style={s.applyBtn}
-            onPress={() => router.push('/buddyid/associations' as any)}
+            onPress={() => router.navigate('/buddyid/associations' as any)}
             activeOpacity={0.85}
           >
             <Text style={s.applyBtnText}>Candidatar a minha associação</Text>

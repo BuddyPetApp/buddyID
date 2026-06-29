@@ -81,7 +81,7 @@ export default function SecondDog() {
       </ScrollView>
 
       <View style={s.footer}>
-        <TouchableOpacity style={s.btnPrimary} onPress={() => router.push('/buddyid/flow' as any)}>
+        <TouchableOpacity style={s.btnPrimary} onPress={() => router.navigate('/buddyid/flow' as any)}>
           <Text style={s.btnPrimaryText}>Criar BuddyID do segundo cão</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.btnGhost} onPress={() => router.replace('/buddyid/loading' as any)}>

@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { ChevronLeftIcon } from '../../components/Icons';
+import { WebSheet } from '../../components/WebSheet';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
 
@@ -147,6 +148,7 @@ export function DogScreenShell({
 }) {
   const router = useRouter();
   return (
+    <WebSheet maxWidth={600}>
     <SafeAreaView style={[shellStyles.safe, { backgroundColor: contentBackground }]} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={shellStyles.header}>
@@ -163,6 +165,7 @@ export function DogScreenShell({
       {/* Bottom Bar */}
       {bottomBar ? <View style={shellStyles.bottomBar}>{bottomBar}</View> : null}
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

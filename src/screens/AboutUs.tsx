@@ -61,7 +61,7 @@ export default function AboutUs() {
         {/* Buddy Fund block */}
         <TouchableOpacity
           style={styles.fundBlock}
-          onPress={() => router.push('/buddyid/buddy-fund' as any)}
+          onPress={() => router.navigate('/buddyid/buddy-fund' as any)}
           activeOpacity={0.82}
         >
           <View style={styles.fundBlockLeft}>
@@ -131,7 +131,7 @@ export default function AboutUs() {
           </Text>
           <TouchableOpacity
             style={styles.joinButton}
-            onPress={() => router.push('/buddyid/contact' as any)}
+            onPress={() => router.navigate('/buddyid/contact' as any)}
             activeOpacity={0.8}
           >
             <Text style={styles.joinButtonText}>Falar com a equipa</Text>

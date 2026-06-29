@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { SvgXml } from 'react-native-svg';
 import { colors, font, fontSize, shadows, spacing, radius } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Button } from '../components/Button';
 import { Logo } from '../components/Logo';
 import {
@@ -85,6 +86,7 @@ export default function Providers() {
     form.services.length > 0;
 
   return (
+    <WebSheet maxWidth={760}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
@@ -216,6 +218,7 @@ export default function Providers() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

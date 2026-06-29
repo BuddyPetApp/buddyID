@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon, EyeIcon } from '../components/Icons';
 
 const BUDDYID_RESULT_KEY = 'buddyid_result';
@@ -53,6 +54,7 @@ export default function Success() {
   }
 
   return (
+    <WebSheet maxWidth={560}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>{title}</Text>
@@ -67,7 +69,7 @@ export default function Success() {
           </View>
         )}
 
-        <TouchableOpacity style={s.card} activeOpacity={0.88} onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}>
+        <TouchableOpacity style={s.card} activeOpacity={0.88} onPress={() => current?.buddyId && router.navigate(`/buddyid/dog/${current.buddyId}` as any)}>
           <View style={s.avatar}><Text style={s.avatarLetter}>{current?.dogName?.[0]?.toUpperCase() ?? '?'}</Text></View>
           <View style={s.cardInfo}>
             <Text style={s.cardName}>{current?.dogName ?? '...'}</Text>
@@ -90,12 +92,12 @@ export default function Success() {
           <Text style={s.progressHint}>{t('buddyId.flow.successProfileHint')}</Text>
         </View>
 
-        <TouchableOpacity style={s.ctaPrimary} onPress={() => current?.buddyId && router.push(`/buddyid/dog/${current.buddyId}` as any)}>
+        <TouchableOpacity style={s.ctaPrimary} onPress={() => current?.buddyId && router.navigate(`/buddyid/dog/${current.buddyId}` as any)}>
           <CheckIcon size={18} color="#fff" strokeWidth={2.5} />
           <Text style={s.ctaPrimaryText}>{t('buddyId.flow.successCompleteProfile')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={s.ctaSecondary} onPress={() => current?.buddyId && router.push(`/buddyid/public/${current.buddyId}` as any)}>
+        <TouchableOpacity style={s.ctaSecondary} onPress={() => current?.buddyId && router.navigate(`/buddyid/public/${current.buddyId}` as any)}>
           <EyeIcon size={18} color={colors.primary} />
           <Text style={s.ctaSecondaryText}>{t('buddyId.flow.successPublicBuddyId')}</Text>
         </TouchableOpacity>
@@ -114,6 +116,7 @@ export default function Success() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

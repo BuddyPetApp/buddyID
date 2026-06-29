@@ -22,7 +22,7 @@ export function NavBar() {
           const active = pathname === item.route || (i === 0 && pathname === '/buddyid');
           const color  = active ? '#fff' : 'rgba(255,255,255,0.45)';
           return (
-            <TouchableOpacity key={item.label} style={s.item} onPress={() => router.push(item.route as any)}>
+            <TouchableOpacity key={item.label} style={s.item} onPress={() => router.navigate(item.route as any)}>
               <View style={[s.iconWrap, active && s.iconWrapActive]}>
                 <item.Icon color={color} />
               </View>

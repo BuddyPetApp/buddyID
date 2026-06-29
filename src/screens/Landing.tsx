@@ -398,21 +398,21 @@ export default function Landing() {
                     </TouchableOpacity>
                   </View>
 
-                  <TouchableOpacity activeOpacity={0.7} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
+                  <TouchableOpacity activeOpacity={0.7} onPress={() => router.navigate(`/buddyid/dog/${activeDog.id}` as any)}>
                     <View style={s.dogInfo}>
                       <Text style={s.dogName}>{activeDog.name}</Text>
                       <Text style={s.dogMeta}>{[activeDog.breed, activeDog.gender === 'male' ? 'Macho' : 'Fêmea'].filter(Boolean).join(' · ')}</Text>
                     </View>
                   </TouchableOpacity>
                   
-                  <TouchableOpacity style={[s.dogCta, { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: 0, marginTop: 0 }]} activeOpacity={0.7} onPress={() => router.push(`/buddyid/dog/${activeDog.id}` as any)}>
+                  <TouchableOpacity style={[s.dogCta, { paddingHorizontal: spacing[4], paddingBottom: spacing[4], paddingTop: 0, marginTop: 0 }]} activeOpacity={0.7} onPress={() => router.navigate(`/buddyid/dog/${activeDog.id}` as any)}>
                     <Text style={s.dogCtaText}>Abrir BuddyID</Text>
                     <ChevronRightIcon size={14} color={colors.primary} />
                   </TouchableOpacity>
                 </Card>
               )}
 
-              <Card style={s.addDogCard} onPress={() => router.push('/buddyid/flow' as any)}>
+              <Card style={s.addDogCard} onPress={() => router.navigate('/buddyid/flow' as any)}>
                 <Text style={s.addDogText}>Adicionar cão</Text>
                 <ChevronRightIcon size={16} color={colors.primary} />
               </Card>
@@ -422,7 +422,7 @@ export default function Landing() {
             <>
 
               {/* ── Hero Card ── */}
-              <Card style={s.hero} onPress={() => router.push('/buddyid/flow' as any)}>
+              <Card style={s.hero} onPress={() => router.navigate('/buddyid/flow' as any)}>
                 <View style={s.heroGlow} />
                 <View style={s.heroDogWrap} pointerEvents="none">
                   <SvgXml xml={PETS_09_SVG} width={113} height={161} />
@@ -442,7 +442,7 @@ export default function Landing() {
                 <View style={s.heroCta}>
                   <Text style={s.heroCtaText}>Começar agora</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/buddyid/auth?mode=login_only' as any)} style={s.heroGhost}>
+                <TouchableOpacity onPress={() => router.navigate('/buddyid/auth?mode=login_only' as any)} style={s.heroGhost}>
                   <Text style={s.heroGhostText}>Já tens conta? Iniciar sessão</Text>
                 </TouchableOpacity>
               </Card>
@@ -484,7 +484,7 @@ export default function Landing() {
               </View>
 
               {/* ── Buddy Fund Card ── */}
-              <Card style={s.fund} onPress={() => router.push('/buddyid/buddy-fund' as any)}>
+              <Card style={s.fund} onPress={() => router.navigate('/buddyid/buddy-fund' as any)}>
                 <View style={s.fundIllustration} pointerEvents="none">
                   <SvgXml xml={SERVICES_09_SVG} width={320} height={124} />
                 </View>
@@ -498,7 +498,7 @@ export default function Landing() {
               </Card>
 
               {/* ── Providers CTA ── */}
-              <Card style={s.providerCard} onPress={() => router.push('/buddyid/parceiros' as any)}>
+              <Card style={s.providerCard} onPress={() => router.navigate('/buddyid/providers' as any)}>
                 <View style={[s.pill, { backgroundColor: colors.cardLilac }]}>
                   <Text style={[s.pillText, { color: '#fff' }]}>Para prestadores</Text>
                 </View>

@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, spacing } from '../../tokens';
+import { WebSheet } from '../../components/WebSheet';
 import { ChevronLeftIcon, CameraIcon } from '../../components/Icons';
 import Svg, { Path } from 'react-native-svg';
 import { apiClient } from '../../api/client';
@@ -438,20 +439,24 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   if (loading) {
     return (
+      <WebSheet maxWidth={600}>
       <SafeAreaView style={styles.loadingWrap}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
+      </WebSheet>
     );
   }
 
   if (!profile) {
     return (
+      <WebSheet maxWidth={600}>
       <SafeAreaView style={styles.emptyWrap}>
         <Text style={styles.emptyText}>{t('tutor.dogProfile.noDogs')}</Text>
         <Pressable onPress={() => router.replace('/buddyid' as any)} style={styles.backButtonInline}>
           <Text style={styles.backButtonInlineText}>Voltar ao Dashboard</Text>
         </Pressable>
       </SafeAreaView>
+      </WebSheet>
     );
   }
 
@@ -494,6 +499,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
   };
 
   return (
+    <WebSheet maxWidth={600}>
     <View style={styles.root}>
       {/* Header bar */}
       <View style={styles.header}>
@@ -732,6 +738,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
         />
       )}
     </View>
+    </WebSheet>
   );
 }
 

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { ChevronLeftIcon, CheckIcon } from '../components/Icons';
 import { SectionLabel } from './shared';
@@ -90,6 +91,7 @@ export default function Associations() {
   const showFooterBtn = step !== 'success';
 
   return (
+    <WebSheet maxWidth={760}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>
@@ -249,6 +251,7 @@ export default function Associations() {
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

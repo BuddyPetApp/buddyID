@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { colors, font, fontSize, radius, shadows, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { ChevronLeftIcon, LockIcon, MailIcon, CheckIcon } from '../components/Icons';
 
@@ -35,7 +36,7 @@ export default function LoginRegister() {
         });
         if (error) throw error;
         if (!data.session) {
-          router.push({
+          router.navigate({
             pathname: '/buddyid/verify-otp',
             params: { email, type: 'signup' }
           } as any);
@@ -72,6 +73,7 @@ export default function LoginRegister() {
     : !email.includes('@') || password.length < 6 || phone.length < 7;
 
   return (
+    <WebSheet maxWidth={460}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>
@@ -147,7 +149,7 @@ export default function LoginRegister() {
               {isLogin && (
                 <TouchableOpacity 
                   style={s.forgotWrap} 
-                  onPress={() => router.push({ pathname: '/buddyid/forgot-password', params: { email } } as any)}
+                  onPress={() => router.navigate({ pathname: '/buddyid/forgot-password', params: { email } } as any)}
                 >
                   <Text style={s.forgotText}>Esqueci-me da palavra-passe</Text>
                 </TouchableOpacity>
@@ -166,6 +168,7 @@ export default function LoginRegister() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

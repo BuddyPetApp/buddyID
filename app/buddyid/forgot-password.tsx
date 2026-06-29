@@ -26,7 +26,7 @@ export default function ForgotPassword() {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
       if (error) throw error;
       
-      router.push({
+      router.navigate({
         pathname: '/buddyid/verify-otp',
         params: { email: email.trim(), type: 'recovery' }
       } as any);
