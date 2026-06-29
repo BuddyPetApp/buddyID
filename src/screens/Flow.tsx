@@ -2,10 +2,12 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
+  Animated,
   Dimensions,
   Image,
   KeyboardAvoidingView,
   LayoutAnimation,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -59,6 +61,8 @@ const TOTAL_QUESTIONS = 14;
 const BUDDYID_FORM_KEY = 'buddyid_pending_form';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
+// How far the form card can be dragged down (mobile) to peek the photo behind it
+const MAX_CARD_DRAG = SCREEN_HEIGHT * 0.55;
 
 const STEPS = [
   'q1',
@@ -119,6 +123,23 @@ export default function Flow() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
   const insets = useSafeAreaInsets();
+
+  // Draggable form card (mobile): drag the handle down to peek the full photo, release to snap back
+  const cardDragY = useRef(new Animated.Value(0)).current;
+  const cardPan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && g.dy > Math.abs(g.dx),
+      onPanResponderMove: (_, g) => {
+        cardDragY.setValue(Math.max(0, Math.min(MAX_CARD_DRAG, g.dy)));
+      },
+      onPanResponderRelease: () => {
+        Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 7, tension: 70 }).start();
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 7, tension: 70 }).start();
+      },
+    })
+  ).current;
 
   const currentStep = STEPS[stepIndex];
   const questionNumber = stepIndex < TOTAL_QUESTIONS ? stepIndex + 1 : null;
@@ -428,8 +449,13 @@ export default function Flow() {
         {/* Flexible spacer pushes card to the bottom (Zeely-style) */}
         <View style={s.flex} />
 
-        {/* Card — wraps content, height adapts per step */}
-        <View style={s.card}>{cardInner}</View>
+        {/* Card — drag the handle down to peek the photo behind it */}
+        <Animated.View style={[s.card, { transform: [{ translateY: cardDragY }] }]}>
+          <View style={s.grabberZone} {...cardPan.panHandlers}>
+            <View style={s.grabber} />
+          </View>
+          {cardInner}
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
     </View>
@@ -1100,6 +1126,8 @@ const s = StyleSheet.create({
     maxHeight: CARD_MAX_HEIGHT,
     overflow: 'hidden',
   },
+  grabberZone: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
+  grabber: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#D6D3DE' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
