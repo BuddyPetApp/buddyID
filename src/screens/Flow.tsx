@@ -124,20 +124,27 @@ export default function Flow() {
   const isDesktop = Platform.OS === 'web' && width >= 900;
   const insets = useSafeAreaInsets();
 
-  // Draggable form card (mobile): drag the handle down to peek the full photo, release to snap back
+  // Draggable form card (mobile): drag the handle to toggle between resting (up) and a
+  // lowered state that stays down to reveal the full photo. Drag the handle up to restore.
   const cardDragY = useRef(new Animated.Value(0)).current;
+  const cardDragBase = useRef(0);
+  const settleCard = (g: { dy: number; vy: number }) => {
+    const next = Math.max(0, Math.min(MAX_CARD_DRAG, cardDragBase.current + g.dy));
+    let target: number;
+    if (g.vy > 0.4) target = MAX_CARD_DRAG; // flick down
+    else if (g.vy < -0.4) target = 0; // flick up
+    else target = next > MAX_CARD_DRAG * 0.5 ? MAX_CARD_DRAG : 0;
+    cardDragBase.current = target;
+    Animated.spring(cardDragY, { toValue: target, useNativeDriver: false, friction: 8, tension: 65 }).start();
+  };
   const cardPan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && g.dy > Math.abs(g.dx),
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 6 && Math.abs(g.dy) > Math.abs(g.dx),
       onPanResponderMove: (_, g) => {
-        cardDragY.setValue(Math.max(0, Math.min(MAX_CARD_DRAG, g.dy)));
+        cardDragY.setValue(Math.max(0, Math.min(MAX_CARD_DRAG, cardDragBase.current + g.dy)));
       },
-      onPanResponderRelease: () => {
-        Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 7, tension: 70 }).start();
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 7, tension: 70 }).start();
-      },
+      onPanResponderRelease: (_, g) => settleCard(g),
+      onPanResponderTerminate: (_, g) => settleCard(g ?? { dy: 0, vy: 0 }),
     })
   ).current;
 
