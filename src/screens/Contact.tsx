@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { apiClient } from '../api/client';
 
 const ICON_EMAIL = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -84,6 +85,7 @@ export default function Contact() {
   }
 
   return (
+    <WebSheet>
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
@@ -224,6 +226,7 @@ export default function Contact() {
       </ScrollView>
       <NavBar />
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

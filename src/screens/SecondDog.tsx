@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { CheckIcon } from '../components/Icons';
 
@@ -32,6 +33,7 @@ export default function SecondDog() {
   const initial = dogName?.[0]?.toUpperCase() ?? 'T';
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.header}>
         <Logo variant="dark" size="sm" />
@@ -89,6 +91,7 @@ export default function SecondDog() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

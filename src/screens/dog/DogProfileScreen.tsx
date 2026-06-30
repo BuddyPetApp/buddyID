@@ -439,7 +439,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   if (loading) {
     return (
-      <WebSheet maxWidth={600}>
+      <WebSheet>
       <SafeAreaView style={styles.loadingWrap}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
@@ -449,7 +449,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
 
   if (!profile) {
     return (
-      <WebSheet maxWidth={600}>
+      <WebSheet>
       <SafeAreaView style={styles.emptyWrap}>
         <Text style={styles.emptyText}>{t('tutor.dogProfile.noDogs')}</Text>
         <Pressable onPress={() => router.replace('/buddyid' as any)} style={styles.backButtonInline}>
@@ -499,7 +499,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
   };
 
   return (
-    <WebSheet maxWidth={600}>
+    <WebSheet>
     <View style={styles.root}>
       {/* Header bar */}
       <View style={styles.header}>

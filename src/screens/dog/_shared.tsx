@@ -148,7 +148,7 @@ export function DogScreenShell({
 }) {
   const router = useRouter();
   return (
-    <WebSheet maxWidth={600}>
+    <WebSheet>
     <SafeAreaView style={[shellStyles.safe, { backgroundColor: contentBackground }]} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={shellStyles.header}>

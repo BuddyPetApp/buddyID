@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing, shadows } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { ChoiceRow, SectionLabel, SectionHint } from './shared';
 import { NavBar } from '../components/NavBar';
@@ -174,6 +175,7 @@ export default function ProviderFlow() {
   const isLastStep = step === 'N6' || step === 'F6';
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>
@@ -220,6 +222,7 @@ export default function ProviderFlow() {
       </KeyboardAvoidingView>
       {step === 'choose' && <NavBar />}
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

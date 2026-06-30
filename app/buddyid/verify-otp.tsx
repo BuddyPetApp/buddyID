@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../src/lib/supabase';
 import { colors, font, fontSize, radius, shadows, spacing } from '../../src/tokens';
+import { WebSheet } from '../../src/components/WebSheet';
 import { Logo } from '../../src/components/Logo';
 import { ChevronLeftIcon, LockIcon } from '../../src/components/Icons';
 
@@ -92,6 +93,7 @@ export default function VerifyOtp() {
   }
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>
@@ -144,6 +146,7 @@ export default function VerifyOtp() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

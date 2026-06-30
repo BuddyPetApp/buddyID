@@ -1,19 +1,22 @@
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
-import { colors, radius, shadows } from '../tokens';
+import { colors } from '../tokens';
 
 export const DESKTOP_BREAKPOINT = 900;
+// Single, consistent content width across all screens on desktop
+export const CONTENT_MAX_WIDTH = 800;
 
 /**
- * Wraps a screen so that on desktop/web it renders as a centered "sheet"
- * (white card with rounded corners + shadow) floating on a soft page
- * background, instead of stretching full-width. No-op on mobile/native.
+ * Wraps a screen so that on desktop/web its content is centered at a fixed max
+ * width instead of stretching full-width. No card chrome — just a centered
+ * column on a seamless background, so every screen keeps the same margin.
+ * No-op on mobile/native.
  *
  * Usage: wrap the screen's existing root (e.g. its SafeAreaView) in <WebSheet>.
  */
 export function WebSheet({
   children,
-  maxWidth = 600,
+  maxWidth = CONTENT_MAX_WIDTH,
   style,
 }: {
   children: ReactNode;
@@ -27,7 +30,7 @@ export function WebSheet({
 
   return (
     <View style={styles.page}>
-      <View style={[styles.sheet, { maxWidth }, style]}>{children}</View>
+      <View style={[styles.content, { maxWidth }, style]}>{children}</View>
     </View>
   );
 }
@@ -35,18 +38,11 @@ export function WebSheet({
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: colors.surfaceAccent,
+    backgroundColor: colors.canvas,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
   },
-  sheet: {
+  content: {
+    flex: 1,
     width: '100%',
-    height: '100%',
-    maxHeight: 900,
-    borderRadius: radius.xxl,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-    ...shadows.elevated,
   },
 });

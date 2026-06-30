@@ -17,6 +17,7 @@ import { router, usePathname } from 'expo-router';
 import { colors, font, fontSize, radius, shadows, spacing } from '../tokens';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
+import { WebSheet } from '../components/WebSheet';
 import {
   ShieldCheckIcon, HeartIcon, StoreIcon, ZapIcon,
   WalkIcon, HomeHeartIcon, AwardIcon, ScissorsIcon,
@@ -310,6 +311,7 @@ export default function Landing() {
   const animStyle = { opacity: fade, transform: [{ translateY: slide }] };
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
@@ -516,6 +518,7 @@ export default function Landing() {
 
       <NavBar />
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

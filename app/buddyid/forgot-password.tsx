@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { colors, font, fontSize, radius, shadows, spacing } from '../../src/tokens';
+import { WebSheet } from '../../src/components/WebSheet';
 import { Logo } from '../../src/components/Logo';
 import { ChevronLeftIcon, MailIcon } from '../../src/components/Icons';
 
@@ -44,6 +45,7 @@ export default function ForgotPassword() {
   }
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>
@@ -86,6 +88,7 @@ export default function ForgotPassword() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

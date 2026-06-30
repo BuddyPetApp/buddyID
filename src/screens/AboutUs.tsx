@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useRouter } from 'expo-router';
 import { colors, font, fontSize, shadows, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
 import { ChevronRightIcon } from '../components/Icons';
@@ -19,6 +20,7 @@ export default function AboutUs() {
   const router = useRouter();
 
   return (
+    <WebSheet>
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
@@ -155,6 +157,7 @@ export default function AboutUs() {
       </ScrollView>
       <NavBar />
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

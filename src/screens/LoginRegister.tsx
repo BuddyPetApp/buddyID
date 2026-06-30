@@ -73,7 +73,7 @@ export default function LoginRegister() {
     : !email.includes('@') || password.length < 6 || phone.length < 7;
 
   return (
-    <WebSheet maxWidth={460}>
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>

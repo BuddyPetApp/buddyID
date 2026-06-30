@@ -86,7 +86,7 @@ export default function Providers() {
     form.services.length > 0;
 
   return (
-    <WebSheet maxWidth={760}>
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 

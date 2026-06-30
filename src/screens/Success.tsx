@@ -54,7 +54,7 @@ export default function Success() {
   }
 
   return (
-    <WebSheet maxWidth={560}>
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>{title}</Text>

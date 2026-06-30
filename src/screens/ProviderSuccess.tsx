@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { CheckIcon } from '../components/Icons';
 
@@ -18,6 +19,7 @@ export default function ProviderSuccess() {
   }, []);
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.header}>
         <Logo variant="dark" size="sm" />
@@ -58,6 +60,7 @@ export default function ProviderSuccess() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

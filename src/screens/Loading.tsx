@@ -189,7 +189,7 @@ export default function Loading() {
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
-    <WebSheet maxWidth={460}>
+    <WebSheet>
     <SafeAreaView style={s.safe}>
       <View style={s.center}>
         <View style={s.spinner}>

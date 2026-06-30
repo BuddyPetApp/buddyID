@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { apiClient } from '../api/client';
 import { Logomark } from '../components/Logo';
 import { PROVIDER_FORM_KEY } from './ProviderFlow';
@@ -76,6 +77,7 @@ export default function ProviderLoading() {
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe}>
       <View style={s.center}>
         <View style={s.spinnerWrap}>
@@ -97,6 +99,7 @@ export default function ProviderLoading() {
         </View>
       </View>
     </SafeAreaView>
+    </WebSheet>
   );
 }
 

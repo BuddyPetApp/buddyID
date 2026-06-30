@@ -91,7 +91,7 @@ export default function Associations() {
   const showFooterBtn = step !== 'success';
 
   return (
-    <WebSheet maxWidth={760}>
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={s.header}>

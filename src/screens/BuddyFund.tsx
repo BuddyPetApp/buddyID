@@ -8,12 +8,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, font, fontSize, spacing } from '../tokens';
+import { WebSheet } from '../components/WebSheet';
 import { Logo } from '../components/Logo';
 import { NavBar } from '../components/NavBar';
 import { ChevronLeftIcon } from '../components/Icons';
 
 export default function BuddyFund() {
   return (
+    <WebSheet>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn} hitSlop={12}>
@@ -80,6 +82,7 @@ export default function BuddyFund() {
       </ScrollView>
       <NavBar />
     </SafeAreaView>
+    </WebSheet>
   );
 }
 
