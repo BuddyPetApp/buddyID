@@ -32,7 +32,7 @@ export default function AboutUs() {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {/* Hero heading */}
         <View style={styles.heroSection}>

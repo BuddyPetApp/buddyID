@@ -516,7 +516,7 @@ export default function DogProfileScreen({ id, isPublic = false, sections }: { i
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={true}>
         {/* Purple Hero Section */}
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>

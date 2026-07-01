@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -57,7 +57,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const TOTAL_QUESTIONS = 14;
 const BUDDYID_FORM_KEY = 'buddyid_pending_form';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
@@ -118,7 +117,35 @@ export default function Flow() {
   const { t, i18n } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<BuddyIDFormData>(INITIAL_FORM_DATA);
+  const [steps, setSteps] = useState<readonly StepKey[]>(STEPS);
   const scrollRef = useRef<ScrollView>(null);
+
+  // Postal code, household and data-use consent are tutor/household-level — the
+  // same regardless of which dog. When adding another dog (already logged in, or
+  // a second dog in the same onboarding), skip those steps and carry the previous
+  // dog's household answers forward so the new record stays consistent. Housing
+  // (q6) also carries over, but its step stays because food is per-dog.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const raw = await AsyncStorage.getItem('buddyid_pending_dogs');
+      const pendingDogs: Partial<BuddyIDFormData>[] = raw ? JSON.parse(raw) : [];
+      const isAdditionalDog = !!session || pendingDogs.length > 0;
+      if (cancelled || !isAdditionalDog) return;
+
+      setSteps(STEPS.filter((step) => step !== 'qLocation' && step !== 'consent' && step !== 'q7b'));
+      const prev = pendingDogs[0];
+      setForm((f) => ({
+        ...f,
+        consentDataUse: true,
+        postalCode: prev?.postalCode || f.postalCode,
+        housemates: prev?.housemates?.length ? prev.housemates : f.housemates,
+        housing: prev?.housing || f.housing,
+      }));
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width >= 900;
@@ -148,9 +175,10 @@ export default function Flow() {
     })
   ).current;
 
-  const currentStep = STEPS[stepIndex];
-  const questionNumber = stepIndex < TOTAL_QUESTIONS ? stepIndex + 1 : null;
-  const progress = (stepIndex + 1) / STEPS.length;
+  const currentStep = steps[stepIndex];
+  const totalQuestions = steps.filter((step) => step !== 'consent').length;
+  const questionNumber = currentStep === 'consent' ? null : stepIndex + 1;
+  const progress = (stepIndex + 1) / steps.length;
 
   function update<K extends keyof BuddyIDFormData>(key: K, value: BuddyIDFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -213,7 +241,7 @@ export default function Flow() {
       return;
     }
 
-    if (stepIndex < STEPS.length - 1) {
+    if (stepIndex < steps.length - 1) {
       LayoutAnimation.configureNext({
         duration: 350,
         update: { type: LayoutAnimation.Types.easeInEaseOut },
@@ -350,7 +378,8 @@ export default function Flow() {
     }
   }
 
-  const continueLabel = currentStep === 'consent'
+  const isLastStep = stepIndex === steps.length - 1;
+  const continueLabel = isLastStep
     ? form.name.trim()
       ? form.gender === 'Fêmea'
         ? t('buddyId.flow.ctaCreateFemale', { name: form.name })
@@ -367,13 +396,13 @@ export default function Flow() {
   );
 
   const counter = questionNumber != null
-    ? <Text style={s.counter}>{questionNumber} de {TOTAL_QUESTIONS}</Text>
+    ? <Text style={s.counter}>{questionNumber} de {totalQuestions}</Text>
     : null;
 
   // Segmented Progress Bar (Instagram-story style)
   const progressBar = (
     <View style={s.progressRow}>
-      {STEPS.map((step, idx) => {
+      {steps.map((step, idx) => {
         const isCompleted = idx <= stepIndex;
         return (
           <View
@@ -396,7 +425,7 @@ export default function Flow() {
         style={{ flexShrink: 1 }}
         contentContainerStyle={s.scrollContent}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         <StepContent step={currentStep} form={form} update={update} toggleMulti={toggleMulti} pickPhoto={pickPhoto} />
       </ScrollView>
@@ -694,7 +723,7 @@ function Q3({ form, update }: Pick<StepProps, 'form' | 'update'>) {
       <SectionLabel>Idade</SectionLabel>
       <View style={s.ageRow}>
         <TextInput
-          style={[s.input, { flex: 1, marginBottom: 0, marginTop: 0 }]}
+          style={[s.input, { flex: 1, minWidth: 0, marginBottom: 0, marginTop: 0 }]}
           placeholder="Ex: 3"
           placeholderTextColor={colors.textMuted}
           keyboardType="numeric"

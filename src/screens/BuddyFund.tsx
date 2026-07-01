@@ -28,7 +28,7 @@ export default function BuddyFund() {
       <ScrollView
         style={s.scroll}
         contentContainerStyle={s.content}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {/* Caixa cheia */}
         <View style={s.heroCard}>

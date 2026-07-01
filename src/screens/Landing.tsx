@@ -319,7 +319,7 @@ export default function Landing() {
         <Text style={s.headerTagline}>Dá ao teu melhor amigo a vida que ele merece</Text>
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={true}>
         <Animated.View style={animStyle}>
 
           {sessionLoading ? (

@@ -103,7 +103,7 @@ export default function Providers() {
           style={s.flex}
           contentContainerStyle={s.scroll}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           {/* Hero */}
           <View style={s.hero}>

@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { apiClient } from '../api/client';
 import { colors, font, fontSize, spacing } from '../tokens';
-import { WebSheet } from '../components/WebSheet';
+import { DesktopSplit } from '../components/DesktopSplit';
 import { Logomark } from '../components/Logo';
 import type { BuddyIDFormData } from './types';
 
@@ -189,7 +189,7 @@ export default function Loading() {
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   return (
-    <WebSheet>
+    <DesktopSplit cardMaxWidth={460}>
     <SafeAreaView style={s.safe}>
       <View style={s.center}>
         <View style={s.spinner}>
@@ -210,7 +210,7 @@ export default function Loading() {
         </View>
       </View>
     </SafeAreaView>
-    </WebSheet>
+    </DesktopSplit>
   );
 }
 

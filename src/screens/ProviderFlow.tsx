@@ -201,7 +201,7 @@ export default function ProviderFlow() {
           style={s.flex}
           contentContainerStyle={s.scrollContent}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           <StepContent step={step} form={form} update={update} chooseBranch={chooseBranch} goNext={goNext} />
         </ScrollView>

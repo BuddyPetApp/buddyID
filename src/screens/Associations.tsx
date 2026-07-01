@@ -121,7 +121,7 @@ export default function Associations() {
           style={s.flex}
           contentContainerStyle={s.scrollContent}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
         >
           {step === 1 && (
             <View style={s.questionWrap}>

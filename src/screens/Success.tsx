@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, font, fontSize, radius, spacing } from '../tokens';
-import { WebSheet } from '../components/WebSheet';
+import { DesktopSplit } from '../components/DesktopSplit';
 import { CheckIcon, ShareIcon, ChevronRightIcon, StarIcon, EyeIcon } from '../components/Icons';
 
 const BUDDYID_RESULT_KEY = 'buddyid_result';
@@ -54,9 +54,9 @@ export default function Success() {
   }
 
   return (
-    <WebSheet>
+    <DesktopSplit cardMaxWidth={480}>
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={true}>
         <Text style={s.title}>{title}</Text>
 
         {results.length > 1 && (
@@ -116,7 +116,7 @@ export default function Success() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-    </WebSheet>
+    </DesktopSplit>
   );
 }
 

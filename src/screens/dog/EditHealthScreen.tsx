@@ -292,7 +292,7 @@ export default function EditHealthScreen({ id, isReadOnly = false }: { id?: stri
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         <View style={styles.introWrap}>
           <Text style={styles.introBody}>

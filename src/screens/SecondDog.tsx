@@ -40,7 +40,7 @@ export default function SecondDog() {
       </View>
       <View style={s.separator} />
 
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={true}>
         {/* First dog card — completed */}
         <View style={s.dogCard}>
           <View style={s.avatar}>
