@@ -1048,7 +1048,6 @@ function QLocation({ form, update }: Pick<StepProps, 'form' | 'update'>) {
         keyboardType="numeric"
         maxLength={8}
       />
-      <Text style={s.hint}>A Buddy está disponível na área metropolitana de Lisboa.</Text>
     </View>
   );
 }
