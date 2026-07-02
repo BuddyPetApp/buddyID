@@ -29,6 +29,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.body.style.backgroundColor = '#FFFFFF';
+      // Disable the browser's pull-to-refresh so dragging the form card down
+      // never reloads the page (which would wipe the in-memory form state).
+      document.documentElement.style.overscrollBehavior = 'none';
+      document.body.style.overscrollBehavior = 'none';
     }
   }, []);
 

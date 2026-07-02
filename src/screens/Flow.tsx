@@ -62,6 +62,8 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CARD_MAX_HEIGHT = SCREEN_HEIGHT * 0.72;
 // How far the form card can be dragged down (mobile) to peek the photo behind it
 const MAX_CARD_DRAG = SCREEN_HEIGHT * 0.55;
+// Keep at least this much of the card (incl. the grab handle) on screen when lowered
+const CARD_PEEK = 96;
 
 const STEPS = [
   'q1',
@@ -151,29 +153,44 @@ export default function Flow() {
   const isDesktop = Platform.OS === 'web' && width >= 900;
   const insets = useSafeAreaInsets();
 
-  // Draggable form card (mobile): drag the handle to toggle between resting (up) and a
-  // lowered state that stays down to reveal the full photo. Drag the handle up to restore.
+  // Draggable form card (mobile): drag the handle down to lower the card and reveal the
+  // photo behind it; drag or tap the handle to bring it back. The lowered distance is
+  // clamped to the card's measured height so the handle never slides off-screen.
   const cardDragY = useRef(new Animated.Value(0)).current;
   const cardDragBase = useRef(0);
+  const cardHeightRef = useRef(0);
+  const maxDrag = () => Math.max(0, Math.min(MAX_CARD_DRAG, cardHeightRef.current - CARD_PEEK));
+  const springCard = (to: number) => {
+    cardDragBase.current = to;
+    Animated.spring(cardDragY, { toValue: to, useNativeDriver: false, friction: 9, tension: 70 }).start();
+  };
   const settleCard = (g: { dy: number; vy: number }) => {
-    const next = Math.max(0, Math.min(MAX_CARD_DRAG, cardDragBase.current + g.dy));
-    let target: number;
-    if (g.vy > 0.4) target = MAX_CARD_DRAG; // flick down
-    else if (g.vy < -0.4) target = 0; // flick up
-    else target = next > MAX_CARD_DRAG * 0.5 ? MAX_CARD_DRAG : 0;
-    cardDragBase.current = target;
-    Animated.spring(cardDragY, { toValue: target, useNativeDriver: false, friction: 8, tension: 65 }).start();
+    const max = maxDrag();
+    const isTap = Math.abs(g.dy) < 6 && Math.abs(g.vy) < 0.3;
+    if (isTap) return springCard(cardDragBase.current > max / 2 ? 0 : max); // tap toggles
+    if (g.vy > 0.4) return springCard(max); // flick down
+    if (g.vy < -0.4) return springCard(0); // flick up
+    const next = Math.max(0, Math.min(max, cardDragBase.current + g.dy));
+    springCard(next > max / 2 ? max : 0);
   };
   const cardPan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 6 && Math.abs(g.dy) > Math.abs(g.dx),
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 4 && Math.abs(g.dy) > Math.abs(g.dx),
       onPanResponderMove: (_, g) => {
-        cardDragY.setValue(Math.max(0, Math.min(MAX_CARD_DRAG, cardDragBase.current + g.dy)));
+        cardDragY.setValue(Math.max(0, Math.min(maxDrag(), cardDragBase.current + g.dy)));
       },
       onPanResponderRelease: (_, g) => settleCard(g),
       onPanResponderTerminate: (_, g) => settleCard(g ?? { dy: 0, vy: 0 }),
     })
   ).current;
+
+  // Pop the card back up whenever the question changes — also prevents a lowered card
+  // from getting stuck when the next step's card is shorter.
+  useEffect(() => {
+    cardDragBase.current = 0;
+    Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 9, tension: 70 }).start();
+  }, [stepIndex]);
 
   const currentStep = steps[stepIndex];
   const totalQuestions = steps.filter((step) => step !== 'consent').length;
@@ -486,7 +503,10 @@ export default function Flow() {
         <View style={s.flex} />
 
         {/* Card — drag the handle down to peek the photo behind it */}
-        <Animated.View style={[s.card, { transform: [{ translateY: cardDragY }] }]}>
+        <Animated.View
+          style={[s.card, { transform: [{ translateY: cardDragY }] }]}
+          onLayout={(e) => { cardHeightRef.current = e.nativeEvent.layout.height; }}
+        >
           <View style={s.grabberZone} {...cardPan.panHandlers}>
             <View style={s.grabber} />
           </View>
@@ -1162,8 +1182,8 @@ const s = StyleSheet.create({
     maxHeight: CARD_MAX_HEIGHT,
     overflow: 'hidden',
   },
-  grabberZone: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
-  grabber: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#D6D3DE' },
+  grabberZone: { alignItems: 'center', paddingTop: 14, paddingBottom: 12 },
+  grabber: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6D3DE' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
