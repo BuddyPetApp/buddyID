@@ -153,44 +153,26 @@ export default function Flow() {
   const isDesktop = Platform.OS === 'web' && width >= 900;
   const insets = useSafeAreaInsets();
 
-  // Draggable form card (mobile): drag the handle down to lower the card and reveal the
-  // photo behind it; drag or tap the handle to bring it back. The lowered distance is
+  // Draggable form card (mobile): hold and drag the handle down to peek at the photo
+  // behind the card; releasing springs the card straight back up. The peek distance is
   // clamped to the card's measured height so the handle never slides off-screen.
   const cardDragY = useRef(new Animated.Value(0)).current;
-  const cardDragBase = useRef(0);
   const cardHeightRef = useRef(0);
   const maxDrag = () => Math.max(0, Math.min(MAX_CARD_DRAG, cardHeightRef.current - CARD_PEEK));
-  const springCard = (to: number) => {
-    cardDragBase.current = to;
-    Animated.spring(cardDragY, { toValue: to, useNativeDriver: false, friction: 9, tension: 70 }).start();
-  };
-  const settleCard = (g: { dy: number; vy: number }) => {
-    const max = maxDrag();
-    const isTap = Math.abs(g.dy) < 6 && Math.abs(g.vy) < 0.3;
-    if (isTap) return springCard(cardDragBase.current > max / 2 ? 0 : max); // tap toggles
-    if (g.vy > 0.4) return springCard(max); // flick down
-    if (g.vy < -0.4) return springCard(0); // flick up
-    const next = Math.max(0, Math.min(max, cardDragBase.current + g.dy));
-    springCard(next > max / 2 ? max : 0);
+  const springCardUp = () => {
+    Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 9, tension: 70 }).start();
   };
   const cardPan = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dy) > 4 && Math.abs(g.dy) > Math.abs(g.dx),
       onPanResponderMove: (_, g) => {
-        cardDragY.setValue(Math.max(0, Math.min(maxDrag(), cardDragBase.current + g.dy)));
+        // Follow the finger downward only; snaps back up on release.
+        cardDragY.setValue(Math.max(0, Math.min(maxDrag(), g.dy)));
       },
-      onPanResponderRelease: (_, g) => settleCard(g),
-      onPanResponderTerminate: (_, g) => settleCard(g ?? { dy: 0, vy: 0 }),
+      onPanResponderRelease: springCardUp,
+      onPanResponderTerminate: springCardUp,
     })
   ).current;
-
-  // Pop the card back up whenever the question changes — also prevents a lowered card
-  // from getting stuck when the next step's card is shorter.
-  useEffect(() => {
-    cardDragBase.current = 0;
-    Animated.spring(cardDragY, { toValue: 0, useNativeDriver: false, friction: 9, tension: 70 }).start();
-  }, [stepIndex]);
 
   const currentStep = steps[stepIndex];
   const totalQuestions = steps.filter((step) => step !== 'consent').length;
